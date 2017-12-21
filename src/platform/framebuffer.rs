@@ -3,7 +3,7 @@
 // Filename: minifb.rs
 // Author: Louise <louise>
 // Created: Tue Dec 19 23:31:25 2017 (+0100)
-// Last-Updated: Thu Dec 21 01:53:18 2017 (+0100)
+// Last-Updated: Thu Dec 21 22:20:02 2017 (+0100)
 //           By: Louise <louise>
 //
 use minifb::{Window, WindowOptions, Scale};
@@ -11,15 +11,15 @@ use common::Platform;
 use common::Color;
 use common;
 
-pub struct MiniFBPlatform {
+pub struct FramebufferPlatform {
     buffer: Box<[u32]>,
     window: Window,
 
     width: u32
 }
 
-impl Platform for MiniFBPlatform {
-    fn new(width: u32, height: u32, _scale: u32) -> MiniFBPlatform {
+impl Platform for FramebufferPlatform {
+    fn new(width: u32, height: u32, _scale: u32) -> FramebufferPlatform {
         let buffer: Vec<u32> = vec![0; (width * height) as usize];
         
         let window = Window::new("rGBA", width as usize, height as usize,
@@ -31,7 +31,7 @@ impl Platform for MiniFBPlatform {
                                  }
         ).unwrap();
         
-        MiniFBPlatform {
+        FramebufferPlatform {
             buffer: buffer.into_boxed_slice(),
             window,
             width

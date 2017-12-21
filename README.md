@@ -5,7 +5,7 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Thu Dec 21 20:26:39 2017 (+0100)
-;; Last-Updated: Thu Dec 21 22:03:05 2017 (+0100)
+;; Last-Updated: Thu Dec 21 22:22:48 2017 (+0100)
 ;;           By: Louise <louise>
  -->
 
@@ -49,8 +49,8 @@ The current front-ends are :
 |Name |Library used|Particularities|
 |-----|------------|---------------|
 |dummy|None|Has absolutely no output and no input. It's selected when you select no other frontend|
-|sdl  | SDL2       | |
-|minifb| [minifb](https://github.com/emoon/rust_minifb) | Only supports output, no input. |
+|sdl  | SDL2       | The recommanded front-end and only fully-functionning one|
+|framebuffer| [minifb](https://github.com/emoon/rust_minifb) | Only supports output, no input. |
  
 # Emulation cores
 

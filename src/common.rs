@@ -3,7 +3,7 @@
 // Filename: core.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:34:12 2017 (+0100)
-// Last-Updated: Tue Dec 19 23:45:11 2017 (+0100)
+// Last-Updated: Thu Dec 21 22:22:04 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -14,14 +14,6 @@ pub enum Console {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color(pub u8, pub u8, pub u8);
-
-impl Color {
-    pub fn as_rgba(&self) -> u32 {
-        ((self.0 as u32) << 16) |
-        ((self.1 as u32) << 8) |
-        (self.2 as u32) 
-    }
-}
 
 #[derive(Debug, Clone, Copy)]
 pub enum Key {

@@ -3,7 +3,7 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Thu Dec 21 22:15:15 2017 (+0100)
+// Last-Updated: Thu Dec 21 22:21:42 2017 (+0100)
 //           By: Louise <louise>
 //
 #[cfg(feature = "minifb")] extern crate minifb;
@@ -20,8 +20,9 @@ mod gb;
 
 use clap::{App, Arg};
 use common::{Core, Console, Platform};
-#[cfg(feature = "minifb")] use platform::minifb::MiniFBPlatform;
+#[cfg(feature = "minifb")] use platform::framebuffer::FramebufferPlatform;
 #[cfg(feature = "sdl")] use platform::sdl::SDLPlatform;
+#[cfg(not(any(feature = "sdl", feature = "framebuffer")))]
 use platform::dummy::DummyPlatform;
 use gb::Gameboy;
 
@@ -57,15 +58,15 @@ fn main() {
             (Console::None, (0, 0, 0))
         };
 
-    #[cfg(all(feature = "sdl", not(feature = "minifb")))]
+    #[cfg(all(feature = "sdl", not(feature = "framebuffer")))]
     let mut platform =
         SDLPlatform::new(parameters.0, parameters.1, parameters.2);
 
-    #[cfg(all(feature = "minifb", not(feature = "sdl")))]
+    #[cfg(all(feature = "framebuffer", not(feature = "sdl")))]
     let mut platform =
-        MiniFBPlatform::new(parameters.0, parameters.1, parameters.2);
+        FramebufferPlatform::new(parameters.0, parameters.1, parameters.2);
 
-    #[cfg(all(not(feature = "minifb"), not(feature = "sdl")))]
+    #[cfg(all(not(feature = "framebuffer"), not(feature = "sdl")))]
     let mut platform =
         DummyPlatform::new(parameters.0, parameters.1, parameters.2);
     

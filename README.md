@@ -1,7 +1,5 @@
 <!-- README.md --- 
 ;; 
-<!-- README.md --- 
-;; 
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Thu Dec 21 20:26:39 2017 (+0100)
@@ -9,16 +7,18 @@
 ;;           By: Louise <louise>
  -->
 
+# rGBA
+
 This is a WIP emulator in Rust. It currently supports the Gameboy, but I will be adding more core,
 such as a GBA core, and, I hope, a NDS core.
 
-# Building and running
+## Building and running
 
-## Building
+### Building
 
 To build, use `cargo build --release --features <the-frontend>`. The binary will be in `target/release/rgba`.
 
-## Bootrom
+### Bootrom
 
 To run, the emulator needs a bootrom/BIOS of the console it's emulating. The SHA-256 sums of the ones
 I'm using are :
@@ -29,7 +29,7 @@ I'm using are :
 |Gameboy Color|b4f2e416a35eef52cba161b159c7c8523a92594facb924b3ede0d722867c50c7|
 |GBA|fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570|
 
-## Controls
+### Controls
 
 Currently, the controls are (for the GB, on a QWERTY keyboard) :
 
@@ -39,7 +39,7 @@ Currently, the controls are (for the GB, on a QWERTY keyboard) :
  - Return for Start
  - The direction keys for, well, the direction keys
  
-# Front-ends
+## Front-ends
 
 Currently, there are three front-ends. To build with a front-end, you have to add `--feature <the-frontend>`
 to the `cargo` command. You can only build the binary with one front-end.
@@ -52,13 +52,13 @@ The current front-ends are :
 |sdl  | SDL2       | The recommanded front-end and only fully-functionning one|
 |framebuffer| [minifb](https://github.com/emoon/rust_minifb) | Only supports output, no input. |
  
-# Emulation cores
+## Emulation cores
 
-## Gameboy
+### Gameboy
 
 The gb core is the first core to have been written. It's still being written.
 
-### Supported features
+#### Supported features
 
  - Gameboy CPU
  - DMG video
@@ -66,33 +66,33 @@ The gb core is the first core to have been written. It's still being written.
  - No MBC, MBC1 and MBC3 (without RTC)
  - Basic debugger (stepping, watchpoints)
  
-### Planned features
+#### Planned features
 
  - Sound
  - GBC support
  - RTC support for MBC3
  - Watchpoints
  
-## GBA
+### GBA
 
 The gba core should be the next core to be written. It's not begun yet.
  
-# Helpful ressources
+## Helpful ressources
 
-## Gameboy
+### Gameboy
 
  - http://problemkaputt.de/pandocs.htm
  - http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
  
-## GBA/NDS
+### GBA/NDS
 
  - http://problemkaputt.de/gbatek.htm
  
-## Rust
+### Rust
 
  - https://doc.rust-lang.org/book/second-edition/
  - https://doc.rust-lang.org/std/
  
-# Licence
+## Licence
 
 This code is licensed under the MIT license.

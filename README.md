@@ -5,7 +5,7 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Thu Dec 21 20:26:39 2017 (+0100)
-;; Last-Updated: Thu Dec 21 22:22:48 2017 (+0100)
+;; Last-Updated: Fri Dec 22 04:04:52 2017 (+0100)
 ;;           By: Louise <louise>
  -->
 
@@ -63,14 +63,14 @@ The gb core is the first core to have been written. It's still being written.
  - Gameboy CPU
  - DMG video
  - Timer, DMA, Input
- - No MBC and MBC1
+ - No MBC, MBC1 and MBC3 (without RTC)
  - Basic debugger (stepping, watchpoints)
  
 ### Planned features
 
- - GBC support
  - Sound
- - MBC3
+ - GBC support
+ - RTC support for MBC3
  - Watchpoints
  
 ## GBA

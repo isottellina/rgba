@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Mon Dec 18 18:05:41 2017 (+0100)
+// Last-Updated: Thu Dec 21 22:56:20 2017 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -22,6 +22,16 @@ pub enum Cartridge {
         mode: bool,
         ram_enable: bool,
 
+        rom_bank: u8,
+        ram_bank: u8,
+
+        save_filename: String,
+    },
+    MBC3 {
+        rom: Vec<u8>,
+        ram: [u8; 0x6000],
+
+        ram_enable: bool,
         rom_bank: u8,
         ram_bank: u8,
 
@@ -58,6 +68,29 @@ impl Cartridge {
                     save_filename,
                 }
             },
+
+            0x0F...0x13 => {
+                let save_filename = format!("{}.sav", filename);
+                let mut ram: [u8; 0x6000] = [0; 0x6000];
+
+                if let Ok(mut file) = File::open(&save_filename) {
+                    if let Err(e) = file.read_exact(&mut ram) {
+                        warn!("Couldn't read savefile : {}", e);
+                    } else {
+                        info!("Savefile loaded!");
+                    }
+                }
+                
+                Cartridge::MBC3 {
+                    rom,
+                    ram,
+                    ram_enable: false,
+                    
+                    rom_bank: 1,
+                    ram_bank: 0,
+                    save_filename,
+                }
+            },
             
             mbc => unimplemented!("MBC type {:02x} has not been \
                                    implemented.", mbc),
@@ -68,7 +101,8 @@ impl Cartridge {
         match *self {
             Cartridge::NoCartridge => 0xFF,
             Cartridge::RomOnly(ref v) => v[address],
-            Cartridge::MBC1 { rom: ref v, rom_bank: b, .. } => {
+            Cartridge::MBC1 { rom: ref v, rom_bank: b, .. } |
+            Cartridge::MBC3 { rom: ref v, rom_bank: b, .. } => {
                 match address {
                     0x0000...0x3FFF => v[address],
                     0x4000...0x7FFF =>
@@ -121,6 +155,45 @@ impl Cartridge {
                     _ => unreachable!(),
                 }
             }
+            &mut Cartridge::MBC3 {
+                ref mut rom_bank,
+                ref mut ram_bank,
+                ref mut ram_enable,
+                ref ram,
+                ref save_filename, ..
+            } => {
+                match address {
+                    0x0000...0x1FFF => {
+                        *ram_enable = (value & 0xF) == 0xA;
+
+                        if !*ram_enable {
+                            if let Ok(mut file) = File::open(save_filename) {
+                                if let Err(e) = file.write(ram) {
+                                    warn!("Couldn't save to savefile : {}", e);
+                                }
+                            } else {
+                                warn!("Couldn't open savefile");
+                            }
+                        }
+                    },
+                    0x2000...0x3FFF => {
+                        *rom_bank = if value == 0 {
+                            1
+                        } else {
+                            value & 0x7f
+                        };
+                    }
+                    0x4000...0x5FFF => {
+                        if value < 4 {
+                            *ram_bank = value;
+                        } else {
+                            warn!("RTC isn't implemented");
+                        }
+                    }
+                    0x6000...0x7FFF => warn!("RTC isn't implemented"),
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 
@@ -128,7 +201,8 @@ impl Cartridge {
         match self {
             &Cartridge::NoCartridge => 0xFF,
             &Cartridge::RomOnly(_) => 0xFF,
-            &Cartridge::MBC1 { ref ram, ram_bank, .. } =>
+            &Cartridge::MBC1 { ref ram, ram_bank, .. } |
+            &Cartridge::MBC3 { ref ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)]
         }
     }
@@ -137,7 +211,8 @@ impl Cartridge {
         match self {
             &mut Cartridge::NoCartridge => { },
             &mut Cartridge::RomOnly(_) => { },
-            &mut Cartridge::MBC1 { ref mut ram, ram_bank, .. } =>
+            &mut Cartridge::MBC1 { ref mut ram, ram_bank, .. } |
+            &mut Cartridge::MBC3 { ref mut ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)] = value,
         }
     }

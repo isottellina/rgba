@@ -3,7 +3,7 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Thu Dec 21 13:02:40 2017 (+0100)
+// Last-Updated: Fri Dec 22 03:58:41 2017 (+0100)
 //           By: Louise <louise>
 //
 use common;
@@ -16,23 +16,29 @@ use sdl2::event::Event;
 use sdl2::surface::Surface;
 use sdl2::keyboard::Scancode;
 use sdl2::video::Window;
+use sdl2::audio::{AudioSpecDesired, AudioQueue};
 
-pub struct SDLPlatform<'a> {
+pub struct SDLPlatform {
     height: u32,
     width: u32,
     scale: u32,
 
     window: Window,
-    surface: Surface<'a>,
+    video_data: Box<[u8]>,
+
+    queue: AudioQueue<i16>,
+    
     event_pump: EventPump,
 }
 
-impl<'a> Platform for SDLPlatform<'a> {
-    fn new(width: u32, height: u32, scale: u32) -> SDLPlatform<'a> {
+impl Platform for SDLPlatform {
+    fn new(width: u32, height: u32, scale: u32) -> SDLPlatform {
         let context = sdl2::init().unwrap();
         let video_sub = context.video().unwrap();
-        let surface = Surface::new(width, height, PixelFormatEnum::RGB888)
-            .unwrap();
+        let audio_sub = context.audio().unwrap();
+        
+        let video_data = vec![0; ((width * height) << 2) as usize]
+            .into_boxed_slice();
         
         let window = video_sub.window("rGBA", width * scale, height * scale)
             .position_centered()
@@ -40,6 +46,14 @@ impl<'a> Platform for SDLPlatform<'a> {
             .unwrap();
 
         let event_pump = context.event_pump().unwrap();
+
+        let queue = audio_sub.open_queue(None,
+                                         &AudioSpecDesired {
+                                             freq: Some(48_000),
+                                             channels: Some(2),
+                                             samples: Some(4)
+                                         }
+        ).unwrap();
         
         SDLPlatform {
             width,
@@ -47,37 +61,41 @@ impl<'a> Platform for SDLPlatform<'a> {
             scale,
 
             window,
-            surface,
+            video_data,
+            queue,
             event_pump,
         }
     }
 
     fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         let width = self.width;
+        let i = ((y * width + x) << 2) as usize;
         
-        self.surface.with_lock_mut(
-            move |array| {
-                let i = ((y * width + x) << 2) as usize;
-                
-                array[i + 2] = color.0;
-                array[i + 1] = color.1;
-                array[i] = color.2;
-            }
-        );
+        self.video_data[i + 2] = color.0;
+        self.video_data[i + 1] = color.1;
+        self.video_data[i] = color.2;
     }
 
     fn present(&mut self) {
         let rect1 = sdl2::rect::Rect::new(0, 0, self.width, self.height);
         let rect2 = sdl2::rect::Rect::new(0, 0,
-                                     self.width * self.scale,
-                                     self.height * self.scale);
+                                          self.width * self.scale,
+                                          self.height * self.scale);
         
-        if let Ok(mut surface) = self.window.surface(&self.event_pump) {
-            if let Err(e) = self.surface.blit_scaled(rect1,&mut surface,rect2) {
+        if let Ok(mut window_surface) = self.window.surface(&self.event_pump) {
+            let surface = Surface::from_data(&mut self.video_data,
+                                             self.width, self.height,
+                                             self.width * 4,
+                                             PixelFormatEnum::RGB888)
+                .unwrap();
+            
+            if let Err(e) = surface.blit_scaled(rect1,
+                                                &mut window_surface,
+                                                rect2) {
                 error!("{}", e);
             }
             
-            if let Err(e) = surface.update_window() {
+            if let Err(e) = window_surface.update_window() {
                 error!("{}", e);
             }
         }

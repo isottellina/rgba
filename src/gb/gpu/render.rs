@@ -3,7 +3,7 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Mon Dec 18 16:53:01 2017 (+0100)
+// Last-Updated: Fri Dec 22 01:11:39 2017 (+0100)
 //           By: Louise <louise>
 //
 use common::Platform;
@@ -20,18 +20,18 @@ impl GPU {
                 } else if self.bg_enable {
                     self.get_background(x, y)
                 } else {
-                    Color::White
+                    0
                 };
 
                 let real_color =
                     if self.obj_enable {
-                        if let Some(spr_color) = self.get_sprite(x, y) {
+                        if let Some(spr_color) = self.get_sprite(x, y, bg_color) {
                             spr_color.as_real()
                         } else {
-                            bg_color.as_real()
+                            self.bgp[bg_color as usize].as_real()
                         }
                     } else {
-                        bg_color.as_real()
+                        self.bgp[bg_color as usize].as_real()
                     };
                 
                 platform.set_pixel(x as u32, y as u32, real_color);
@@ -69,7 +69,7 @@ impl GPU {
         ((data1 >> (7 - x)) & 1) | (((data2 >> (7 - x)) & 1) << 1)
     }
 
-    fn get_window(&self, x: u8, y: u8) -> Color {
+    fn get_window(&self, x: u8, y: u8) -> u8 {
         let actual_x = x.wrapping_sub(self.wx).wrapping_add(7) as u16;
         let actual_y = y.wrapping_sub(self.wy) as u16;
         
@@ -84,12 +84,10 @@ impl GPU {
         let tile_x = actual_x as u8 & 0x7;
         let tile_y = actual_y as u8 & 0x7;
         
-        let c = self.tile_get_color(self.tile_data, tile, tile_x, tile_y);
-        
-        self.bgp[c as usize]
+        self.tile_get_color(self.tile_data, tile, tile_x, tile_y)
     }
     
-    fn get_background(&self, x: u8, y: u8) -> Color {
+    fn get_background(&self, x: u8, y: u8) -> u8 {
         let actual_x = self.scx.wrapping_add(x) as u16;
         let actual_y = self.scy.wrapping_add(y) as u16;
         
@@ -104,12 +102,10 @@ impl GPU {
         let tile_x = actual_x as u8 & 0x7;
         let tile_y = actual_y as u8 & 0x7;
         
-        let c = self.tile_get_color(self.tile_data, tile, tile_x, tile_y);
-
-        self.bgp[c as usize]
+        self.tile_get_color(self.tile_data, tile, tile_x, tile_y)
     }
 
-    fn get_sprite(&self, x: u8, y: u8) -> Option<Color> {
+    fn get_sprite(&self, x: u8, y: u8, bg_color: u8) -> Option<Color> {
         let sprites = self.line_cache[y as usize];
 
         for opt_sprite in sprites.iter() {
@@ -120,6 +116,10 @@ impl GPU {
                 let sprite_y = sprite.y.wrapping_sub(16);
                 
                 if (x >= sprite_x) && (x < (sprite_x + 8)) {
+                    if sprite.priority && (bg_color != 0) {
+                        continue;
+                    }
+                    
                     let tile = if self.obj_size {
                         sprite.tile & 0xfe
                     } else {

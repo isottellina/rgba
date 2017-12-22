@@ -3,10 +3,11 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Tue Dec 19 19:51:23 2017 (+0100)
+// Last-Updated: Fri Dec 22 01:05:43 2017 (+0100)
 //           By: Louise <louise>
 //
 use common;
+use std::cmp::Ordering;
 
 mod render;
 mod oam;
@@ -305,7 +306,7 @@ impl GPU {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq)]
 struct Sprite {
     x: u8,
     y: u8,
@@ -365,6 +366,24 @@ impl Sprite {
             },
             _ => unreachable!(),
         }
+    }
+}
+
+impl Ord for Sprite {
+    fn cmp(&self, other: &Sprite) -> Ordering {
+        self.x.cmp(&other.x)
+    }
+}
+
+impl PartialOrd for Sprite {
+    fn partial_cmp(&self, other: &Sprite) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl PartialEq for Sprite {
+    fn eq(&self, other: &Sprite) -> bool {
+        self.x == other.x
     }
 }
 

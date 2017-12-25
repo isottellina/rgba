@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Sun Dec 24 16:50:16 2017 (+0100)
+// Last-Updated: Mon Dec 25 02:21:53 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -41,6 +41,7 @@ pub struct SquareChannel {
     envelope_running: bool,
     envelope_direction: bool,
     envelope_sweep: u8,
+    envelope_counter: u8,
 
     // Other
     
@@ -65,7 +66,7 @@ impl SquareChannel {
 
     pub fn set_nr1(&mut self, value: u8) {
         self.duty = (value & 0xc0) >> 6;
-        self.length_counter = value & 0x3F;
+        self.length_counter = 64 - (value & 0x3F);
     }
 
     pub fn nr2(&self) -> u8 {
@@ -107,7 +108,9 @@ impl SquareChannel {
 
             self.timer = (2048 - self.frequency as i32) << 2;
             self.initial_volume = self.last_volume;
-            
+
+            self.envelope_running = true;
+            self.envelope_counter = self.envelope_sweep;
         }
     }
 
@@ -116,8 +119,21 @@ impl SquareChannel {
     }
 
     pub fn envelope_click(&mut self) {
-        if self.envelope_sweep != 0 {
-            println!("New volume");
+        if self.envelope_running && self.envelope_counter != 0 {
+            self.envelope_counter -= 1;
+            if self.envelope_counter == 0 {
+                println!("New volume : {}", self.initial_volume);
+                
+                if self.envelope_direction {
+                    self.initial_volume += 1;
+                } else {
+                    self.initial_volume -= 1;
+                }
+
+                if (self.initial_volume == 0) || (self.initial_volume == 15) {
+                    self.envelope_running = false;
+                }
+            }
         }
     }
     

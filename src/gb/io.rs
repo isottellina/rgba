@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Wed Dec 20 00:40:28 2017 (+0100)
+// Last-Updated: Sat Dec 23 20:11:34 2017 (+0100)
 //           By: Louise <louise>
 // 
 use common::Platform;
@@ -217,17 +217,17 @@ impl Interconnect {
             NR10 => self.apu.nr10(),
             NR11 => self.apu.nr11(),
             NR12 => self.apu.nr12(),
-            NR13 => self.apu.nr13(),
             NR14 => self.apu.nr14(),
+            
             NR21 => self.apu.nr21(),
             NR22 => self.apu.nr22(),
-            NR23 => self.apu.nr23(),
             NR24 => self.apu.nr24(),
+            
             NR30 => self.apu.nr30(),
             NR31 => self.apu.nr31(),
             NR32 => self.apu.nr32(),
-            NR33 => self.apu.nr33(),
             NR34 => self.apu.nr34(),
+            
             NR41 => self.apu.nr41(),
             NR42 => self.apu.nr42(),
             NR43 => self.apu.nr43(),
@@ -404,6 +404,7 @@ impl Interconnect {
             }
             
             self.timer.handle();
+            self.apu.step();
 
             cycles -= 1;
         }
@@ -415,5 +416,6 @@ impl Interconnect {
     
     pub fn render<T: Platform>(&mut self, platform: &mut T) {
         self.gpu.render(platform);
+        self.apu.render(platform);
     }
 }

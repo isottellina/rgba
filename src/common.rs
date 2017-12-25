@@ -3,7 +3,7 @@
 // Filename: core.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:34:12 2017 (+0100)
-// Last-Updated: Thu Dec 21 22:22:04 2017 (+0100)
+// Last-Updated: Sat Dec 23 00:24:47 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -48,9 +48,27 @@ pub trait Core {
 
 pub trait Platform {
     fn new(u32, u32, u32) -> Self;
-    fn set_pixel(&mut self, u32, u32, Color);
-    fn present(&mut self);
 
-    fn set_title(&mut self, String);
-    fn poll_event(&mut self) -> Option<Event>;
+    // Video functions
+    fn set_pixel(&mut self, _: u32, _: u32, _: Color) {
+
+    }
+    
+    fn present(&mut self) {
+
+    }
+
+    fn set_title(&mut self, _: String) {
+        
+    }
+
+    // Sound functions
+    fn queue_samples(&mut self, _: &[i16]) {
+
+    }
+    
+    // Input functions
+    fn poll_event(&mut self) -> Option<Event> {
+        None
+    }
 }

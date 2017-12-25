@@ -3,7 +3,7 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Fri Dec 22 03:58:41 2017 (+0100)
+// Last-Updated: Sun Dec 24 02:08:51 2017 (+0100)
 //           By: Louise <louise>
 //
 use common;
@@ -26,7 +26,7 @@ pub struct SDLPlatform {
     window: Window,
     video_data: Box<[u8]>,
 
-    queue: AudioQueue<i16>,
+    audio_device: AudioQueue<i16>,
     
     event_pump: EventPump,
 }
@@ -47,13 +47,15 @@ impl Platform for SDLPlatform {
 
         let event_pump = context.event_pump().unwrap();
 
-        let queue = audio_sub.open_queue(None,
+        let audio_device = audio_sub.open_queue(None,
                                          &AudioSpecDesired {
-                                             freq: Some(48_000),
-                                             channels: Some(2),
-                                             samples: Some(4)
+                                             freq: Some(48_100),
+                                             channels: Some(1),
+                                             samples: Some(1024)
                                          }
         ).unwrap();
+
+        audio_device.resume();
         
         SDLPlatform {
             width,
@@ -62,7 +64,7 @@ impl Platform for SDLPlatform {
 
             window,
             video_data,
-            queue,
+            audio_device,
             event_pump,
         }
     }
@@ -105,6 +107,10 @@ impl Platform for SDLPlatform {
         if let Err(e) = self.window.set_title(&s) {
             warn!("{}", e);
         }
+    }
+
+    fn queue_samples(&mut self, samples: &[i16]) {
+        self.audio_device.queue(samples);
     }
     
     fn poll_event(&mut self) -> Option<common::Event> {

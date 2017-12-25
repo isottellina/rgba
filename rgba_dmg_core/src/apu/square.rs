@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Mon Dec 25 02:21:53 2017 (+0100)
+// Last-Updated: Mon Dec 25 20:27:17 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -122,8 +122,6 @@ impl SquareChannel {
         if self.envelope_running && self.envelope_counter != 0 {
             self.envelope_counter -= 1;
             if self.envelope_counter == 0 {
-                println!("New volume : {}", self.initial_volume);
-                
                 if self.envelope_direction {
                     self.initial_volume += 1;
                 } else {

@@ -1,7 +1,7 @@
 [package]
 name = "rgba_dmg_core"
 version = "0.1.0"
-authors = ["Louise <julese50@gmail.com>"]
+authors = ["Louise"]
 
 [dependencies]
 rgba_common = { path = '../rgba_common' }

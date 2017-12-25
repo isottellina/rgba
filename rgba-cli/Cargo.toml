@@ -1,7 +1,7 @@
 [package]
 name = "rgba-cli"
 version = "0.1.0"
-authors = ["Louise <julese50@gmail.com>"]
+authors = ["Louise"]
 
 [features]
 sdl = ["sdl2"]

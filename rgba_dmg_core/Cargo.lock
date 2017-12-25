@@ -1,0 +1,54 @@
+[[package]]
+name = "cfg-if"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "libc"
+version = "0.2.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "log"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "readline"
+version = "0.0.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)",
+ "readline-sys 0.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "readline-sys"
+version = "0.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "rgba_common"
+version = "0.1.0"
+
+[[package]]
+name = "rgba_dmg_core"
+version = "0.1.0"
+dependencies = [
+ "log 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "readline 0.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rgba_common 0.1.0",
+]
+
+[metadata]
+"checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
+"checksum libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)" = "36fbc8a8929c632868295d0178dd8f63fc423fd7537ad0738372bd010b3ac9b0"
+"checksum log 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b3a89a0c46ba789b8a247d4c567aed4d7c68e624672d238b45cc3ec20dc9f940"
+"checksum readline 0.0.13 (registry+https://github.com/rust-lang/crates.io-index)" = "4218b9ac22bd209aec77277e713de7597237242bdc0f76c91bb67a98929c92fc"
+"checksum readline-sys 0.0.12 (registry+https://github.com/rust-lang/crates.io-index)" = "d4119c06ab954da155685b7157556e94fab679d8c8b05adc921d4ab4fb26f22a"

@@ -3,10 +3,10 @@
 // Filename: joypad.rs
 // Author: Louise <louise>
 // Created: Thu Dec 14 23:45:40 2017 (+0100)
-// Last-Updated: Sun Dec 17 16:32:37 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:22:42 2017 (+0100)
 //           By: Louise <louise>
 // 
-use common::{Event, Key};
+use rgba_common::{Event, Key};
 
 #[derive(Debug, Default)]
 pub struct Joypad {

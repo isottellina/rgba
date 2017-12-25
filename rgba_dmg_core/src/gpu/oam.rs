@@ -3,10 +3,10 @@
 // Filename: oam.rs
 // Author: Louise <louise>
 // Created: Mon Dec 18 14:45:17 2017 (+0100)
-// Last-Updated: Fri Dec 22 01:13:02 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:19:53 2017 (+0100)
 //           By: Louise <louise>
 // 
-use gb::gpu::GPU;
+use gpu::GPU;
 
 impl GPU {
     pub fn rebuild_cache(&mut self) {

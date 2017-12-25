@@ -3,13 +3,13 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Mon Dec 25 01:30:41 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:22:29 2017 (+0100)
 //           By: Louise <louise>
 // 
 mod square;
 
-use gb::apu::square::SquareChannel;
-use common::Platform;
+use apu::square::SquareChannel;
+use rgba_common::Platform;
 
 pub struct APU {
     channel1: SquareChannel,

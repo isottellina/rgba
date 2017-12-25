@@ -3,11 +3,11 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Sun Dec 24 02:08:51 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:27:36 2017 (+0100)
 //           By: Louise <louise>
 //
-use common;
-use common::{Color, Platform, Key};
+use rgba_common;
+use rgba_common::{Color, Platform, Key};
 
 use sdl2;
 use sdl2::EventPump;
@@ -113,33 +113,51 @@ impl Platform for SDLPlatform {
         self.audio_device.queue(samples);
     }
     
-    fn poll_event(&mut self) -> Option<common::Event> {
+    fn poll_event(&mut self) -> Option<rgba_common::Event> {
         match self.event_pump.poll_event() {
-            Some(Event::Quit { .. }) => Some(common::Event::Quit),
+            Some(Event::Quit { .. }) => Some(rgba_common::Event::Quit),
             Some(Event::KeyDown { scancode: Some(scan), .. }) =>
                 match scan {
-                    Scancode::F11 => Some(common::Event::Debug),
-                    Scancode::F12 => Some(common::Event::Reset),
-                    Scancode::Q => Some(common::Event::KeyDown(Key::A)),
-                    Scancode::W => Some(common::Event::KeyDown(Key::B)),
-                    Scancode::Return =>Some(common::Event::KeyDown(Key::Start)),
-                    Scancode::Space =>Some(common::Event::KeyDown(Key::Select)),
-                    Scancode::Up => Some(common::Event::KeyDown(Key::Up)),
-                    Scancode::Down => Some(common::Event::KeyDown(Key::Down)),
-                    Scancode::Right => Some(common::Event::KeyDown(Key::Right)),
-                    Scancode::Left => Some(common::Event::KeyDown(Key::Left)),
+                    Scancode::F11 =>
+                        Some(rgba_common::Event::Debug),
+                    Scancode::F12 =>
+                        Some(rgba_common::Event::Reset),
+                    Scancode::Q =>
+                        Some(rgba_common::Event::KeyDown(Key::A)),
+                    Scancode::W =>
+                        Some(rgba_common::Event::KeyDown(Key::B)),
+                    Scancode::Return =>
+                        Some(rgba_common::Event::KeyDown(Key::Start)),
+                    Scancode::Space =>
+                        Some(rgba_common::Event::KeyDown(Key::Select)),
+                    Scancode::Up =>
+                        Some(rgba_common::Event::KeyDown(Key::Up)),
+                    Scancode::Down =>
+                        Some(rgba_common::Event::KeyDown(Key::Down)),
+                    Scancode::Right =>
+                        Some(rgba_common::Event::KeyDown(Key::Right)),
+                    Scancode::Left =>
+                        Some(rgba_common::Event::KeyDown(Key::Left)),
                     _ => None
                 },
             Some(Event::KeyUp { scancode: Some(scan), .. }) =>
                 match scan {
-                    Scancode::Q => Some(common::Event::KeyUp(Key::A)),
-                    Scancode::W => Some(common::Event::KeyUp(Key::B)),
-                    Scancode::Return => Some(common::Event::KeyUp(Key::Start)),
-                    Scancode::Space => Some(common::Event::KeyUp(Key::Select)),
-                    Scancode::Up => Some(common::Event::KeyUp(Key::Up)),
-                    Scancode::Down => Some(common::Event::KeyUp(Key::Down)),
-                    Scancode::Right => Some(common::Event::KeyUp(Key::Right)),
-                    Scancode::Left => Some(common::Event::KeyUp(Key::Left)),
+                    Scancode::Q =>
+                        Some(rgba_common::Event::KeyUp(Key::A)),
+                    Scancode::W =>
+                        Some(rgba_common::Event::KeyUp(Key::B)),
+                    Scancode::Return =>
+                        Some(rgba_common::Event::KeyUp(Key::Start)),
+                    Scancode::Space =>
+                        Some(rgba_common::Event::KeyUp(Key::Select)),
+                    Scancode::Up =>
+                        Some(rgba_common::Event::KeyUp(Key::Up)),
+                    Scancode::Down =>
+                        Some(rgba_common::Event::KeyUp(Key::Down)),
+                    Scancode::Right =>
+                        Some(rgba_common::Event::KeyUp(Key::Right)),
+                    Scancode::Left =>
+                        Some(rgba_common::Event::KeyUp(Key::Left)),
                     _ => None,
                 },
             _ => None

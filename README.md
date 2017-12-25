@@ -3,7 +3,7 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Thu Dec 21 20:26:39 2017 (+0100)
-;; Last-Updated: Fri Dec 22 04:04:52 2017 (+0100)
+;; Last-Updated: Mon Dec 25 20:26:23 2017 (+0100)
 ;;           By: Louise <louise>
  -->
 
@@ -16,7 +16,8 @@ such as a GBA core, and, I hope, a NDS core.
 
 ### Building
 
-To build, use `cargo build --release --features <the-frontend>`. The binary will be in `target/release/rgba`.
+To build, use `cargo build --release --features <the-frontend>` in the rgba-cli folder.
+The binary will be in `rgba-cli/target/release/rgba`.
 
 ### Bootrom
 

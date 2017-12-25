@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Thu Dec 21 22:56:20 2017 (+0100)
+// Last-Updated: Sat Dec 23 20:48:13 2017 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -130,9 +130,12 @@ impl Cartridge {
                         *ram_enable = (value & 0xF) == 0xA;
 
                         if !*ram_enable {
-                            if let Ok(mut file) = File::open(save_filename) {
+                            if let Ok(mut file) = File::create(save_filename) {
                                 if let Err(e) = file.write(ram) {
-                                    warn!("Couldn't save to savefile : {}", e);
+                                    warn!("Couldn't save to savefile {}: {}",
+                                          save_filename,
+                                          e
+                                    );
                                 }
                             } else {
                                 warn!("Couldn't open savefile");

@@ -3,10 +3,10 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Wed Dec 13 17:39:26 2017 (+0100)
-// Last-Updated: Tue Dec 19 21:43:04 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:18:12 2017 (+0100)
 //           By: Louise <louise>
 // 
-use gb::io::Interconnect;
+use io::Interconnect;
 
 static CONDITIONS: [&str; 4] = ["NZ", "Z", "NC", "C"];
 static ALU: [&str; 8] = ["ADD A,", "ADC A,", "SUB", "SBC",

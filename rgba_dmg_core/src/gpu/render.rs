@@ -3,13 +3,13 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Fri Dec 22 01:11:39 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:22:16 2017 (+0100)
 //           By: Louise <louise>
 //
-use common::Platform;
-use gb::gpu::Color;
+use rgba_common::Platform;
+use gpu::Color;
 
-use gb::gpu::GPU;
+use gpu::GPU;
 
 impl GPU {   
     pub fn render<T: Platform>(&mut self, platform: &mut T) {

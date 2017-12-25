@@ -3,7 +3,7 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Tue Dec 19 21:29:40 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:18:03 2017 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -11,8 +11,8 @@ mod disasm;
 use std::collections::{BTreeSet, VecDeque};
 use readline::{readline, add_history};
 
-use gb::Gameboy;
-use gb::debug::disasm::disasm;
+use ::Gameboy;
+use debug::disasm::disasm;
 
 pub struct Debugger {
     breakpoints: BTreeSet<usize>,

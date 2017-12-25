@@ -3,19 +3,19 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sat Dec 23 20:11:34 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:18:34 2017 (+0100)
 //           By: Louise <louise>
 // 
-use common::Platform;
-use common::Event;
+use rgba_common::Platform;
+use rgba_common::Event;
 use std::fs::File;
 use std::io::Read;
 
-use gb::cart::Cartridge;
-use gb::gpu::GPU;
-use gb::apu::APU;
-use gb::timer::Timer;
-use gb::joypad::Joypad;
+use cart::Cartridge;
+use gpu::GPU;
+use apu::APU;
+use timer::Timer;
+use joypad::Joypad;
 
 const JOYP: usize = 0xFF00;
 

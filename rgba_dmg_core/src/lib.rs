@@ -3,9 +3,13 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Wed Dec 20 00:43:55 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:21:29 2017 (+0100)
 //           By: Louise <louise>
 //
+#[macro_use] extern crate log;
+extern crate readline;
+extern crate rgba_common;
+
 mod cpu;
 mod gpu;
 mod apu;
@@ -15,12 +19,12 @@ mod io;
 mod cart;
 mod debug;
 
-use common::Core;
-use common::Platform;
-use common::Event;
-use gb::cpu::LR35902;
-use gb::io::Interconnect;
-use gb::debug::Debugger;
+use rgba_common::Core;
+use rgba_common::Platform;
+use rgba_common::Event;
+use cpu::LR35902;
+use io::Interconnect;
+use debug::Debugger;
 
 use std::thread;
 use std::fs::File;

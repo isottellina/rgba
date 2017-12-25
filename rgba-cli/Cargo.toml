@@ -1,0 +1,18 @@
+[package]
+name = "rgba-cli"
+version = "0.1.0"
+authors = ["Louise <julese50@gmail.com>"]
+
+[features]
+sdl = ["sdl2"]
+framebuffer = ["minifb"]
+
+[dependencies]
+rgba_common = { path = '../rgba_common' }
+rgba_dmg_core = { path = '../rgba_dmg_core' }
+
+log = "~0.4.0-rc.1"
+env_logger = "~0.5.0-rc.1"
+clap = "*"
+minifb = { version = "0.10.3", optional = true }
+sdl2 = { version = "~0.31.0", optional = true }

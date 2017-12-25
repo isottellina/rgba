@@ -3,13 +3,13 @@
 // Filename: minifb.rs
 // Author: Louise <louise>
 // Created: Tue Dec 19 23:31:25 2017 (+0100)
-// Last-Updated: Thu Dec 21 22:20:02 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:25:54 2017 (+0100)
 //           By: Louise <louise>
 //
 use minifb::{Window, WindowOptions, Scale};
-use common::Platform;
-use common::Color;
-use common;
+use rgba_common::Platform;
+use rgba_common::Color;
+use rgba_common;
 
 pub struct FramebufferPlatform {
     buffer: Box<[u32]>,
@@ -39,7 +39,8 @@ impl Platform for FramebufferPlatform {
     }
 
     fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
-        let color_rgba = color.as_rgba();
+        let color_rgba = ((color.0 as u32) << 16) | ((color.1 as u32) << 8) |
+                                                     (color.2 as u32);
 
         self.buffer[(y * self.width + x) as usize] = color_rgba;
     }
@@ -52,7 +53,7 @@ impl Platform for FramebufferPlatform {
         }
     }
 
-    fn poll_event(&mut self) -> Option<common::Event> {
+    fn poll_event(&mut self) -> Option<rgba_common::Event> {
         None
     }
     

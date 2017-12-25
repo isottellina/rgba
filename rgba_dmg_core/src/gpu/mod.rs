@@ -3,10 +3,10 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Fri Dec 22 01:05:43 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:22:06 2017 (+0100)
 //           By: Louise <louise>
 //
-use common;
+use rgba_common;
 use std::cmp::Ordering;
 
 mod render;
@@ -404,12 +404,12 @@ enum Color {
 }
 
 impl Color {
-    fn as_real(self) -> common::Color {
+    fn as_real(self) -> rgba_common::Color {
         match self {
-            Color::White => common::Color(224, 248, 208),
-            Color::LightGray => common::Color(136, 192, 112),
-            Color::DarkGray => common::Color(52, 104, 86),
-            Color::Black => common::Color(8, 24, 32),
+            Color::White => rgba_common::Color(224, 248, 208),
+            Color::LightGray => rgba_common::Color(136, 192, 112),
+            Color::DarkGray => rgba_common::Color(52, 104, 86),
+            Color::Black => rgba_common::Color(8, 24, 32),
         }
     }
 }

@@ -3,28 +3,29 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Thu Dec 21 22:21:42 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:24:04 2017 (+0100)
 //           By: Louise <louise>
 //
+extern crate rgba_common;
+extern crate rgba_dmg_core;
+
 #[cfg(feature = "minifb")] extern crate minifb;
 #[cfg(feature = "sdl")] extern crate sdl2;
 
 extern crate clap;
 #[macro_use] extern crate log;
-extern crate readline;
 extern crate env_logger;
 
-mod common;
 mod platform;
-mod gb;
 
 use clap::{App, Arg};
-use common::{Core, Console, Platform};
 #[cfg(feature = "minifb")] use platform::framebuffer::FramebufferPlatform;
 #[cfg(feature = "sdl")] use platform::sdl::SDLPlatform;
 #[cfg(not(any(feature = "sdl", feature = "framebuffer")))]
 use platform::dummy::DummyPlatform;
-use gb::Gameboy;
+
+use rgba_common::{Core, Console, Platform};
+use rgba_dmg_core::Gameboy;
 
 fn main() {
     env_logger::init();

@@ -3,10 +3,10 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Tue Dec 19 19:33:44 2017 (+0100)
+// Last-Updated: Mon Dec 25 19:20:09 2017 (+0100)
 //           By: Louise <louise>
 // 
-use gb::Interconnect;
+use ::Interconnect;
 use std::fmt;
 
 #[derive(Debug)]

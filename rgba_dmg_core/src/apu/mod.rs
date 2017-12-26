@@ -3,7 +3,7 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Mon Dec 25 22:47:52 2017 (+0100)
+// Last-Updated: Tue Dec 26 19:56:47 2017 (+0100)
 //           By: Louise <louise>
 // 
 mod square;
@@ -35,7 +35,7 @@ pub struct APU {
     frame_cycles: u32,
     frame_sequencer: u8,
 
-    samples: [i16; 4096],
+    samples: [i16; 8192],
     samples_index: usize,
     buffer_complete: bool,
     
@@ -45,8 +45,8 @@ pub struct APU {
 impl APU {
     pub fn new() -> APU {
         APU {
-            channel1: Default::default(),
-            channel2: Default::default(),
+            channel1: SquareChannel::new(),
+            channel2: SquareChannel::new(),
             
             nr30: 0,
             nr31: 0,
@@ -68,7 +68,7 @@ impl APU {
             frame_cycles: 8192,
             frame_sequencer: 0,
 
-            samples: [0; 4096],
+            samples: [0; 8192],
             samples_index: 0,
             buffer_complete: false,
 
@@ -194,7 +194,7 @@ impl APU {
             let sample = (self.channel1.render() as u16) << 8;
             
             self.samples[self.samples_index] = sample as i16;
-            self.samples_index = (self.samples_index + 1) & 0xfff;
+            self.samples_index = (self.samples_index + 1) & 0x1fff;
 
             if self.samples_index == 0 {
                 self.samples_index = 0;

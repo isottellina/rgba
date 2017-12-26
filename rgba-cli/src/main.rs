@@ -3,7 +3,7 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Tue Dec 26 11:50:52 2017 (+0100)
+// Last-Updated: Tue Dec 26 18:24:59 2017 (+0100)
 //           By: Louise <louise>
 //
 extern crate rgba_common;
@@ -24,7 +24,7 @@ use clap::{App, Arg};
 #[cfg(not(any(feature = "sdl", feature = "framebuffer")))]
 use platform::dummy::DummyPlatform;
 
-use rgba_common::{Core, Console, Platform};
+use rgba_common::Platform;
 use rgba_builder::ConsoleBuilder;
 
 fn main() {
@@ -72,7 +72,7 @@ fn main() {
         let mut platform =
             DummyPlatform::new(parameters.0, parameters.1, parameters.2);
         
-        console.run(&mut platform, debug);
+        let _ = console.run(&mut platform, debug).unwrap();
     } else {
         panic!("Couldn't build Console");
     }

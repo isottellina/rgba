@@ -1,5 +1,5 @@
 [package]
-name = "rgba-cli"
+name = "rgba-sdl"
 version = "0.1.0"
 authors = ["Louise"]
 

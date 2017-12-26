@@ -3,11 +3,13 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Mon Dec 25 23:59:44 2017 (+0100)
+// Last-Updated: Tue Dec 26 16:32:35 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
 use rgba_common::Event;
+
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
 
@@ -93,6 +95,11 @@ pub struct Interconnect {
     dma_dest: usize,
     dma_ongoing: bool,
 
+    // Watchpoints
+    watchpoints_enabled: bool,
+    watchpoints: HashSet<usize>,
+    watchpoint_hit: Option<(usize, u8)>,
+    
     // Other
     bios_inplace: bool,
 }
@@ -120,6 +127,10 @@ impl Interconnect {
             dma_dest: 0,
             dma_ongoing: false,
 
+            watchpoints_enabled: false,
+            watchpoints: HashSet::new(),
+            watchpoint_hit: None,
+            
             bios_inplace: false
         }
     }
@@ -250,6 +261,12 @@ impl Interconnect {
     }
     
     pub fn write_u8(&mut self, address: usize, value: u8) {
+        if self.watchpoints_enabled {
+            if self.watchpoints.contains(&address) {
+                self.watchpoint_hit = Some((address, value));
+            }
+        }
+        
         match address {
             0x0000...0x7FFF => self.cart.write_rom(address, value),
             0x8000...0x9FFF => self.gpu.write_vram_u8(address, value),
@@ -393,6 +410,25 @@ impl Interconnect {
     #[inline(always)]
     pub fn ack_frame(&mut self) { self.gpu.ack_frame() }
 
+    // Watchpoints
+    #[inline]
+    pub fn watchpoint_hit(&self) -> Option<(usize, u8)> { self.watchpoint_hit }
+    #[inline]
+    pub fn set_watchpoint(&mut self, address: usize) {
+        self.watchpoints_enabled = true;
+        self.watchpoints.insert(address);
+    }
+    #[inline]
+    pub fn rem_watchpoint(&mut self, address: usize) -> bool {
+        let r = self.watchpoints.remove(&address);
+        self.watchpoints_enabled = !self.watchpoints.is_empty();
+
+        r
+    }
+    #[inline]
+    pub fn ack_watchpoint(&mut self) { self.watchpoint_hit = None }
+
+    
     pub fn delay(&mut self, m_cycles: u32) {
         let mut cycles = m_cycles << 2;
 

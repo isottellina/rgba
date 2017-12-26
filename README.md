@@ -3,18 +3,18 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Thu Dec 21 20:26:39 2017 (+0100)
-;; Last-Updated: Tue Dec 26 11:57:59 2017 (+0100)
+;; Last-Updated: Wed Dec 27 00:49:56 2017 (+0100)
 ;;           By: Louise <louise>
  -->
 
 # rGBA
 
-This is a WIP emulator in Rust. It currently supports the Gameboy, but I will be adding more core,
+This is a WIP emulator in Rust. It currently supports the Gameboy, but I will be adding more cores,
 such as a GBA core, and, I hope, a NDS core.
 
 ## Building and running
 
-Currently, the binary used to launch rGBA cores is the rGBA-cli crate.
+Currently, the binary used to launch rGBA cores is the rGBA-sdl crate.
 
 ### Bootrom
 
@@ -42,6 +42,7 @@ I'm using are :
 
  - https://doc.rust-lang.org/book/second-edition/
  - https://doc.rust-lang.org/std/
+ - https://crates.io
  
 ## Licence
 

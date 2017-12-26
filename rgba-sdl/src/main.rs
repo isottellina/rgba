@@ -3,26 +3,23 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Tue Dec 26 18:24:59 2017 (+0100)
+// Last-Updated: Wed Dec 27 00:46:22 2017 (+0100)
 //           By: Louise <louise>
 //
 extern crate rgba_common;
 extern crate rgba_builder;
 
-#[cfg(feature = "minifb")] extern crate minifb;
-#[cfg(feature = "sdl")] extern crate sdl2;
-
 extern crate clap;
 #[macro_use] extern crate log;
 extern crate env_logger;
 
-mod platform;
+extern crate sdl2;
+
+mod sdl;
 
 use clap::{App, Arg};
-#[cfg(feature = "minifb")] use platform::framebuffer::FramebufferPlatform;
-#[cfg(feature = "sdl")] use platform::sdl::SDLPlatform;
-#[cfg(not(any(feature = "sdl", feature = "framebuffer")))]
-use platform::dummy::DummyPlatform;
+
+use sdl::SDLPlatform;
 
 use rgba_common::Platform;
 use rgba_builder::ConsoleBuilder;
@@ -58,19 +55,9 @@ fn main() {
         .build();
 
     if console.is_determined() {
-        let parameters = console.get_platform_parameters().unwrap();
-        
-        #[cfg(all(feature = "sdl", not(feature = "framebuffer")))]
-        let mut platform =
-            SDLPlatform::new(parameters.0, parameters.1, parameters.2);
-        
-        #[cfg(all(feature = "framebuffer", not(feature = "sdl")))]
-        let mut platform =
-            FramebufferPlatform::new(parameters.0, parameters.1, parameters.2);
-        
-        #[cfg(all(not(feature = "framebuffer"), not(feature = "sdl")))]
-        let mut platform =
-            DummyPlatform::new(parameters.0, parameters.1, parameters.2);
+       let parameters = console.get_platform_parameters().unwrap();
+
+        let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
         
         let _ = console.run(&mut platform, debug).unwrap();
     } else {

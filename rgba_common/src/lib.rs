@@ -3,7 +3,7 @@
 // Filename: core.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:34:12 2017 (+0100)
-// Last-Updated: Tue Dec 26 11:47:24 2017 (+0100)
+// Last-Updated: Tue Dec 26 23:30:24 2017 (+0100)
 //           By: Louise <louise>
 //
 
@@ -52,7 +52,7 @@ pub trait Core {
     fn load_bios(&mut self, &str) -> Result<(), &'static str>;
     fn load_rom(&mut self, &str) -> bool;
 
-    fn get_platform_parameters() -> (u32, u32, u32);
+    fn get_platform_parameters() -> (u32, u32);
     fn get_console_type() -> Console;
 }
 

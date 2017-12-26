@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:18:34 2017 (+0100)
+// Last-Updated: Mon Dec 25 23:59:44 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -132,7 +132,7 @@ impl Interconnect {
         self.gpu.reset();
     }
     
-    pub fn load_bios(&mut self, filename: &str) -> bool {
+    pub fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
         match File::open(filename) {
             Ok(mut file) => {
                 info!("BIOS file opened!");
@@ -140,17 +140,17 @@ impl Interconnect {
                 if let Err(e) = file.read_to_end(&mut self.bios) {
                     warn!("Couldn't read BIOS file : {}", e);
 
-                    false
+                    Err("Error while reading file")
                 } else {
                     self.bios_inplace = true;
                 
-                    true
+                    Ok(())
                 }
             },
 
             Err(e) => {
                 warn!("Couldn't open BIOS file : {}", e);
-                false
+                Err("Error opening file")
             }
         }
     }

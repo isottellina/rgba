@@ -3,17 +3,19 @@
 // Filename: core.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:34:12 2017 (+0100)
-// Last-Updated: Sat Dec 23 00:24:47 2017 (+0100)
+// Last-Updated: Tue Dec 26 11:47:24 2017 (+0100)
 //           By: Louise <louise>
-// 
+//
 
-pub enum Console {
-    Gameboy,
-    None
-}
+// Enums
 
 #[derive(Debug, Clone, Copy)]
-pub struct Color(pub u8, pub u8, pub u8);
+pub enum Console {
+    Gameboy,
+    GameboyAdvance,
+    NDS,
+    None
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum Key {
@@ -37,13 +39,21 @@ pub enum Event {
     KeyUp(Key)
 }
 
+// Structs
+
+#[derive(Debug, Clone, Copy)]
+pub struct Color(pub u8, pub u8, pub u8);
+
+// Traits
+
 pub trait Core {
     fn run<T: Platform>(&mut self, &mut T, bool);
     fn is_file(&str) -> bool;
-    fn load_bios(&mut self, &str) -> bool;
+    fn load_bios(&mut self, &str) -> Result<(), &'static str>;
     fn load_rom(&mut self, &str) -> bool;
 
     fn get_platform_parameters() -> (u32, u32, u32);
+    fn get_console_type() -> Console;
 }
 
 pub trait Platform {

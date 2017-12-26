@@ -3,11 +3,11 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:24:04 2017 (+0100)
+// Last-Updated: Tue Dec 26 11:50:52 2017 (+0100)
 //           By: Louise <louise>
 //
 extern crate rgba_common;
-extern crate rgba_dmg_core;
+extern crate rgba_builder;
 
 #[cfg(feature = "minifb")] extern crate minifb;
 #[cfg(feature = "sdl")] extern crate sdl2;
@@ -25,7 +25,7 @@ use clap::{App, Arg};
 use platform::dummy::DummyPlatform;
 
 use rgba_common::{Core, Console, Platform};
-use rgba_dmg_core::Gameboy;
+use rgba_builder::ConsoleBuilder;
 
 fn main() {
     env_logger::init();
@@ -52,35 +52,28 @@ fn main() {
     let bios_name = matches.value_of("bios").unwrap();
     let debug = matches.is_present("debug");
     
-    let (console, parameters) =
-        if Gameboy::is_file(rom_name) {
-            (Console::Gameboy, Gameboy::get_platform_parameters())
-        } else {
-            (Console::None, (0, 0, 0))
-        };
+    let console = ConsoleBuilder::default()
+        .load_bios(bios_name)
+        .load_rom(rom_name)
+        .build();
 
-    #[cfg(all(feature = "sdl", not(feature = "framebuffer")))]
-    let mut platform =
-        SDLPlatform::new(parameters.0, parameters.1, parameters.2);
-
-    #[cfg(all(feature = "framebuffer", not(feature = "sdl")))]
-    let mut platform =
-        FramebufferPlatform::new(parameters.0, parameters.1, parameters.2);
-
-    #[cfg(all(not(feature = "framebuffer"), not(feature = "sdl")))]
-    let mut platform =
-        DummyPlatform::new(parameters.0, parameters.1, parameters.2);
-    
-    match console {
-        Console::Gameboy => {
-            let mut gb = Gameboy::new();
-
-            gb.load_bios(bios_name);
-            gb.load_rom(rom_name);
-            gb.run(&mut platform, debug);
-        },
-
-        Console::None =>
-            eprintln!("Couldn't guess what console this ROM is for.")
+    if console.is_determined() {
+        let parameters = console.get_platform_parameters().unwrap();
+        
+        #[cfg(all(feature = "sdl", not(feature = "framebuffer")))]
+        let mut platform =
+            SDLPlatform::new(parameters.0, parameters.1, parameters.2);
+        
+        #[cfg(all(feature = "framebuffer", not(feature = "sdl")))]
+        let mut platform =
+            FramebufferPlatform::new(parameters.0, parameters.1, parameters.2);
+        
+        #[cfg(all(not(feature = "framebuffer"), not(feature = "sdl")))]
+        let mut platform =
+            DummyPlatform::new(parameters.0, parameters.1, parameters.2);
+        
+        console.run(&mut platform, debug);
+    } else {
+        panic!("Couldn't build Console");
     }
 }

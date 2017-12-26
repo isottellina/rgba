@@ -3,7 +3,7 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:22:29 2017 (+0100)
+// Last-Updated: Mon Dec 25 22:47:52 2017 (+0100)
 //           By: Louise <louise>
 // 
 mod square;
@@ -160,7 +160,7 @@ impl APU {
     }
     
     pub fn step(&mut self) {
-        self.frame_cycles -= 1;
+        self.frame_cycles = self.frame_cycles - 1;
 
         if self.frame_cycles == 0 {
             self.frame_cycles = 8192;
@@ -188,11 +188,9 @@ impl APU {
         self.channel1.step();
         self.channel2.step();
 
-        self.downsample_count -= 1;
+        self.downsample_count = (self.downsample_count + 1) % 95;
 
         if self.downsample_count == 0 {
-            self.downsample_count = 95;
-
             let sample = (self.channel1.render() as u16) << 8;
             
             self.samples[self.samples_index] = sample as i16;

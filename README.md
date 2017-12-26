@@ -3,7 +3,7 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Thu Dec 21 20:26:39 2017 (+0100)
-;; Last-Updated: Mon Dec 25 20:26:23 2017 (+0100)
+;; Last-Updated: Tue Dec 26 11:57:59 2017 (+0100)
 ;;           By: Louise <louise>
  -->
 
@@ -14,10 +14,7 @@ such as a GBA core, and, I hope, a NDS core.
 
 ## Building and running
 
-### Building
-
-To build, use `cargo build --release --features <the-frontend>` in the rgba-cli folder.
-The binary will be in `rgba-cli/target/release/rgba`.
+Currently, the binary used to launch rGBA cores is the rGBA-cli crate.
 
 ### Bootrom
 
@@ -29,54 +26,6 @@ I'm using are :
 |Gameboy (DMG)|cf053eccb4ccafff9e67339d4e78e98dce7d1ed59be819d2a1ba2232c6fce1c7|
 |Gameboy Color|b4f2e416a35eef52cba161b159c7c8523a92594facb924b3ede0d722867c50c7|
 |GBA|fd2547724b505f487e6dcb29ec2ecff3af35a841a77ab2e85fd87350abd36570|
-
-### Controls
-
-Currently, the controls are (for the GB, on a QWERTY keyboard) :
-
- - Q for A
- - W for B
- - Space bar for Select
- - Return for Start
- - The direction keys for, well, the direction keys
- 
-## Front-ends
-
-Currently, there are three front-ends. To build with a front-end, you have to add `--feature <the-frontend>`
-to the `cargo` command. You can only build the binary with one front-end.
-
-The current front-ends are :
-
-|Name |Library used|Particularities|
-|-----|------------|---------------|
-|dummy|None|Has absolutely no output and no input. It's selected when you select no other frontend|
-|sdl  | SDL2       | The recommanded front-end and only fully-functionning one|
-|framebuffer| [minifb](https://github.com/emoon/rust_minifb) | Only supports output, no input. |
- 
-## Emulation cores
-
-### Gameboy
-
-The gb core is the first core to have been written. It's still being written.
-
-#### Supported features
-
- - Gameboy CPU
- - DMG video
- - Timer, DMA, Input
- - No MBC, MBC1 and MBC3 (without RTC)
- - Basic debugger (stepping, watchpoints)
- 
-#### Planned features
-
- - Sound
- - GBC support
- - RTC support for MBC3
- - Watchpoints
- 
-### GBA
-
-The gba core should be the next core to be written. It's not begun yet.
  
 ## Helpful ressources
 

@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Mon Dec 25 20:27:17 2017 (+0100)
+// Last-Updated: Mon Dec 25 22:47:02 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -121,6 +121,7 @@ impl SquareChannel {
     pub fn envelope_click(&mut self) {
         if self.envelope_running && self.envelope_counter != 0 {
             self.envelope_counter -= 1;
+            
             if self.envelope_counter == 0 {
                 if self.envelope_direction {
                     self.initial_volume += 1;
@@ -151,7 +152,7 @@ impl SquareChannel {
     }
     
     pub fn step(&mut self) {
-        self.timer -= 1;
+        self.timer = self.timer - 1;
 
         if self.timer <= 0 {
             self.timer = (2048 - self.frequency as i32) << 2;

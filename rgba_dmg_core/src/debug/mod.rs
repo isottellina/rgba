@@ -3,7 +3,7 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:18:03 2017 (+0100)
+// Last-Updated: Tue Dec 26 16:32:18 2017 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -12,6 +12,7 @@ use std::collections::{BTreeSet, VecDeque};
 use readline::{readline, add_history};
 
 use ::Gameboy;
+use io::Interconnect;
 use debug::disasm::disasm;
 
 pub struct Debugger {
@@ -34,7 +35,8 @@ impl Debugger {
     }
     
     pub fn handle(&mut self, gb: &mut Gameboy) {
-        if self.should_break(gb.cpu.pc()) || self.enough_steps() {
+        if self.should_break(gb.cpu.pc()) || self.enough_steps() ||
+            self.hit_watchpoint(&mut gb.io) {
             println!("{}", gb.cpu);
             println!("0x{:04x}: {}", gb.cpu.pc(), disasm(&gb.io, gb.cpu.pc()));
             
@@ -79,6 +81,31 @@ impl Debugger {
                                 
                                 if !self.breakpoints.remove(&(addr as usize)) {
                                     println!("There was no breakpoint to remove.");
+                                }
+                            },
+                            
+                            _ => println!("This function requires an argument"),
+                        }
+                    },
+
+                    Some("w") | Some("watch") => {
+                        match get_argument(&mut command) {
+                            Some(addr) => {
+                                println!("Setting watchpoint at {:#04x}", addr);
+                                gb.io.set_watchpoint(addr as usize);
+                            },
+                            
+                            _ => println!("This function requires an argument"),
+                        }
+                    },
+
+                    Some("rw") | Some("rwatch") => {
+                        match get_argument(&mut command) {
+                            Some(addr) => {
+                                println!("Removing watchpoint at {:#04x}", addr);
+                                
+                                if !gb.io.rem_watchpoint(addr as usize) {
+                                    println!("There was no watchpoint to remove.");
                                 }
                             },
                             
@@ -141,6 +168,18 @@ impl Debugger {
             let r = self.breakpoints.contains(&pc);
             if r { println!("Breakpoint triggered"); }
             r
+        }
+    }
+
+    fn hit_watchpoint(&mut self, io: &mut Interconnect) -> bool {
+        if let Some((address, value)) = io.watchpoint_hit() {
+            println!("Watchpoint hit at {:04x} (value: {:02x})",
+                     address, value);
+
+            io.ack_watchpoint();
+            true
+        } else {
+            false
         }
     }
 }

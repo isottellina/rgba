@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Tue Dec 26 11:12:56 2017 (+0100)
-// Last-Updated: Tue Dec 26 18:23:50 2017 (+0100)
+// Last-Updated: Wed Dec 27 00:21:04 2017 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -50,7 +50,7 @@ impl ConsoleBuilder {
 
     pub fn is_determined(&self) -> bool { self.console.is_some() }
     
-    pub fn get_platform_parameters(&self) -> Option<(u32, u32, u32)> {
+    pub fn get_platform_parameters(&self) -> Option<(u32, u32)> {
         if let Some(ref console) = self.console {
             match *console {
                 Console::Gameboy => Some(Gameboy::get_platform_parameters()),

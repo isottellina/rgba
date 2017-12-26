@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Tue Dec 26 11:16:09 2017 (+0100)
+// Last-Updated: Wed Dec 27 00:20:21 2017 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -148,8 +148,8 @@ impl Core for Gameboy {
         self.io.load_rom(filename)
     }
 
-    fn get_platform_parameters() -> (u32, u32, u32) {
-        (160, 144, 2)
+    fn get_platform_parameters() -> (u32, u32) {
+        (160, 144)
     }
 
     fn get_console_type() -> Console {

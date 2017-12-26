@@ -20,16 +20,12 @@ lto   = true
 debug-assertions = false
 panic = 'unwind'
 
-[features]
-sdl = ["sdl2"]
-framebuffer = ["minifb"]
-
 [dependencies]
 rgba_common = { path = '../rgba_common' }
 rgba_builder = { path = '../rgba_builder' }
 
 log = "~0.4.0-rc.1"
 env_logger = "~0.5.0-rc.1"
-clap = "*"
-minifb = { version = "0.10.3", optional = true }
-sdl2 = { version = "~0.31.0", optional = true }
+clap = "~2.29.0"
+
+sdl2 = "~0.31.0"

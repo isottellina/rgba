@@ -3,13 +3,30 @@ name = "rgba-cli"
 version = "0.1.0"
 authors = ["Louise"]
 
+[profile.dev]
+opt-level = 1
+debug = true
+rpath = false
+lto = false
+debug-assertions = true
+codegen-units = 4
+panic = 'unwind'
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto   = true
+debug-assertions = false
+panic = 'unwind'
+
 [features]
 sdl = ["sdl2"]
 framebuffer = ["minifb"]
 
 [dependencies]
 rgba_common = { path = '../rgba_common' }
-rgba_dmg_core = { path = '../rgba_dmg_core' }
+rgba_builder = { path = '../rgba_builder' }
 
 log = "~0.4.0-rc.1"
 env_logger = "~0.5.0-rc.1"

@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:21:29 2017 (+0100)
+// Last-Updated: Tue Dec 26 11:16:09 2017 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -19,9 +19,7 @@ mod io;
 mod cart;
 mod debug;
 
-use rgba_common::Core;
-use rgba_common::Platform;
-use rgba_common::Event;
+use rgba_common::{Core, Platform, Event, Console};
 use cpu::LR35902;
 use io::Interconnect;
 use debug::Debugger;
@@ -142,7 +140,7 @@ impl Core for Gameboy {
         }
     }
     
-    fn load_bios(&mut self, filename: &str) -> bool {
+    fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
         self.io.load_bios(filename)
     }
 
@@ -152,5 +150,9 @@ impl Core for Gameboy {
 
     fn get_platform_parameters() -> (u32, u32, u32) {
         (160, 144, 2)
+    }
+
+    fn get_console_type() -> Console {
+        Console::Gameboy
     }
 }

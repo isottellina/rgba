@@ -1,0 +1,9 @@
+[package]
+name = "rgba_builder"
+version = "0.1.0"
+authors = ["Louise <julese50@gmail.com>"]
+
+[dependencies]
+log = "~0.4.0-rc.1"
+rgba_common = { path = '../rgba_common' }
+rgba_dmg_core = { path = '../rgba_dmg_core' }

@@ -274,9 +274,18 @@ dependencies = [
  "env_logger 0.5.0-rc.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "minifb 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rgba_builder 0.1.0",
+ "rgba_common 0.1.0",
+ "sdl2 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "rgba_builder"
+version = "0.1.0"
+dependencies = [
+ "log 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgba_common 0.1.0",
  "rgba_dmg_core 0.1.0",
- "sdl2 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Tue Dec 26 11:12:56 2017 (+0100)
-// Last-Updated: Tue Dec 26 12:02:20 2017 (+0100)
+// Last-Updated: Tue Dec 26 18:23:50 2017 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -61,14 +61,14 @@ impl ConsoleBuilder {
         }
     }
 
-    pub fn run<T: Platform>(&self, platform: &mut T, debug: bool) {
+    pub fn run<T: Platform>(&self, platform: &mut T, debug: bool) -> Result<(), String> {
         if let Some(ref console) = self.console {
             match *console {
                 Console::Gameboy => {
                     let mut gb = Gameboy::new();
 
                     if let Some(ref bios_name) = self.bios {
-                        gb.load_bios(bios_name);
+                        gb.load_bios(bios_name)?
                     }
 
                     if let Some(ref rom_name) = self.rom {
@@ -76,10 +76,13 @@ impl ConsoleBuilder {
                     }
                     
                     gb.run(platform, debug);
+                    Ok(())
                 },
         
-                _ => { }
+                _ => panic!("There isn't a core yet for {:?}", console)
             }
+        } else {
+            Err("Console wasn't determined".to_string())
         }
     }
 }

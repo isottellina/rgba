@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Mon Dec 25 01:53:11 2017 (+0100)
+// Last-Updated: Wed Dec 27 19:35:35 2017 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -17,7 +17,7 @@ pub enum Cartridge {
     ),
     MBC1 {
         rom: Vec<u8>,
-        ram: [u8; 0x6000],
+        ram: [u8; 0x8000],
         
         mode: bool,
         ram_enable: bool,
@@ -29,7 +29,7 @@ pub enum Cartridge {
     },
     MBC3 {
         rom: Vec<u8>,
-        ram: [u8; 0x6000],
+        ram: [u8; 0x8000],
 
         ram_enable: bool,
         rom_bank: u8,
@@ -48,7 +48,7 @@ impl Cartridge {
 
             0x01...0x03 => {
                 let save_filename = format!("{}.sav", filename);
-                let mut ram: [u8; 0x6000] = [0; 0x6000];
+                let mut ram: [u8; 0x8000] = [0; 0x8000];
 
                 if let Ok(mut file) = File::open(&save_filename) {
                     if let Err(e) = file.read_exact(&mut ram) {
@@ -71,7 +71,7 @@ impl Cartridge {
 
             0x0F...0x13 => {
                 let save_filename = format!("{}.sav", filename);
-                let mut ram: [u8; 0x6000] = [0; 0x6000];
+                let mut ram: [u8; 0x8000] = [0; 0x8000];
 
                 if let Ok(mut file) = File::open(&save_filename) {
                     if let Err(e) = file.read_exact(&mut ram) {

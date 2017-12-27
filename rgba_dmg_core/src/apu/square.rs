@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Tue Dec 26 20:00:44 2017 (+0100)
+// Last-Updated: Wed Dec 27 21:49:56 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -16,8 +16,8 @@ const DUTY_TABLE: [[bool; 8]; 4] = [
 
 #[derive(Debug, Default)]
 pub struct SquareChannel {
-    timer: i32,
-    frequency: u32,
+    timer: u16,
+    frequency: u16,
 
     enabled: bool,
     dac_enabled: bool,
@@ -85,6 +85,8 @@ impl SquareChannel {
             last_trigger: false
         }
     }
+
+    pub fn enabled(&self) -> bool { self.enabled }
     
     pub fn nr0(&self) -> u8 {
         (self.sweep_period << 4) |
@@ -126,8 +128,7 @@ impl SquareChannel {
     }
 
     pub fn set_nr3(&mut self, value: u8) {
-        self.frequency &= 0x0700;
-        self.frequency |= value as u32;
+        self.frequency = (self.frequency & 0x700) | (value as u16);
     }
 
     pub fn nr4(&self) -> u8 {
@@ -137,36 +138,40 @@ impl SquareChannel {
     pub fn set_nr4(&mut self, value: u8) {
         self.length_enable = (value & 0x40) != 0;
         
-        self.frequency &= 0x00ff;
-        self.frequency |= ((value & 0x7) as u32) << 8;
-
+        self.frequency = (self.frequency & 0xff) | ((value & 0x7) as u16) << 8;
         self.last_trigger = (value & 0x80) != 0;
         
-        if (value & 0x80) != 0 {
+        if self.last_trigger {
             self.enabled = true;
 
             if self.length_counter == 0 {
                 self.length_counter = 64;
             }
 
-            self.timer = (2048 - self.frequency as i32) << 2;
+            self.timer = (2048 - self.frequency) << 2;
             self.volume = self.volume_load;
 
             self.envelope_running = true;
             self.envelope_period = self.envelope_period_load;
 
-            self.sweep_shadow = self.frequency as u16;
+            self.sweep_shadow = self.frequency;
             self.sweep_period = self.sweep_period_load;
 
             if self.sweep_period == 0 {
                 self.sweep_period = 8;
             }
 
+            if self.sweep_shift != 0 {
+                self.sweep_calc();
+            }
+            
             self.sweep_enable = (self.sweep_period > 0)||(self.sweep_shift > 0);
         }
     }
 
     pub fn sweep_calc(&mut self) -> u16 {
+        println!("Old frequency : {:04x}", self.frequency);
+        
         let freq = if self.sweep_negate {
             self.sweep_shadow - (self.sweep_shadow >> self.sweep_shift)
         } else {
@@ -177,6 +182,8 @@ impl SquareChannel {
             self.enabled = false;
         }
 
+        println!("New frequency : {:04x}", freq);
+        
         freq
     }
     
@@ -193,10 +200,10 @@ impl SquareChannel {
             if self.sweep_enable && (self.sweep_period_load > 0) {
                 let freq = self.sweep_calc();
 
-                if (freq <= 2047) && (self.sweep_shift > 0) {
+                if (freq <= 2047) && (self.sweep_shift != 0) {
                     self.sweep_shadow = freq;
-                    self.frequency = freq as u32;
-                    
+                    self.frequency = freq;
+                    self.sweep_calc();
                 }
             }
         }
@@ -232,15 +239,15 @@ impl SquareChannel {
         }
     }
 
-    pub fn render(&mut self) -> u8 {
+    pub fn render(&self) -> u8 {
         self.out_volume
     }
     
     pub fn step(&mut self) {
-        self.timer = self.timer - 1;
+        self.timer = self.timer.wrapping_sub(1);
 
         if self.timer <= 0 {
-            self.timer = (2048 - self.frequency as i32) << 2;
+            self.timer = (2048 - self.frequency) << 2;
             self.duty_state = (self.duty_state + 1) & 0x7;
             
             self.out_volume = if self.enabled && self.dac_enabled {

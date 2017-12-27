@@ -3,39 +3,41 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Tue Dec 26 22:41:29 2017 (+0100)
+// Last-Updated: Wed Dec 27 20:26:03 2017 (+0100)
 //           By: Louise <louise>
 // 
 mod square;
+mod wave;
 
 use apu::square::SquareChannel;
+use apu::wave::WaveChannel;
 use rgba_common::Platform;
 
 pub struct APU {
+    enabled: bool,
+    
     channel1: SquareChannel,
     channel2: SquareChannel,
-    
-    nr30: u8,
-    nr31: u8,
-    nr32: u8,
-    nr33: u8,
-    nr34: u8,
+    channel3: WaveChannel,
     
     nr41: u8,
     nr42: u8,
     nr43: u8,
     nr44: u8,
-    
-    nr50: u8,
-    nr51: u8,
-    nr52: u8,
-
-    nr3_wave: [u8; 0x10],
+  
+    ch1_so1: bool,
+    ch2_so1: bool,
+    ch3_so1: bool,
+    ch4_so1: bool,
+    ch1_so2: bool,
+    ch2_so2: bool,
+    ch3_so2: bool,
+    ch4_so2: bool,
 
     frame_cycles: u32,
     frame_sequencer: u8,
 
-    samples: [i16; 4096],
+    samples: [i16; 1024],
     samples_index: usize,
     buffer_complete: bool,
     
@@ -45,30 +47,30 @@ pub struct APU {
 impl APU {
     pub fn new() -> APU {
         APU {
+            enabled: true,
+            
             channel1: SquareChannel::new(),
             channel2: SquareChannel::new(),
-            
-            nr30: 0,
-            nr31: 0,
-            nr32: 0,
-            nr33: 0,
-            nr34: 0,
+            channel3: WaveChannel::new(),
             
             nr41: 0,
             nr42: 0,
             nr43: 0,
             nr44: 0,
-            
-            nr50: 0,
-            nr51: 0,
-            nr52: 0,
-            
-            nr3_wave: [0; 0x10],
+
+            ch1_so1: false,
+            ch2_so1: false,
+            ch3_so1: false,
+            ch4_so1: false,
+            ch1_so2: false,
+            ch2_so2: false,
+            ch3_so2: false,
+            ch4_so2: false,
 
             frame_cycles: 8192,
             frame_sequencer: 0,
 
-            samples: [0; 4096],
+            samples: [0; 1024],
             samples_index: 0,
             buffer_complete: false,
 
@@ -106,19 +108,19 @@ impl APU {
 
     
     // Channel 3
-    pub fn nr30(&self) -> u8 { self.nr30 }
-    pub fn set_nr30(&mut self, nr30: u8) { self.nr30 = nr30; }
+    pub fn nr30(&self) -> u8 { self.channel3.nr0() }
+    pub fn set_nr30(&mut self, nr30: u8) { self.channel3.set_nr0(nr30); }
     
-    pub fn nr31(&self) -> u8 { self.nr31 }
-    pub fn set_nr31(&mut self, nr31: u8) { self.nr31 = nr31; }
+    pub fn nr31(&self) -> u8 { self.channel3.nr1() }
+    pub fn set_nr31(&mut self, nr31: u8) { self.channel3.set_nr1(nr31); }
     
-    pub fn nr32(&self) -> u8 { self.nr32 }
-    pub fn set_nr32(&mut self, nr32: u8) { self.nr32 = nr32; }
+    pub fn nr32(&self) -> u8 { self.channel3.nr2() }
+    pub fn set_nr32(&mut self, nr32: u8) { self.channel3.set_nr2(nr32); }
     
-    pub fn set_nr33(&mut self, nr33: u8) { self.nr33 = nr33; }
+    pub fn set_nr33(&mut self, nr33: u8) { self.channel3.set_nr3(nr33); }
     
-    pub fn nr34(&self) -> u8 { self.nr34 }
-    pub fn set_nr34(&mut self, nr34: u8) { self.nr34 = nr34; }
+    pub fn nr34(&self) -> u8 { self.channel3.nr4() }
+    pub fn set_nr34(&mut self, nr34: u8) { self.channel3.set_nr4(nr34); }
 
     
     // Channel 4
@@ -136,27 +138,98 @@ impl APU {
 
     
     // Control
-    pub fn nr50(&self) -> u8 { self.nr50 }
-    pub fn set_nr50(&mut self, nr50: u8) { self.nr50 = nr50; }
+    pub fn nr50(&self) -> u8 { 0 }
+    pub fn set_nr50(&mut self, nr50: u8) {
+        if (nr50 & 0x88) != 0 {
+            warn!("Vin is enabled; This emulator has no Vin support.");
+        }
+    }
     
-    pub fn nr51(&self) -> u8 { self.nr51 }
-    pub fn set_nr51(&mut self, nr51: u8) { self.nr51 = nr51; }
+    pub fn nr51(&self) -> u8 {
+        ((self.ch4_so2 as u8) << 7) |
+        ((self.ch3_so2 as u8) << 6) |
+        ((self.ch2_so2 as u8) << 5) |
+        ((self.ch1_so2 as u8) << 4) |
+        ((self.ch4_so1 as u8) << 3) |
+        ((self.ch3_so1 as u8) << 2) |
+        ((self.ch2_so1 as u8) << 1) |
+        (self.ch1_so1 as u8)
+    }
     
-    pub fn nr52(&self) -> u8 { self.nr52 }
-    pub fn set_nr52(&mut self, nr52: u8) { self.nr52 = nr52; }
+    pub fn set_nr51(&mut self, nr51: u8) {
+        self.ch1_so1 = (nr51 & 0x01) != 0;
+        self.ch2_so1 = (nr51 & 0x02) != 0;
+        self.ch3_so1 = (nr51 & 0x04) != 0;
+        self.ch4_so1 = (nr51 & 0x08) != 0;
+        self.ch1_so2 = (nr51 & 0x10) != 0;
+        self.ch2_so2 = (nr51 & 0x20) != 0;
+        self.ch3_so2 = (nr51 & 0x40) != 0;
+        self.ch4_so2 = (nr51 & 0x80) != 0;
+    }
+    
+    pub fn nr52(&self) -> u8 {
+        ((self.enabled as u8) << 7) |
+        ((self.channel3.enabled() as u8) << 2) |
+        ((self.channel2.enabled() as u8) << 1) |
+        (self.channel1.enabled() as u8)
+    }
+    
+    pub fn set_nr52(&mut self, nr52: u8) {
+        self.enabled = (nr52 & 0x80) != 0;
+    }
 
-    pub fn nr3_wave(&self, address: usize) -> u8 { self.nr3_wave[address & 0xF] }
+    pub fn nr3_wave(&self, address: usize) -> u8 { self.channel3.wave(address) }
     pub fn set_nr3_wave(&mut self, address: usize, value: u8) {
-        self.nr3_wave[address & 0xF] = value;
+        self.channel3.set_wave(address, value);
     }
 
     // Actual APU
+    pub fn enabled(&self) -> bool {
+        self.enabled
+    }
+    
     pub fn render<T: Platform>(&mut self, platform: &mut T) {
         if self.buffer_complete {
             platform.queue_samples(&self.samples);
 
             self.buffer_complete = false;
         }
+    }
+
+    fn get_so1(&self) -> u8 {
+        let mut so1 = 0;
+
+        if self.ch1_so1 {
+            so1 += self.channel1.render();
+        }
+
+        if self.ch2_so1 {
+            so1 += self.channel2.render();
+        }
+        
+        if self.ch2_so1 {
+            so1 += self.channel3.render();
+        }
+        
+        so1
+    }
+
+    fn get_so2(&self) -> u8 {
+        let mut so2 = 0;
+
+        if self.ch1_so2 {
+            so2 += self.channel1.render();
+        }
+
+        if self.ch2_so2 {
+            so2 += self.channel2.render();
+        }
+        
+        if self.ch2_so2 {
+            so2 += self.channel3.render();
+        }
+        
+        so2
     }
     
     pub fn step(&mut self) {
@@ -169,11 +242,13 @@ impl APU {
                 0 | 4 => {
                     self.channel1.length_click();
                     self.channel2.length_click();
+                    self.channel3.length_click();
                 },
                 2 | 6 => {
                     self.channel1.sweep_click();
                     self.channel1.length_click();
                     self.channel2.length_click();
+                    self.channel3.length_click();
                 },
                 7 => {
                     self.channel1.envelope_click();
@@ -187,14 +262,18 @@ impl APU {
 
         self.channel1.step();
         self.channel2.step();
+        self.channel3.step();
 
-        self.downsample_count = (self.downsample_count + 1) % 95;
+        self.downsample_count = (self.downsample_count + 1) % 87;
 
         if self.downsample_count == 0 {
-            let sample = (self.channel1.render() as u16) << 8;
+            let so1 = self.get_so1() as u16;
+            let so2 = self.get_so2() as u16;
+
+            let mix = (so1 + so2) << 7;
             
-            self.samples[self.samples_index] = sample as i16;
-            self.samples_index = (self.samples_index + 1) & 0xfff;
+            self.samples[self.samples_index] = mix as i16;
+            self.samples_index = (self.samples_index + 1) & 0x3ff;
 
             if self.samples_index == 0 {
                 self.samples_index = 0;

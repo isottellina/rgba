@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Wed Dec 27 22:47:24 2017 (+0100)
+// Last-Updated: Wed Dec 27 23:31:01 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -60,8 +60,8 @@ impl SquareChannel {
             enabled: false,
             dac_enabled: true,
             
-            duty: 2,
-            duty_state: 5,
+            duty: 0,
+            duty_state: 0,
             out_volume: 0,
 
             sweep_enable: false,
@@ -95,7 +95,7 @@ impl SquareChannel {
     }
     
     pub fn set_nr0(&mut self, value: u8) {
-        self.sweep_period = (value & 0x70) >> 4;
+        self.sweep_period_load = (value & 0x70) >> 4;
         self.sweep_negate = (value & 0x08) != 0;
         self.sweep_shift = value & 0x07;
     }
@@ -195,7 +195,7 @@ impl SquareChannel {
 
             if self.sweep_enable && (self.sweep_period_load > 0) {
                 let freq = self.sweep_calc();
-
+                
                 if (freq <= 2047) && (self.sweep_shift != 0) {
                     self.sweep_shadow = freq;
                     self.frequency = freq;

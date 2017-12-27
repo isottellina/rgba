@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Wed Dec 27 21:49:56 2017 (+0100)
+// Last-Updated: Wed Dec 27 22:47:24 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -170,8 +170,6 @@ impl SquareChannel {
     }
 
     pub fn sweep_calc(&mut self) -> u16 {
-        println!("Old frequency : {:04x}", self.frequency);
-        
         let freq = if self.sweep_negate {
             self.sweep_shadow - (self.sweep_shadow >> self.sweep_shift)
         } else {
@@ -181,8 +179,6 @@ impl SquareChannel {
         if freq > 2047 {
             self.enabled = false;
         }
-
-        println!("New frequency : {:04x}", freq);
         
         freq
     }

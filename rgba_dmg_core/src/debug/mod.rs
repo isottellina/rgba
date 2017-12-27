@@ -3,7 +3,7 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Tue Dec 26 16:32:18 2017 (+0100)
+// Last-Updated: Wed Dec 27 15:04:46 2017 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -142,10 +142,14 @@ impl Debugger {
                                   s, step\t\tStep executgb.ion\n\
                                   b, break\tSet a breakpoint\n\
                                   rb, rbreak\tRemove a breakpoint\n\
-                                  d, disassemble\tDisassemble an instructgb.ion");
+                                  w, watch\tSet a watchpoint\n\
+                                  rw, rwatch\tRemove a watchpoint\n\
+                                  d, disassemble\tDisassemble an instruction"
+                        );
                     }
 
-                    other => { println!("This command doesn't exist : {:?}", other); }
+                    Some(o) => { println!("This command doesn't exist : {}", o); }
+                    None => { println!("You didn't enter a command"); }
                 }
             }
         }
@@ -185,23 +189,17 @@ impl Debugger {
 }
 
 fn get_argument(command: &mut VecDeque<&str>) -> Option<u32> {
-    match command.pop_front() {
-        Some(arg) => {
+    command.pop_front().and_then(
+        |arg| {
             if arg.starts_with("0x") {
-                if let Ok(u) = u32::from_str_radix(&arg[2..], 16) {
-                    Some(u)
-                } else {
-                    None
-                }
+                u32::from_str_radix(&arg[2..], 16).ok()
+            } else if arg.starts_with("0b") {
+                u32::from_str_radix(&arg[2..], 2).ok()
+            } else if arg.starts_with("0") {
+                u32::from_str_radix(arg, 8).ok()
             } else {
-                if let Ok(u) = u32::from_str_radix(arg, 10) {
-                    Some(u)
-                } else {
-                    None
-                }
+                u32::from_str_radix(arg, 10).ok()
             }
-        },
-
-        None => None,
-    }
+        }
+    )
 }

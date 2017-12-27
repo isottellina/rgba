@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Tue Dec 26 16:32:35 2017 (+0100)
+// Last-Updated: Wed Dec 27 20:25:27 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -440,7 +440,10 @@ impl Interconnect {
             }
             
             self.timer.handle();
-            self.apu.step();
+
+            if self.apu.enabled() {
+                self.apu.step();
+            }
 
             cycles -= 1;
         }

@@ -3,7 +3,7 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Tue Dec 26 11:53:56 2017 (+0100)
-;; Last-Updated: Thu Dec 28 00:00:45 2017 (+0100)
+;; Last-Updated: Thu Dec 28 01:06:41 2017 (+0100)
 ;;           By: Louise <louise>
  -->
  
@@ -15,13 +15,15 @@ The dmg core is the first core to have been written. It's still being written.
 
  - Gameboy CPU
  - DMG video
- - Audio (No NoiseChannel for now)
+ - Audio
  - Timer, DMA, Input
  - No MBC, MBC1 and MBC3 (without RTC)
  - Basic debugger (stepping, breakpoints, watchpoints, disassembly)
  
-## Planned features
+## Planned features for 1.0
 
- - NoiseChannel
  - GBC support
+ 
+## Planned features for later
+
  - RTC support for MBC3

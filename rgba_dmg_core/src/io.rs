@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Wed Dec 27 20:25:27 2017 (+0100)
+// Last-Updated: Thu Dec 28 00:23:00 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -243,6 +243,7 @@ impl Interconnect {
             NR42 => self.apu.nr42(),
             NR43 => self.apu.nr43(),
             NR44 => self.apu.nr44(),
+            
             NR50 => self.apu.nr50(),
             NR51 => self.apu.nr51(),
             NR52 => self.apu.nr52(),

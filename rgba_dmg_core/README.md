@@ -3,7 +3,7 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Tue Dec 26 11:53:56 2017 (+0100)
-;; Last-Updated: Thu Dec 28 01:06:41 2017 (+0100)
+;; Last-Updated: Thu Dec 28 01:33:28 2017 (+0100)
 ;;           By: Louise <louise>
  -->
  
@@ -27,3 +27,6 @@ The dmg core is the first core to have been written. It's still being written.
 ## Planned features for later
 
  - RTC support for MBC3
+ - Booting without bootrom
+ - Saving less often
+ - Optimisations in general (in the OAM code for example)

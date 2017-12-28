@@ -3,14 +3,17 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Wed Dec 27 20:26:03 2017 (+0100)
+// Last-Updated: Thu Dec 28 00:56:37 2017 (+0100)
 //           By: Louise <louise>
 // 
 mod square;
 mod wave;
+mod noise;
 
 use apu::square::SquareChannel;
 use apu::wave::WaveChannel;
+use apu::noise::NoiseChannel;
+
 use rgba_common::Platform;
 
 pub struct APU {
@@ -19,11 +22,7 @@ pub struct APU {
     channel1: SquareChannel,
     channel2: SquareChannel,
     channel3: WaveChannel,
-    
-    nr41: u8,
-    nr42: u8,
-    nr43: u8,
-    nr44: u8,
+    channel4: NoiseChannel,
   
     ch1_so1: bool,
     ch2_so1: bool,
@@ -52,11 +51,7 @@ impl APU {
             channel1: SquareChannel::new(),
             channel2: SquareChannel::new(),
             channel3: WaveChannel::new(),
-            
-            nr41: 0,
-            nr42: 0,
-            nr43: 0,
-            nr44: 0,
+            channel4: NoiseChannel::new(),
 
             ch1_so1: false,
             ch2_so1: false,
@@ -124,17 +119,17 @@ impl APU {
 
     
     // Channel 4
-    pub fn nr41(&self) -> u8 { self.nr41 }
-    pub fn set_nr41(&mut self, nr41: u8) { self.nr41 = nr41; }
+    pub fn nr41(&self) -> u8 { self.channel4.nr1() }
+    pub fn set_nr41(&mut self, nr41: u8) { self.channel4.set_nr1(nr41); }
     
-    pub fn nr42(&self) -> u8 { self.nr42 }
-    pub fn set_nr42(&mut self, nr42: u8) { self.nr42 = nr42; }
+    pub fn nr42(&self) -> u8 { self.channel4.nr2() }
+    pub fn set_nr42(&mut self, nr42: u8) { self.channel4.set_nr2(nr42); }
     
-    pub fn nr43(&self) -> u8 { self.nr43 }
-    pub fn set_nr43(&mut self, nr43: u8) { self.nr43 = nr43; }
+    pub fn nr43(&self) -> u8 { self.channel4.nr3() }
+    pub fn set_nr43(&mut self, nr43: u8) { self.channel4.set_nr3(nr43); }
     
-    pub fn nr44(&self) -> u8 { self.nr44 }
-    pub fn set_nr44(&mut self, nr44: u8) { self.nr44 = nr44; }
+    pub fn nr44(&self) -> u8 { self.channel4.nr4() }
+    pub fn set_nr44(&mut self, nr44: u8) { self.channel4.set_nr4(nr44); }
 
     
     // Control
@@ -207,8 +202,12 @@ impl APU {
             so1 += self.channel2.render();
         }
         
-        if self.ch2_so1 {
+        if self.ch3_so1 {
             so1 += self.channel3.render();
+        }
+
+        if self.ch4_so1 {
+            so1 += self.channel4.render();
         }
         
         so1
@@ -225,8 +224,12 @@ impl APU {
             so2 += self.channel2.render();
         }
         
-        if self.ch2_so2 {
+        if self.ch3_so2 {
             so2 += self.channel3.render();
+        }
+
+        if self.ch4_so2 {
+            so2 += self.channel4.render();
         }
         
         so2
@@ -243,16 +246,19 @@ impl APU {
                     self.channel1.length_click();
                     self.channel2.length_click();
                     self.channel3.length_click();
+                    self.channel4.length_click();
                 },
                 2 | 6 => {
                     self.channel1.sweep_click();
                     self.channel1.length_click();
                     self.channel2.length_click();
                     self.channel3.length_click();
+                    self.channel4.length_click();
                 },
                 7 => {
                     self.channel1.envelope_click();
                     self.channel2.envelope_click();
+                    self.channel4.envelope_click();
                 },
                 _ => { }
             }
@@ -263,6 +269,7 @@ impl APU {
         self.channel1.step();
         self.channel2.step();
         self.channel3.step();
+        self.channel4.step();
 
         self.downsample_count = (self.downsample_count + 1) % 87;
 

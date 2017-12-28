@@ -3,7 +3,7 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:27:36 2017 (+0100)
+// Last-Updated: Thu Dec 28 00:03:46 2017 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -51,7 +51,7 @@ impl Platform for SDLPlatform {
                                          &AudioSpecDesired {
                                              freq: Some(48_100),
                                              channels: Some(1),
-                                             samples: Some(1024)
+                                             samples: Some(4096)
                                          }
         ).unwrap();
 

@@ -3,13 +3,13 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:22:16 2017 (+0100)
+// Last-Updated: Fri Dec 29 12:36:23 2017 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common::Platform;
-use gpu::Color;
 
 use gpu::GPU;
+use gpu::DmgColor;
 
 impl GPU {   
     pub fn render<T: Platform>(&mut self, platform: &mut T) {
@@ -105,7 +105,7 @@ impl GPU {
         self.tile_get_color(self.tile_data, tile, tile_x, tile_y)
     }
 
-    fn get_sprite(&self, x: u8, y: u8, bg_color: u8) -> Option<Color> {
+    fn get_sprite(&self, x: u8, y: u8, bg_color: u8) -> Option<DmgColor> {
         let sprites = self.line_cache[y as usize];
 
         for opt_sprite in sprites.iter() {

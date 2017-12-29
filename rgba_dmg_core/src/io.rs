@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Thu Dec 28 00:23:00 2017 (+0100)
+// Last-Updated: Fri Dec 29 16:39:08 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -61,12 +61,22 @@ const LY: usize = 0xFF44;
 const LYC: usize = 0xFF45;
 const WY: usize = 0xFF4A;
 const WX: usize = 0xFF4B;
+
 const BGP: usize = 0xFF47;
 const OBP0: usize = 0xFF48;
 const OBP1: usize = 0xFF49;
 
+const BCPI: usize = 0xFF68;
+const BCPD: usize = 0xFF69;
+const OCPI: usize = 0xFF6A;
+const OCPD: usize = 0xFF6B;
+
 const DMA: usize = 0xFF46;
+const KEY1: usize = 0xFF4D;
 const BIOS: usize = 0xFF50;
+
+const VBK: usize = 0xFF4F;
+const SVBK: usize = 0xFF70;
 
 const IF: usize = 0xFF0F;
 const IE: usize = 0xFFFF;
@@ -90,6 +100,10 @@ pub struct Interconnect {
     it_serial_enable: bool,
     it_joypad_enable: bool,
 
+    // CGB stuff
+    wram_bank: u8,
+    
+    
     // DMA
     dma_src: usize,
     dma_dest: usize,
@@ -102,6 +116,7 @@ pub struct Interconnect {
     
     // Other
     bios_inplace: bool,
+    cgb: bool,
 }
 
 impl Interconnect {
@@ -123,6 +138,8 @@ impl Interconnect {
             it_serial_enable: false,
             it_joypad_enable: false,
 
+            wram_bank: 1,
+            
             dma_src: 0,
             dma_dest: 0,
             dma_ongoing: false,
@@ -131,7 +148,8 @@ impl Interconnect {
             watchpoints: HashSet::new(),
             watchpoint_hit: None,
             
-            bios_inplace: false
+            bios_inplace: false,
+            cgb: false,
         }
     }
 
@@ -148,16 +166,38 @@ impl Interconnect {
             Ok(mut file) => {
                 info!("BIOS file opened!");
                 
-                if let Err(e) = file.read_to_end(&mut self.bios) {
-                    warn!("Couldn't read BIOS file : {}", e);
+                match file.read_to_end(&mut self.bios) {
+                    Ok(n) => {
+                        self.bios_inplace = true;
 
-                    Err("Error while reading file")
-                } else {
-                    self.bios_inplace = true;
-                
-                    Ok(())
+                        match n {
+                            0x100 => {
+                                info!("BIOS type: DMG");
+                                self.cgb = false;
+                                
+                                Ok(())
+                            }
+                            
+                            0x900 => {
+                                info!("BIOS type: CGB");
+                                self.cgb = true;
+                                
+                                Ok(())
+                            }
+                            
+                            _ => {
+                                Err("BIOS not recognized")
+                            }
+                        }
+                    }
+
+                    Err(e) => {
+                        warn!("Couldn't read BIOS file : {}", e);
+
+                        Err("Error while reading file")
+                    }
                 }
-            },
+            }
 
             Err(e) => {
                 warn!("Couldn't open BIOS file : {}", e);
@@ -194,7 +234,10 @@ impl Interconnect {
     
     pub fn read_u8(&self, address: usize) -> u8 {
         match address {
-            0x0000...0x00FF if self.bios_inplace => self.bios[address],
+            0x0000...0x00FF if self.bios_inplace =>
+                self.bios[address],
+            0x0200...0x08FF if self.bios_inplace && self.cgb =>
+                self.bios[address],
             0x0000...0x7FFF => self.cart.read_rom(address),
             0x8000...0x9FFF => self.gpu.read_vram_u8(address),
             0xA000...0xBFFF => self.cart.read_ram(address),
@@ -224,6 +267,14 @@ impl Interconnect {
             BGP  => self.gpu.bgp(),
             OBP0 => self.gpu.obp0(),
             OBP1 => self.gpu.obp1(),
+
+            BCPI => self.gpu.bcpi(),
+            BCPD => self.gpu.bcpd(),
+            OCPI => self.gpu.ocpi(),
+            OCPD => self.gpu.ocpd(),
+
+            VBK  if self.cgb => self.gpu.vbk(),
+            SVBK if self.cgb => self.wram_bank,
 
             NR10 => self.apu.nr10(),
             NR11 => self.apu.nr11(),
@@ -297,6 +348,15 @@ impl Interconnect {
             BGP  => self.gpu.set_bgp(value),
             OBP0 => self.gpu.set_obp0(value),
             OBP1 => self.gpu.set_obp1(value),
+
+            BCPI if self.cgb => self.gpu.set_bcpi(value),
+            BCPD if self.cgb => self.gpu.set_bcpd(value),
+            OCPI if self.cgb => self.gpu.set_ocpi(value),
+            OCPD if self.cgb => self.gpu.set_ocpd(value),
+            
+            VBK  if self.cgb => self.gpu.set_vbk(value),
+            SVBK if self.cgb => self.set_svbk(value),
+            
             BIOS => self.bios_inplace = false,
 
             NR10 => self.apu.set_nr10(value),
@@ -337,6 +397,14 @@ impl Interconnect {
         self.write_u8(address + 1, (value >> 8) as u8);
     }
 
+    fn set_svbk(&mut self, svbk: u8) {
+        if svbk == 0 {
+            self.wram_bank = 1;
+        } else {
+            self.wram_bank = svbk & 0x7;
+        }
+    }
+    
     fn it_e(&self) -> u8 {
         ((self.it_joypad_enable as u8) << 4) |
         ((self.it_serial_enable as u8) << 3) |

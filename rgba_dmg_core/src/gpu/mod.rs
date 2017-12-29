@@ -3,7 +3,7 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:22:06 2017 (+0100)
+// Last-Updated: Fri Dec 29 16:38:30 2017 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -46,9 +46,20 @@ pub struct GPU {
     mode0_irq: bool,
 
     // Palettes
-    bgp: [Color; 4],
-    obp0: [Color; 4],
-    obp1: [Color; 4],
+    bgp: [DmgColor; 4],
+    obp0: [DmgColor; 4],
+    obp1: [DmgColor; 4],
+    
+    bcpi: usize,
+    bcp_inc: bool,
+    bcpd: [[CgbColor; 4]; 8],
+
+    ocpi: usize,
+    ocp_inc: bool,
+    ocpd: [[CgbColor; 4]; 8],
+
+    // CGB stuff
+    vram_bank: u8,
 
     // Interrupts
     it_vblank: bool,
@@ -59,7 +70,7 @@ impl GPU {
     pub fn new() -> GPU {
         GPU {
             vram: [0; 0x4000],
-            oam: [Sprite::new(); 40],
+            oam: [Default::default(); 40],
             line_cache: [[None; 10]; 144],
 
             mode: GpuMode::ReadingOAM,
@@ -91,9 +102,20 @@ impl GPU {
             mode0_irq: false,
 
             // Palettes
-            bgp: [Color::White; 4],
-            obp0: [Color::White; 4],
-            obp1: [Color::White; 4],
+            bgp: [DmgColor::White; 4],
+            obp0: [DmgColor::White; 4],
+            obp1: [DmgColor::White; 4],
+            
+            bcpi: 0,
+            bcp_inc: false,
+            bcpd: [[Default::default(); 4]; 8],
+            
+            ocpi: 0,
+            ocp_inc: false,
+            ocpd: [[Default::default(); 4]; 8],
+            
+            // CGB stuff
+            vram_bank: 0,
 
             // Interrupts
             it_vblank: false,
@@ -243,6 +265,53 @@ impl GPU {
     pub fn obp1(&self) -> u8 { self.obp1.get_register() }
     #[inline]
     pub fn set_obp1(&mut self, obp1: u8) { self.obp1.set_register(obp1) }
+
+    #[inline]
+    pub fn vbk(&self) -> u8 { self.vram_bank }
+    #[inline]
+    pub fn set_vbk(&mut self, vbk: u8) { self.vram_bank = vbk; }
+
+    #[inline]
+    pub fn bcpi(&self) -> u8 { self.bcpi as u8 }
+    #[inline]
+    pub fn set_bcpi(&mut self, bcpi: u8) {
+        self.bcp_inc = (bcpi & 0x80) != 0;
+        self.bcpi = (bcpi & 0x7f) as usize;
+    }
+
+    #[inline]
+    pub fn bcpd(&self) -> u8 {
+        self.bcpd[self.bcpi >> 3][(self.bcpi & 0x7) >> 1].read(self.bcpi)
+    }
+    #[inline]
+    pub fn set_bcpd(&mut self, value: u8) {
+        self.bcpd[self.bcpi >> 3][(self.bcpi & 0x7) >> 1].write(self.bcpi, value);
+
+        if self.bcp_inc {
+            self.bcpi += 1;
+        }
+    }
+
+    #[inline]
+    pub fn ocpi(&self) -> u8 { self.bcpi as u8 }
+    #[inline]
+    pub fn set_ocpi(&mut self, ocpi: u8) {
+        self.ocp_inc = (ocpi & 0x80) != 0;
+        self.ocpi = (ocpi & 0x7f) as usize;
+    }
+
+    #[inline]
+    pub fn ocpd(&self) -> u8 {
+        self.ocpd[self.ocpi >> 3][(self.ocpi & 0x7) >> 1].read(self.ocpi)
+    }
+    #[inline]
+    pub fn set_ocpd(&mut self, value: u8) {
+        self.ocpd[self.ocpi >> 3][(self.ocpi & 0x7) >> 1].write(self.ocpi, value);
+
+        if self.ocp_inc {
+            self.ocpi += 1;
+        }
+    }
     
     pub fn lcdc(&self) -> u8 {
         ((self.display_enable as u8) << 7) |
@@ -291,10 +360,10 @@ impl GPU {
     pub fn set_it_lcd(&mut self, v: bool) { self.it_lcd = v }
     
     pub fn read_vram_u8(&self, address: usize) -> u8 {
-        self.vram[address & 0x1FFF]
+        self.vram[((self.vram_bank as usize) << 13) + address & 0x1FFF]
     }
     pub fn write_vram_u8(&mut self, address: usize, value: u8) {
-        self.vram[address & 0x1FFF] = value
+        self.vram[((self.vram_bank as usize) << 13) + (address & 0x1FFF)] = value
     }
 
     pub fn read_oam_u8(&self, address: usize) -> u8 {
@@ -306,7 +375,7 @@ impl GPU {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq)]
+#[derive(Default, Debug, Clone, Copy, Eq)]
 struct Sprite {
     x: u8,
     y: u8,
@@ -321,21 +390,6 @@ struct Sprite {
 }
 
 impl Sprite {
-    pub fn new() -> Sprite {
-        Sprite {
-            x: 0,
-            y: 0,
-            tile: 0,
-
-            priority: false,
-            y_flip: false,
-            x_flip: false,
-            dmg_palette: false,
-            cgb_bank: 0,
-            cgb_palette: 0,
-        }
-    }
-    
     pub fn read(&self, address: usize) -> u8 {
         match address % 4 {
             0 => self.y,
@@ -395,33 +449,72 @@ enum GpuMode {
     ReadingVRAM = 3,
 }
 
+impl Default for GpuMode {
+    fn default() -> GpuMode { GpuMode::ReadingOAM }
+}
+
 #[derive(Debug, Clone, Copy)]
-enum Color {
+enum DmgColor {
     White = 0,
     LightGray = 1,
     DarkGray = 2,
     Black = 3
 }
 
-impl Color {
+impl Default for DmgColor {
+    fn default() -> DmgColor { DmgColor::White }
+}
+
+impl DmgColor {
     fn as_real(self) -> rgba_common::Color {
         match self {
-            Color::White => rgba_common::Color(224, 248, 208),
-            Color::LightGray => rgba_common::Color(136, 192, 112),
-            Color::DarkGray => rgba_common::Color(52, 104, 86),
-            Color::Black => rgba_common::Color(8, 24, 32),
+            DmgColor::White => rgba_common::Color(224, 248, 208),
+            DmgColor::LightGray => rgba_common::Color(136, 192, 112),
+            DmgColor::DarkGray => rgba_common::Color(52, 104, 86),
+            DmgColor::Black => rgba_common::Color(8, 24, 32),
         }
     }
 }
 
-impl From<u8> for Color {
-    fn from(value: u8) -> Color {
+impl From<u8> for DmgColor {
+    fn from(value: u8) -> DmgColor {
         match value {
-            0 => Color::White,
-            1 => Color::LightGray,
-            2 => Color::DarkGray,
-            3 => Color::Black,
+            0 => DmgColor::White,
+            1 => DmgColor::LightGray,
+            2 => DmgColor::DarkGray,
+            3 => DmgColor::Black,
             _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct CgbColor {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8
+}
+
+impl CgbColor {
+    pub fn read(&self, address: usize) -> u8 {
+        match address & 1 {
+            0 => self.r | ((self.g & 0x7) << 5),
+            1 => (self.g >> 3) | (self.b << 2),
+            _ => unreachable!()
+        }
+    }
+
+    pub fn write(&mut self, address: usize, value: u8) {
+        match address & 1 {
+            0 => {
+                self.r = value & 0x1f;
+                self.g = (self.g & 0x18) | ((value & 0xe0) >> 5);
+            }
+            1 => {
+                self.g = (self.g & 0x7) | ((value & 0x3) << 3);
+                self.b = value >> 2;
+            }
+            _ => unreachable!()
         }
     }
 }
@@ -431,7 +524,7 @@ trait PaletteRegister {
     fn set_register(&mut self, u8);
 }
 
-impl PaletteRegister for [Color; 4] {
+impl PaletteRegister for [DmgColor; 4] {
     fn get_register(&self) -> u8 {
         ((self[3] as u8) << 6) |
         ((self[2] as u8) << 4) |
@@ -440,9 +533,9 @@ impl PaletteRegister for [Color; 4] {
     }
 
     fn set_register(&mut self, value: u8) {
-        self[0] = Color::from(value & 0b00000011);
-        self[1] = Color::from((value & 0b00001100) >> 2);
-        self[2] = Color::from((value & 0b00110000) >> 4);
-        self[3] = Color::from((value & 0b11000000) >> 6);
+        self[0] = DmgColor::from(value & 0b00000011);
+        self[1] = DmgColor::from((value & 0b00001100) >> 2);
+        self[2] = DmgColor::from((value & 0b00110000) >> 4);
+        self[3] = DmgColor::from((value & 0b11000000) >> 6);
     }
 }

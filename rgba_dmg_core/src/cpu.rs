@@ -3,7 +3,7 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Sat Dec 30 11:17:50 2017 (+0100)
+// Last-Updated: Sun Dec 31 00:44:29 2017 (+0100)
 //           By: Louise <louise>
 // 
 use ::Interconnect;
@@ -400,14 +400,14 @@ impl LR35902 {
             unadjusted.wrapping_sub(adjust)
         } else {
             if ((unadjusted & 0xF) > 9) || self.half { adjust |= 0x06 }
-            if (unadjusted > 0x9F) || self.carry     { adjust |= 0x60 }
+            if (unadjusted > 0x99) || self.carry     { adjust |= 0x60 }
 
             unadjusted.wrapping_add(adjust)
         };
 
         self.a = a as u8;
         
-        if (adjust & 0x60) != 0 { self.carry = true; }
+        if (a & 0x100) != 0 { self.carry = true; }
         self.zero = self.a == 0;
         self.half = false;
     }
@@ -879,7 +879,7 @@ impl LR35902 {
                 self.zero = false;
                 self.sub = false;
                 self.half = (sp ^ v ^ res) & 0x10 == 0x10;
-                self.carry = res & 0x100 == 0x100;
+                self.carry = (sp ^ v ^ res) & 0x100 == 0x100;
                 
                 self.sp = res as u16;
                 io.delay(2);
@@ -911,7 +911,7 @@ impl LR35902 {
                 self.zero = false;
                 self.sub = false;
                 self.half = (sp ^ v ^ res) & 0x10 == 0x10;
-                self.carry = res & 0x100 == 0x100;
+                self.carry = (sp ^ v ^ res) & 0x100 == 0x100;
                 
                 self.set_hl(res as u16);
                 io.delay(1);

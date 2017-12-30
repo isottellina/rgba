@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sat Dec 30 23:04:29 2017 (+0100)
+// Last-Updated: Sat Dec 30 23:50:59 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -77,7 +77,6 @@ const HDMA2: usize = 0xFF52;
 const HDMA3: usize = 0xFF53;
 const HDMA4: usize = 0xFF54;
 const HDMA5: usize = 0xFF55;
-const KEY1: usize = 0xFF4D;
 const BIOS: usize = 0xFF50;
 
 const VBK: usize = 0xFF4F;
@@ -107,7 +106,6 @@ pub struct Interconnect {
 
     // CGB stuff
     wram_bank: u8,
-    
     
     // DMA
     dma_src: usize,

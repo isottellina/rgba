@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Fri Dec 29 16:44:08 2017 (+0100)
+// Last-Updated: Sat Dec 30 23:04:29 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -72,6 +72,11 @@ const OCPI: usize = 0xFF6A;
 const OCPD: usize = 0xFF6B;
 
 const DMA: usize = 0xFF46;
+const HDMA1: usize = 0xFF51;
+const HDMA2: usize = 0xFF52;
+const HDMA3: usize = 0xFF53;
+const HDMA4: usize = 0xFF54;
+const HDMA5: usize = 0xFF55;
 const KEY1: usize = 0xFF4D;
 const BIOS: usize = 0xFF50;
 
@@ -109,6 +114,12 @@ pub struct Interconnect {
     dma_dest: usize,
     dma_ongoing: bool,
 
+    // HDMA
+    hdma_src: usize,
+    hdma_dst: usize,
+    hdma_length: usize,
+    hdma_ongoing: bool,
+
     // Watchpoints
     watchpoints_enabled: bool,
     watchpoints: HashSet<usize>,
@@ -143,6 +154,11 @@ impl Interconnect {
             dma_src: 0,
             dma_dest: 0,
             dma_ongoing: false,
+
+            hdma_src: 0,
+            hdma_dst: 0,
+            hdma_length: 0,
+            hdma_ongoing: false,
 
             watchpoints_enabled: false,
             watchpoints: HashSet::new(),
@@ -276,6 +292,8 @@ impl Interconnect {
             VBK  if self.cgb => self.gpu.vbk(),
             SVBK if self.cgb => self.wram_bank,
 
+            HDMA5 => 0x00,
+            
             NR10 => self.apu.nr10(),
             NR11 => self.apu.nr11(),
             NR12 => self.apu.nr12(),
@@ -384,7 +402,13 @@ impl Interconnect {
                 self.apu.set_nr3_wave(address, value),
 
             DMA  => self.begin_dma(value),
-            
+
+            HDMA1 if self.cgb => self.hdma_src = (self.hdma_src & 0xff) | ((value as usize) << 8),
+            HDMA2 if self.cgb => self.hdma_src = (self.hdma_src & 0xff00) | (value as usize),
+            HDMA3 if self.cgb => self.hdma_dst = (self.hdma_dst & 0xff) | ((value as usize) << 8),
+            HDMA4 if self.cgb => self.hdma_dst = (self.hdma_dst & 0xff00) | (value as usize),
+            HDMA5 if self.cgb => self.write_hdma(value),
+                
             IF   => self.set_if(value),
             IE   => self.set_ie(value),
             
@@ -451,6 +475,51 @@ impl Interconnect {
             self.gpu.rebuild_cache();
         }
     }
+
+    fn handle_hdma(&mut self) {
+        if self.hdma_ongoing {
+            let length_dest = self.hdma_length - 0x10;
+            
+            while self.hdma_length > length_dest {
+                let byte = self.read_u8(self.hdma_src);
+                self.gpu.write_vram_u8(self.hdma_dst | 0x8000, byte);
+                
+                self.hdma_src += 1;
+                self.hdma_dst += 1;
+                self.hdma_length -= 1;
+
+                if self.hdma_length == 0 {
+                    self.hdma_ongoing = false;
+                }
+            }
+        }
+    }
+    
+    fn write_hdma(&mut self, value: u8) {
+        let mut length = (((value & 0x7f) as usize) + 1) << 4;
+        let mut src = self.hdma_src & 0xfff0;
+        let mut dst = (self.hdma_dst & 0x1ff0) | 0x8000;
+
+        if self.hdma_ongoing && (value & 0x80 == 0) {
+            self.hdma_ongoing = false;
+        } else {
+            if value & 0x80 == 0 {
+                // General purpose DMA
+                while length != 0 {
+                    let byte = self.read_u8(src);
+                    self.gpu.write_vram_u8(dst, byte);
+                    
+                    src += 1;
+                    dst += 1;
+                    length -= 1;
+                }
+            } else {
+                // H-Blank DMA
+                self.hdma_ongoing = true;
+                self.hdma_length = length;
+            }
+        }
+    }
     
     pub fn next_interrupt(&self) -> Option<u16> {
         if self.it_vblank_enable && self.gpu.it_vblank() {
@@ -501,6 +570,14 @@ impl Interconnect {
     pub fn delay(&mut self, m_cycles: u32) {
         let mut cycles = m_cycles << 2;
 
+        if self.gpu.has_hblank() {
+            self.gpu.ack_hblank();
+
+            self.handle_hdma();
+
+            cycles += 8;
+        }
+        
         self.gpu.spend_cycles(cycles);
 
         while cycles != 0 {

@@ -3,7 +3,7 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Sat Dec 30 11:16:36 2017 (+0100)
+// Last-Updated: Sat Dec 30 22:56:04 2017 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -65,6 +65,8 @@ pub struct GPU {
     // Interrupts
     it_vblank: bool,
     it_lcd: bool,
+
+    has_hblank: bool,
 }
 
 impl GPU {
@@ -121,6 +123,7 @@ impl GPU {
             // Interrupts
             it_vblank: false,
             it_lcd: false,
+            has_hblank: false,
         }
     }
 
@@ -212,7 +215,8 @@ impl GPU {
                     if self.mode0_irq {
                         self.it_lcd = true;
                     }
-                    
+
+                    self.has_hblank = true;
                     self.mode = GpuMode::HBlank;
                 }
             }
@@ -352,6 +356,9 @@ impl GPU {
         self.mode0_irq = (stat & 0x08) != 0;
     }
 
+    pub fn has_hblank(&self) -> bool { self.has_hblank }
+    pub fn ack_hblank(&mut self) { self.has_hblank = false }
+    
     pub fn it_vblank(&self) -> bool { self.it_vblank }
     pub fn ack_it_vblank(&mut self) { self.it_vblank = false }
     pub fn set_it_vblank(&mut self, v: bool) { self.it_vblank = v }

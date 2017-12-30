@@ -3,13 +3,14 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Fri Dec 29 16:38:30 2017 (+0100)
+// Last-Updated: Sat Dec 30 11:16:36 2017 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
 use std::cmp::Ordering;
 
-mod render;
+mod render_dmg;
+mod render_cgb;
 mod oam;
 
 pub struct GPU {
@@ -269,7 +270,7 @@ impl GPU {
     #[inline]
     pub fn vbk(&self) -> u8 { self.vram_bank }
     #[inline]
-    pub fn set_vbk(&mut self, vbk: u8) { self.vram_bank = vbk; }
+    pub fn set_vbk(&mut self, vbk: u8) { self.vram_bank = vbk & 1; }
 
     #[inline]
     pub fn bcpi(&self) -> u8 { self.bcpi as u8 }
@@ -360,7 +361,7 @@ impl GPU {
     pub fn set_it_lcd(&mut self, v: bool) { self.it_lcd = v }
     
     pub fn read_vram_u8(&self, address: usize) -> u8 {
-        self.vram[((self.vram_bank as usize) << 13) + address & 0x1FFF]
+        self.vram[((self.vram_bank as usize) << 13) + (address & 0x1FFF)]
     }
     pub fn write_vram_u8(&mut self, address: usize, value: u8) {
         self.vram[((self.vram_bank as usize) << 13) + (address & 0x1FFF)] = value
@@ -516,6 +517,14 @@ impl CgbColor {
             }
             _ => unreachable!()
         }
+    }
+
+    pub fn as_real(&self) -> rgba_common::Color {
+        rgba_common::Color(
+            self.r << 3,
+            self.g << 3,
+            self.b << 3
+        )
     }
 }
 

@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Fri Dec 29 16:39:08 2017 (+0100)
+// Last-Updated: Fri Dec 29 16:44:08 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -523,7 +523,12 @@ impl Interconnect {
     }
     
     pub fn render<T: Platform>(&mut self, platform: &mut T) {
-        self.gpu.render(platform);
+        if self.cgb {
+            self.gpu.render_cgb(platform);
+        } else {
+            self.gpu.render_dmg(platform);
+        }
+        
         self.apu.render(platform);
     }
 }

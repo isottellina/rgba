@@ -3,7 +3,7 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:20:09 2017 (+0100)
+// Last-Updated: Sat Dec 30 11:17:50 2017 (+0100)
 //           By: Louise <louise>
 // 
 use ::Interconnect;
@@ -591,6 +591,7 @@ impl LR35902 {
                 self.carry = (self.a & 0x80) != 0;
             }
 
+            0x10 => { }
             0x11 => { let de = self.next_u16(io); self.set_de(de); },
             0x12 => {
                 let de = self.de();

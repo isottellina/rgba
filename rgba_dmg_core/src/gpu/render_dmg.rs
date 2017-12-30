@@ -3,7 +3,7 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Fri Dec 29 12:36:23 2017 (+0100)
+// Last-Updated: Sat Dec 30 10:02:50 2017 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common::Platform;
@@ -12,7 +12,7 @@ use gpu::GPU;
 use gpu::DmgColor;
 
 impl GPU {   
-    pub fn render<T: Platform>(&mut self, platform: &mut T) {
+    pub fn render_dmg<T: Platform>(&mut self, platform: &mut T) {
         if let Some(y) = self.render_line {    
             for x in 0..160 {
                 let bg_color = if self.window_enable && self.in_window(x, y) {
@@ -46,15 +46,15 @@ impl GPU {
     }
 
     #[inline]
-    fn in_window(&self, x: u8, y: u8) -> bool {
+    pub fn in_window(&self, x: u8, y: u8) -> bool {
         let wx = self.wx as i32;
         let dx = x as i32;
 
         dx >= (wx - 7) && y >= self.wy
     }
     
-    fn tile_get_color(&self, bank: bool, tile: u8, x: u8, y: u8) -> u8 {
-        let offset = if bank {
+    fn tile_get(&self, tile_data: bool, tile: u8, x: u8, y: u8) -> u8 {
+        let offset = if tile_data {
             ((tile as usize) << 4) + ((y as usize) << 1)
         } else {
             let tile = tile as i8;
@@ -84,7 +84,7 @@ impl GPU {
         let tile_x = actual_x as u8 & 0x7;
         let tile_y = actual_y as u8 & 0x7;
         
-        self.tile_get_color(self.tile_data, tile, tile_x, tile_y)
+        self.tile_get(self.tile_data, tile, tile_x, tile_y)
     }
     
     fn get_background(&self, x: u8, y: u8) -> u8 {
@@ -102,7 +102,7 @@ impl GPU {
         let tile_x = actual_x as u8 & 0x7;
         let tile_y = actual_y as u8 & 0x7;
         
-        self.tile_get_color(self.tile_data, tile, tile_x, tile_y)
+        self.tile_get(self.tile_data, tile, tile_x, tile_y)
     }
 
     fn get_sprite(&self, x: u8, y: u8, bg_color: u8) -> Option<DmgColor> {
@@ -142,7 +142,7 @@ impl GPU {
                         }
                     };
                     
-                    let c = self.tile_get_color(true, tile, tile_x, tile_y);
+                    let c = self.tile_get(true, tile, tile_x, tile_y);
                     
                     if c == 0 {
                         continue;

@@ -3,7 +3,7 @@
 // Filename: timer.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 01:49:50 2017 (+0100)
-// Last-Updated: Sun Dec 31 01:28:17 2017 (+0100)
+// Last-Updated: Sun Dec 31 15:12:17 2017 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -43,7 +43,7 @@ impl Timer {
 
     pub fn handle(&mut self) {
         self.div = self.div.wrapping_add(1);
-
+        
         if self.tima_running {
             let mask = (1 << self.speed) - 1;
             
@@ -57,10 +57,13 @@ impl Timer {
             }
         }
     }
+
+    pub fn get_internal(&self) -> u16 { self.div }
     
     pub fn div(&self) -> u8 { (self.div >> 8) as u8 }
     pub fn set_div(&mut self) { self.div = 0; }
-    
+
+    pub fn set_tima(&mut self, tima: u8) { self.tima = tima; }
     pub fn tima(&self) -> u8 { self.tima }
     
     pub fn tma(&self) -> u8 { self.tma }

@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sat Dec 30 23:50:59 2017 (+0100)
+// Last-Updated: Sun Dec 31 15:41:24 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -349,9 +349,10 @@ impl Interconnect {
             SB => {},
             SC => {},
 
-            DIV => self.timer.set_div(),
-            TMA => self.timer.set_tma(value),
-            TAC => self.timer.set_tac(value),
+            DIV  => self.timer.set_div(),
+            TIMA => self.timer.set_tima(value),
+            TMA  => self.timer.set_tma(value),
+            TAC  => self.timer.set_tac(value),
 
             LCDC => self.gpu.set_lcdc(value),
             STAT => self.gpu.set_stat(value),
@@ -546,6 +547,8 @@ impl Interconnect {
     #[inline(always)]
     pub fn ack_frame(&mut self) { self.gpu.ack_frame() }
 
+    pub fn get_internal(&self) -> u16 { self.timer.get_internal() }
+    
     // Watchpoints
     #[inline]
     pub fn watchpoint_hit(&self) -> Option<(usize, u8)> { self.watchpoint_hit }
@@ -572,8 +575,6 @@ impl Interconnect {
             self.gpu.ack_hblank();
 
             self.handle_hdma();
-
-            cycles += 8;
         }
         
         self.gpu.spend_cycles(cycles);

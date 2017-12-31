@@ -3,12 +3,12 @@
 // Filename: timer.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 01:49:50 2017 (+0100)
-// Last-Updated: Tue Dec 19 19:35:16 2017 (+0100)
+// Last-Updated: Sun Dec 31 01:28:17 2017 (+0100)
 //           By: Louise <louise>
 // 
 
 pub struct Timer {
-    div: u32,
+    div: u16,
 
     tima: u8,
     tma: u8,
@@ -75,7 +75,7 @@ impl Timer {
             _ => unreachable!(),
         };
         
-        ((self.tima_running as u8) << 7) | speed
+        ((self.tima_running as u8) << 2) | speed
     }
 
     pub fn set_tac(&mut self, value: u8) {
@@ -87,7 +87,7 @@ impl Timer {
             _ => unreachable!(),
         };
 
-        self.tima_running = (value & 0x80) != 0;
+        self.tima_running = (value & 0x04) != 0;
     }
 
     pub fn it_timer(&self) -> bool { self.it_timer }

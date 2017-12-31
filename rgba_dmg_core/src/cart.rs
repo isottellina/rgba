@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Sun Dec 31 20:12:55 2017 (+0100)
+// Last-Updated: Sun Dec 31 21:52:37 2017 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -25,6 +25,8 @@ pub enum Cartridge {
         rom_bank: u8,
         ram_bank: u8,
 
+        rom_banks: u8,
+
         save_filename: String,
     },
     MBC3 {
@@ -35,12 +37,16 @@ pub enum Cartridge {
         rom_bank: u8,
         ram_bank: u8,
 
+        rom_banks: u8,
+
         save_filename: String,
     }
 }
 
 impl Cartridge {
     pub fn new(filename: &str, rom: Vec<u8>) -> Cartridge {
+        let rom_banks: u8 = 2 << rom[0x148];
+        
         match rom[0x147] {
             0x00 => {
                 Cartridge::RomOnly(rom)
@@ -65,6 +71,7 @@ impl Cartridge {
                     mode: false,
                     rom_bank: 1,
                     ram_bank: 0,
+                    rom_banks,
                     save_filename,
                 }
             },
@@ -88,6 +95,7 @@ impl Cartridge {
                     
                     rom_bank: 1,
                     ram_bank: 0,
+                    rom_banks,
                     save_filename,
                 }
             },
@@ -105,7 +113,7 @@ impl Cartridge {
             Cartridge::MBC3 { rom: ref v, rom_bank: b, .. } => {
                 match address {
                     0x0000...0x3FFF => v[address],
-                    0x4000...0x7FFF =>
+                    0x4000...0x7FFF => 
                         v[((b as usize) << 14) + (address & 0x3FFF)],
                     _ => unreachable!(),
                 }
@@ -122,6 +130,7 @@ impl Cartridge {
                 ref mut ram_bank,
                 ref mut mode,
                 ref mut ram_enable,
+                ref rom_banks,
                 ref ram,
                 ref save_filename, ..
             } => {
@@ -145,6 +154,7 @@ impl Cartridge {
                     0x2000...0x3FFF => {
                         *rom_bank &= 0xe0;
                         *rom_bank |= if value == 0 { 1 } else { value & 0x1f };
+                        *rom_bank %= rom_banks;
                     }
                     0x4000...0x5FFF => {
                         if *mode {
@@ -152,6 +162,7 @@ impl Cartridge {
                         } else {
                             *rom_bank &= 0x1f;
                             *rom_bank |= (value & 0x3) << 5;
+                            *rom_bank %= rom_banks;
                         }
                     }
                     0x6000...0x7FFF => *mode = value != 0,
@@ -162,6 +173,7 @@ impl Cartridge {
                 ref mut rom_bank,
                 ref mut ram_bank,
                 ref mut ram_enable,
+                ref rom_banks,
                 ref ram,
                 ref save_filename, ..
             } => {
@@ -185,6 +197,8 @@ impl Cartridge {
                         } else {
                             value & 0x7f
                         };
+
+                        *rom_bank %= rom_banks;
                     }
                     0x4000...0x5FFF => {
                         if value < 4 {

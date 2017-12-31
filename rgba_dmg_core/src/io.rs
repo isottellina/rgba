@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sun Dec 31 20:15:19 2017 (+0100)
+// Last-Updated: Sun Dec 31 20:51:22 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -90,7 +90,7 @@ const IE: usize = 0xFFFF;
 pub struct Interconnect {
     bios: Vec<u8>,
     cart: Cartridge,
-    wram: [u8; 0x2000],
+    wram: [u8; 0x8000],
     hram: [u8; 0x80],
 
     // Components
@@ -107,7 +107,7 @@ pub struct Interconnect {
     it_joypad_enable: bool,
 
     // CGB stuff
-    wram_bank: u8,
+    wram_bank: usize,
     
     // DMA
     dma_src: usize,
@@ -135,7 +135,7 @@ impl Interconnect {
         Interconnect {
             bios: Vec::new(),
             cart: Cartridge::NoCartridge,
-            wram: [0; 0x2000],
+            wram: [0; 0x8000],
             hram: [0; 0x80],
 
             gpu: GPU::new(),
@@ -257,7 +257,10 @@ impl Interconnect {
             0x0000...0x7FFF => self.cart.read_rom(address),
             0x8000...0x9FFF => self.gpu.read_vram_u8(address),
             0xA000...0xBFFF => self.cart.read_ram(address),
-            0xC000...0xFDFF => self.wram[address & 0x1FFF],
+            0xC000...0xCFFF => self.wram[address & 0xFFF],
+            0xD000...0xDFFF => self.wram[(self.wram_bank << 12) + (address & 0xFFF)],
+            0xE000...0xEFFF => self.wram[address & 0xFFF],
+            0xF000...0xFDFF => self.wram[(self.wram_bank << 12) + (address & 0xFFF)],
             0xFE00...0xFE9F => self.gpu.read_oam_u8(address),
             0xFEA0...0xFEFF => 0xFF,
             0xFF80...0xFFFE => self.hram[address & 0x7F],
@@ -290,7 +293,7 @@ impl Interconnect {
             OCPD => self.gpu.ocpd(),
 
             VBK  if self.cgb => self.gpu.vbk(),
-            SVBK if self.cgb => self.wram_bank,
+            SVBK if self.cgb => self.wram_bank as u8,
 
             HDMA5 => 0x00,
             
@@ -341,7 +344,10 @@ impl Interconnect {
             0x0000...0x7FFF => { self.cart.write_rom(address, value) }
             0x8000...0x9FFF => { self.gpu.write_vram_u8(address, value) }
             0xA000...0xBFFF => { self.cart.write_ram(address, value) }
-            0xC000...0xFDFF => { self.wram[address & 0x1FFF] = value }
+            0xC000...0xCFFF => { self.wram[address & 0xFFF] = value }
+            0xD000...0xDFFF => { self.wram[(self.wram_bank << 12) + (address & 0xFFF)] = value }
+            0xE000...0xEFFF => { self.wram[address & 0xFFF] = value }
+            0xF000...0xFDFF => { self.wram[(self.wram_bank << 12) + (address & 0xFFF)] = value }
             0xFE00...0xFE9F => { self.gpu.write_oam_u8(address, value); self.gpu.rebuild_cache(); }
             0xFEA0...0xFEFF => { },
             0xFF80...0xFFFE => { self.hram[address & 0x7F] = value }
@@ -432,7 +438,7 @@ impl Interconnect {
         if svbk == 0 {
             self.wram_bank = 1;
         } else {
-            self.wram_bank = svbk & 0x7;
+            self.wram_bank = (svbk & 0x7) as usize;
         }
     }
     

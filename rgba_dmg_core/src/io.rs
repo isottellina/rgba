@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sun Dec 31 15:41:24 2017 (+0100)
+// Last-Updated: Sun Dec 31 20:15:19 2017 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -34,6 +34,7 @@ const NR11: usize = 0xFF11;
 const NR12: usize = 0xFF12;
 const NR13: usize = 0xFF13;
 const NR14: usize = 0xFF14;
+const NR20: usize = 0xFF15;
 const NR21: usize = 0xFF16;
 const NR22: usize = 0xFF17;
 const NR23: usize = 0xFF18;
@@ -43,6 +44,7 @@ const NR31: usize = 0xFF1B;
 const NR32: usize = 0xFF1C;
 const NR33: usize = 0xFF1D;
 const NR34: usize = 0xFF1E;
+const NR40: usize = 0xFF1F;
 const NR41: usize = 0xFF20;
 const NR42: usize = 0xFF21;
 const NR43: usize = 0xFF22;
@@ -336,13 +338,13 @@ impl Interconnect {
         }
         
         match address {
-            0x0000...0x7FFF => self.cart.write_rom(address, value),
-            0x8000...0x9FFF => self.gpu.write_vram_u8(address, value),
-            0xA000...0xBFFF => self.cart.write_ram(address, value),
-            0xC000...0xFDFF => self.wram[address & 0x1FFF] = value,
-            0xFE00...0xFE9F => self.gpu.write_oam_u8(address, value),
+            0x0000...0x7FFF => { self.cart.write_rom(address, value) }
+            0x8000...0x9FFF => { self.gpu.write_vram_u8(address, value) }
+            0xA000...0xBFFF => { self.cart.write_ram(address, value) }
+            0xC000...0xFDFF => { self.wram[address & 0x1FFF] = value }
+            0xFE00...0xFE9F => { self.gpu.write_oam_u8(address, value); self.gpu.rebuild_cache(); }
             0xFEA0...0xFEFF => { },
-            0xFF80...0xFFFE => self.hram[address & 0x7F] = value,
+            0xFF80...0xFFFE => { self.hram[address & 0x7F] = value }
 
             // IO
             JOYP => self.joypad.write(value),
@@ -381,19 +383,25 @@ impl Interconnect {
             NR12 => self.apu.set_nr12(value),
             NR13 => self.apu.set_nr13(value),
             NR14 => self.apu.set_nr14(value),
+
+            NR20 => { },
             NR21 => self.apu.set_nr21(value),
             NR22 => self.apu.set_nr22(value),
             NR23 => self.apu.set_nr23(value),
             NR24 => self.apu.set_nr24(value),
+            
             NR30 => self.apu.set_nr30(value),
             NR31 => self.apu.set_nr31(value),
             NR32 => self.apu.set_nr32(value),
             NR33 => self.apu.set_nr33(value),
             NR34 => self.apu.set_nr34(value),
+
+            NR40 => { },
             NR41 => self.apu.set_nr41(value),
             NR42 => self.apu.set_nr42(value),
             NR43 => self.apu.set_nr43(value),
             NR44 => self.apu.set_nr44(value),
+            
             NR50 => self.apu.set_nr50(value),
             NR51 => self.apu.set_nr51(value),
             NR52 => self.apu.set_nr52(value),

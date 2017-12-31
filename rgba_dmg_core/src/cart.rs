@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Wed Dec 27 19:35:35 2017 (+0100)
+// Last-Updated: Sun Dec 31 20:12:55 2017 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -170,7 +170,7 @@ impl Cartridge {
                         *ram_enable = (value & 0xF) == 0xA;
 
                         if !*ram_enable {
-                            if let Ok(mut file) = File::open(save_filename) {
+                            if let Ok(mut file) = File::create(save_filename) {
                                 if let Err(e) = file.write(ram) {
                                     warn!("Couldn't save to savefile : {}", e);
                                 }
@@ -190,10 +190,10 @@ impl Cartridge {
                         if value < 4 {
                             *ram_bank = value;
                         } else {
-                            warn!("RTC isn't implemented");
+                            // RTC here
                         }
                     }
-                    0x6000...0x7FFF => warn!("RTC isn't implemented"),
+                    0x6000...0x7FFF => { },
                     _ => unreachable!(),
                 }
             }

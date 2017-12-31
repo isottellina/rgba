@@ -3,7 +3,7 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Wed Dec 27 15:04:46 2017 (+0100)
+// Last-Updated: Sun Dec 31 15:42:53 2017 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -37,122 +37,123 @@ impl Debugger {
     pub fn handle(&mut self, gb: &mut Gameboy) {
         if self.should_break(gb.cpu.pc()) || self.enough_steps() ||
             self.hit_watchpoint(&mut gb.io) {
-            println!("{}", gb.cpu);
-            println!("0x{:04x}: {}", gb.cpu.pc(), disasm(&gb.io, gb.cpu.pc()));
-            
-            while let Ok(s) = readline("> ") {
-                if let Err(_e) = add_history(&s) {
-                    error!("Couldn't add to history!");
-                }
+                println!("{}", gb.cpu);
+                println!("Timer track: {:04x}", gb.io.get_internal());
+                println!("0x{:04x}: {}", gb.cpu.pc(), disasm(&gb.io, gb.cpu.pc()));
                 
-                let mut command: VecDeque<&str> =
-                    s.split_whitespace().collect();
-
-                match command.pop_front() {
-                    Some("c") | Some("continue") => {
-                        break;
-                    },
-
-                    Some("q") | Some("quit") => {
-                        gb.state = false;
-                        break;
-                    },
-
-                    Some("s") | Some("step") => {
-                        self.steps = 1;
-                        break;
+                while let Ok(s) = readline("> ") {
+                    if let Err(_e) = add_history(&s) {
+                        error!("Couldn't add to history!");
                     }
-
-                    Some("b") | Some("break") => {
-                        match get_argument(&mut command) {
-                            Some(addr) => {
-                                println!("Setting breakpoint at {:#04x}", addr);
-                                self.breakpoints.insert(addr as usize);
-                            },
-                            
-                            _ => println!("This function requires an argument"),
-                        }
-                    },
-
-                    Some("rb") | Some("rbreak") => {
-                        match get_argument(&mut command) {
-                            Some(addr) => {
-                                println!("Removing breakpoint at {:#04x}", addr);
-                                
-                                if !self.breakpoints.remove(&(addr as usize)) {
-                                    println!("There was no breakpoint to remove.");
-                                }
-                            },
-                            
-                            _ => println!("This function requires an argument"),
-                        }
-                    },
-
-                    Some("w") | Some("watch") => {
-                        match get_argument(&mut command) {
-                            Some(addr) => {
-                                println!("Setting watchpoint at {:#04x}", addr);
-                                gb.io.set_watchpoint(addr as usize);
-                            },
-                            
-                            _ => println!("This function requires an argument"),
-                        }
-                    },
-
-                    Some("rw") | Some("rwatch") => {
-                        match get_argument(&mut command) {
-                            Some(addr) => {
-                                println!("Removing watchpoint at {:#04x}", addr);
-                                
-                                if !gb.io.rem_watchpoint(addr as usize) {
-                                    println!("There was no watchpoint to remove.");
-                                }
-                            },
-                            
-                            _ => println!("This function requires an argument"),
-                        }
-                    },
-
-                    Some("x") | Some("read") => {
-                        let addr = if let Some(u) = get_argument(&mut command) {
-                            u as usize
-                        } else {
-                            gb.cpu.pc()
-                        };
-
-                        println!("{:04x}: {:02x}", addr, gb.io.read_u8(addr));
-                    },
                     
-                    Some("d") | Some("disassemble") => {
-                        let addr = if let Some(u) = get_argument(&mut command) {
-                            u as usize
-                        } else {
-                            gb.cpu.pc()
-                        };
+                    let mut command: VecDeque<&str> =
+                        s.split_whitespace().collect();
 
-                        println!("{:04x}: {}", addr, disasm(&gb.io, addr));
-                    },
+                    match command.pop_front() {
+                        Some("c") | Some("continue") => {
+                            break;
+                        },
 
-                    Some("reset") => gb.reset(),
-                    
-                    Some("h") | Some("help") => {
-                        println!("c, continue\tContinue emulation\n\
-                                  q, quit\t\tQuit the emulator\n\
-                                  h, help\t\tPrint this help\n\
-                                  s, step\t\tStep executgb.ion\n\
-                                  b, break\tSet a breakpoint\n\
-                                  rb, rbreak\tRemove a breakpoint\n\
-                                  w, watch\tSet a watchpoint\n\
-                                  rw, rwatch\tRemove a watchpoint\n\
-                                  d, disassemble\tDisassemble an instruction"
-                        );
+                        Some("q") | Some("quit") => {
+                            gb.state = false;
+                            break;
+                        },
+
+                        Some("s") | Some("step") => {
+                            self.steps = 1;
+                            break;
+                        }
+
+                        Some("b") | Some("break") => {
+                            match get_argument(&mut command) {
+                                Some(addr) => {
+                                    println!("Setting breakpoint at {:#04x}", addr);
+                                    self.breakpoints.insert(addr as usize);
+                                },
+                                
+                                _ => println!("This function requires an argument"),
+                            }
+                        },
+
+                        Some("rb") | Some("rbreak") => {
+                            match get_argument(&mut command) {
+                                Some(addr) => {
+                                    println!("Removing breakpoint at {:#04x}", addr);
+                                    
+                                    if !self.breakpoints.remove(&(addr as usize)) {
+                                        println!("There was no breakpoint to remove.");
+                                    }
+                                },
+                                
+                                _ => println!("This function requires an argument"),
+                            }
+                        },
+
+                        Some("w") | Some("watch") => {
+                            match get_argument(&mut command) {
+                                Some(addr) => {
+                                    println!("Setting watchpoint at {:#04x}", addr);
+                                    gb.io.set_watchpoint(addr as usize);
+                                },
+                                
+                                _ => println!("This function requires an argument"),
+                            }
+                        },
+
+                        Some("rw") | Some("rwatch") => {
+                            match get_argument(&mut command) {
+                                Some(addr) => {
+                                    println!("Removing watchpoint at {:#04x}", addr);
+                                    
+                                    if !gb.io.rem_watchpoint(addr as usize) {
+                                        println!("There was no watchpoint to remove.");
+                                    }
+                                },
+                                
+                                _ => println!("This function requires an argument"),
+                            }
+                        },
+
+                        Some("x") | Some("read") => {
+                            let addr = if let Some(u) = get_argument(&mut command) {
+                                u as usize
+                            } else {
+                                gb.cpu.pc()
+                            };
+
+                            println!("{:04x}: {:02x}", addr, gb.io.read_u8(addr));
+                        },
+                        
+                        Some("d") | Some("disassemble") => {
+                            let addr = if let Some(u) = get_argument(&mut command) {
+                                u as usize
+                            } else {
+                                gb.cpu.pc()
+                            };
+
+                            println!("{:04x}: {}", addr, disasm(&gb.io, addr));
+                        },
+
+                        Some("reset") => gb.reset(),
+                        
+                        Some("h") | Some("help") => {
+                            println!("c, continue\tContinue emulation\n\
+                                      q, quit\t\tQuit the emulator\n\
+                                      h, help\t\tPrint this help\n\
+                                      s, step\t\tStep executgb.ion\n\
+                                      b, break\tSet a breakpoint\n\
+                                      rb, rbreak\tRemove a breakpoint\n\
+                                      w, watch\tSet a watchpoint\n\
+                                      rw, rwatch\tRemove a watchpoint\n\
+                                      d, disassemble\tDisassemble an instruction"
+                            );
+                        }
+
+                        Some(o) => { println!("This command doesn't exist : {}", o); }
+                        None => { println!("You didn't enter a command"); }
                     }
-
-                    Some(o) => { println!("This command doesn't exist : {}", o); }
-                    None => { println!("You didn't enter a command"); }
                 }
             }
-        }
     }
 
     fn enough_steps(&mut self) -> bool {

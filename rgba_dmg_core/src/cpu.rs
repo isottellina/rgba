@@ -3,7 +3,7 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Sun Dec 31 00:44:29 2017 (+0100)
+// Last-Updated: Sun Dec 31 16:08:27 2017 (+0100)
 //           By: Louise <louise>
 // 
 use ::Interconnect;
@@ -192,7 +192,7 @@ impl LR35902 {
     #[inline]
     /// Reads a word at given address
     fn read_u16(&self, io: &mut Interconnect, address: usize) -> u16 {
-        io.delay(1);
+        io.delay(2);
         
         io.read_u16(address)
     }
@@ -208,7 +208,7 @@ impl LR35902 {
     #[inline]
     /// Writes a word
     fn write_u16(&self, io: &mut Interconnect, address: usize, value: u16) {
-        io.delay(1);
+        io.delay(2);
         
         io.write_u16(address, value);
     }
@@ -835,7 +835,7 @@ impl LR35902 {
             0xC2 => { let c = !self.zero; self.jp_cond(io, c) }
             0xC3 => { self.jp(io) }
             0xC4 => { let c = !self.zero; self.call_cond(io, c) }
-            0xC5 => { let bc = self.bc(); self.push(io, bc) }
+            0xC5 => { let bc = self.bc(); io.delay(1); self.push(io, bc) }
             0xC6 => { let v = self.next_u8(io); self.add_u8(v) }
             0xC7 => { self.rst(io, 0x00) }
             0xC8 => { let c = self.zero; self.ret_cond(io, c) }
@@ -851,7 +851,7 @@ impl LR35902 {
             0xD1 => { let de = self.pop(io); self.set_de(de) }
             0xD2 => { let c = !self.carry; self.jp_cond(io, c) }
             0xD4 => { let c = !self.carry; self.call_cond(io, c) }
-            0xD5 => { let de = self.de(); self.push(io, de) }
+            0xD5 => { let de = self.de(); io.delay(1); self.push(io, de) }
             0xD6 => { let v = self.next_u8(io); self.sub_u8(v) }
             0xD7 => { self.rst(io, 0x10) }
             0xD8 => { let c = self.carry; self.ret_cond(io, c) }
@@ -867,7 +867,7 @@ impl LR35902 {
             },
             0xE1 => { let hl = self.pop(io); self.set_hl(hl); },
             0xE2 => { self.write_u8(io, (0xFF00 + self.c as usize), self.a) }
-            0xE5 => { let hl = self.hl(); self.push(io, hl); }
+            0xE5 => { let hl = self.hl(); io.delay(1); self.push(io, hl); }
             0xE6 => { let v = self.next_u8(io); self.and_u8(v) }
             0xE7 => { self.rst(io, 0x20) }
             0xE8 => {
@@ -899,7 +899,7 @@ impl LR35902 {
             0xF1 => { let af = self.pop(io); self.set_af(af); }
             0xF2 => { self.a = self.read_u8(io, (0xFF00 + self.c as usize)) }
             0xF3 => { self.ime = false }
-            0xF5 => { let af = self.af(); self.push(io, af); }
+            0xF5 => { let af = self.af(); io.delay(1); self.push(io, af); }
             0xF6 => { let v = self.next_u8(io); self.or_u8(v) }
             0xF7 => { self.rst(io, 0x30) }
             0xF8 => {
@@ -1240,7 +1240,7 @@ impl LR35902 {
             0xFD => { self.l |= 0x80 }
             0xFE => { let hl = self.read_hl(io) | 0x80; self.write_hl(io, hl) }
             0xFF => { self.a |= 0x80 }
-            _ => unimplemented!("Opcode 0xCB{:02X} is not yet implemented.", opcode),
+            _ => unreachable!()
         }
     }
 }
@@ -1248,11 +1248,16 @@ impl LR35902 {
 impl fmt::Display for LR35902 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "=====LR35902=====\n\
-                   AF: {:02x}{:02x} HL: {:02x}{:02x}\n\
+                   AF: {:02x}{:02x} HL: {:02x}{:02x} [{}{}{}{}]\n\
                    BC: {:02x}{:02x} SP: {:04x}\n\
                    DE: {:02x}{:02x} PC: {:04x}",
-               self.a, self.f(), self.h, self.l, self.b, self.c,
-               self.sp, self.d, self.e, self.pc)
-               
+               self.a, self.f(), self.h, self.l,
+               if self.zero  { 'Z' } else { '-' },
+               if self.sub   { 'N' } else { '-' },
+               if self.half  { 'H' } else { '-' },
+               if self.carry { 'C' } else { '-' },
+               self.b, self.c, self.sp,
+               self.d, self.e, self.pc
+        )
     }
 }

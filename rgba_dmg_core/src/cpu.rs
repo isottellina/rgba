@@ -3,7 +3,7 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Sun Dec 31 16:08:27 2017 (+0100)
+// Last-Updated: Sun Dec 31 19:49:07 2017 (+0100)
 //           By: Louise <louise>
 // 
 use ::Interconnect;
@@ -390,24 +390,28 @@ impl LR35902 {
     }
 
     fn daa(&mut self) {
-        let unadjusted = self.a as u16;
-        let mut adjust: u16 = 0;
-        
-        let a = if self.sub {
-            if self.half  { adjust |= 0x06 }
-            if self.carry { adjust |= 0x60 }
+        let mut carry = false;
 
-            unadjusted.wrapping_sub(adjust)
-        } else {
-            if ((unadjusted & 0xF) > 9) || self.half { adjust |= 0x06 }
-            if (unadjusted > 0x99) || self.carry     { adjust |= 0x60 }
+        if !self.sub {
+            if self.carry || (self.a > 0x99) {
+                self.a = self.a.wrapping_add(0x60);
+                carry = true;
+            }
 
-            unadjusted.wrapping_add(adjust)
-        };
+            if self.half || (self.a & 0xf) > 0x9 {
+                self.a = self.a.wrapping_add(0x06);
+            }
+        } else if self.carry {
+            carry = true;
 
-        self.a = a as u8;
-        
-        if (a & 0x100) != 0 { self.carry = true; }
+            self.a = self.a.wrapping_add(
+                if self.half { 0x9a } else { 0xa0 }
+            );
+        } else if self.half {
+            self.a = self.a.wrapping_add(0xfa);
+        }
+
+        self.carry = carry;
         self.zero = self.a == 0;
         self.half = false;
     }
@@ -656,7 +660,7 @@ impl LR35902 {
             0x2B => { let hl = self.dec_u16(io, self.hl()); self.set_hl(hl) }
             0x2C => { let l = self.l; self.l = self.inc_u8(l) }
             0x2D => { let l = self.l; self.l = self.dec_u8(l) }
-            0x2E => { let v = self.next_u8(io); self.l = v; }
+            0x2E => { self.l = self.next_u8(io) }
             0x2F => { self.sub = true; self.half = true; self.a ^= 0xFF }
 
             0x30 => { let c = !self.carry; self.jr_cond(io, c) }

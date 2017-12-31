@@ -1,6 +1,6 @@
 [package]
 name = "rgba_dmg_core"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Louise"]
 
 [profile.dev]
@@ -22,5 +22,5 @@ panic = 'unwind'
 
 [dependencies]
 rgba_common = { path = '../rgba_common' }
-log = "~0.4.0-rc.1"
+log = "~0.4.0"
 readline = "~0.0.12"

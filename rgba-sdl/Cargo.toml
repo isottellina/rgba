@@ -1,6 +1,6 @@
 [package]
 name = "rgba-sdl"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Louise"]
 
 [profile.dev]
@@ -24,7 +24,7 @@ panic = 'unwind'
 rgba_common = { path = '../rgba_common' }
 rgba_builder = { path = '../rgba_builder' }
 
-log = "~0.4.0-rc.1"
+log = "~0.4.0"
 env_logger = "~0.5.0-rc.1"
 clap = "~2.29.0"
 

@@ -1,10 +1,10 @@
 [package]
-name = "rgba_dmg_core"
-version = "1.0.0"
+name = "rgba_gba_core"
+version = "0.1.0"
 authors = ["Louise"]
 
 [profile.dev]
-opt-level = 0
+opt-level = 1
 debug = true
 rpath = false
 lto = false

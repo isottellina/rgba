@@ -3,11 +3,10 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Sun Dec 31 22:04:43 2017 (+0100)
+// Last-Updated: Thu Jan  4 13:14:18 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
-extern crate readline;
 extern crate rgba_common;
 
 mod cpu;
@@ -20,6 +19,7 @@ mod cart;
 mod debug;
 
 use rgba_common::{Core, Platform, Event, Console};
+use rgba_common::fnv_hash;
 use cpu::LR35902;
 use io::Interconnect;
 use debug::Debugger;
@@ -95,7 +95,7 @@ impl Core for Gameboy {
         self.state = true;
         
         while self.state {
-            debugger.handle(self);
+            debugger.handle(self, platform);
             
             self.cpu.step(&mut self.io);
             self.io.render(platform);
@@ -111,7 +111,6 @@ impl Core for Gameboy {
         match File::open(filename) {
             Ok(mut file) => {
                 let mut logo: [u8; 0x30] = [0; 0x30];
-                let mut hash: u32 = 0x811c9dc5;
                 
                 if let Err(e) = file.seek(SeekFrom::Start(0x104)) {
                     warn!("Couldn't seek in ROM file : {}", e);
@@ -123,12 +122,7 @@ impl Core for Gameboy {
 
                         false
                     } else {
-                        for byte in logo.iter() {
-                            hash = hash.wrapping_mul(16777619);
-                            hash ^= (*byte) as u32;
-                        }
-                    
-                        hash == 0x8fcbd5b7
+                        fnv_hash(&logo) == 0x8fcbd5b7
                     }
                 }
             },

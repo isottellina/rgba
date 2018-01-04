@@ -3,7 +3,7 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Thu Dec 28 00:03:46 2017 (+0100)
+// Last-Updated: Thu Jan  4 13:15:39 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -17,6 +17,8 @@ use sdl2::surface::Surface;
 use sdl2::keyboard::Scancode;
 use sdl2::video::Window;
 use sdl2::audio::{AudioSpecDesired, AudioQueue};
+
+use readline::{readline, add_history};
 
 pub struct SDLPlatform {
     height: u32,
@@ -161,6 +163,18 @@ impl Platform for SDLPlatform {
                     _ => None,
                 },
             _ => None
+        }
+    }
+
+    fn read_line(&self, prompt: &str) -> Option<String> {
+        if let Ok(s) = readline(prompt) {
+            if let Err(_) = add_history(&s) {
+                warn!("Couldn't add to history");
+            }
+
+            Some(s)
+        } else {
+            None
         }
     }
 }

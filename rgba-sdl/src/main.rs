@@ -3,7 +3,7 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Wed Dec 27 00:46:22 2017 (+0100)
+// Last-Updated: Thu Jan  4 13:05:12 2018 (+0100)
 //           By: Louise <louise>
 //
 extern crate rgba_common;
@@ -13,6 +13,7 @@ extern crate clap;
 #[macro_use] extern crate log;
 extern crate env_logger;
 
+extern crate readline;
 extern crate sdl2;
 
 mod sdl;
@@ -55,7 +56,7 @@ fn main() {
         .build();
 
     if console.is_determined() {
-       let parameters = console.get_platform_parameters().unwrap();
+        let parameters = console.get_platform_parameters().unwrap();
 
         let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
         

@@ -3,16 +3,18 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Tue Dec 26 11:12:56 2017 (+0100)
-// Last-Updated: Wed Dec 27 00:21:04 2017 (+0100)
+// Last-Updated: Wed Jan  3 15:26:46 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
 
 extern crate rgba_common;
 extern crate rgba_dmg_core;
+extern crate rgba_gba_core;
 
 use rgba_common::{Console, Core, Platform};
 use rgba_dmg_core::Gameboy;
+use rgba_gba_core::GBA;
 
 #[derive(Debug, Default)]
 /// This struct is used to build and run Console
@@ -40,6 +42,8 @@ impl ConsoleBuilder {
         if let Some(ref rom_name) = self.rom {
             if Gameboy::is_file(rom_name) {
                 self.console = Some(Console::Gameboy);
+            } else if GBA::is_file(rom_name) {
+                self.console = Some(Console::GBA);
             } else {
                 error!("Couldn't guess what console this ROM is for.")
             }
@@ -54,6 +58,7 @@ impl ConsoleBuilder {
         if let Some(ref console) = self.console {
             match *console {
                 Console::Gameboy => Some(Gameboy::get_platform_parameters()),
+                Console::GBA => Some(GBA::get_platform_parameters()),
                 _ => None
             }
         } else {
@@ -78,7 +83,22 @@ impl ConsoleBuilder {
                     gb.run(platform, debug);
                     Ok(())
                 },
-        
+
+                Console::GBA => {
+                    let mut gba = GBA::new();
+
+                    if let Some(ref bios_name) = self.bios {
+                        gba.load_bios(bios_name)?
+                    }
+
+                    if let Some(ref rom_name) = self.rom {
+                        gba.load_rom(rom_name);
+                    }
+
+                    gba.run(platform, debug);
+                    Ok(())
+                }
+                
                 _ => panic!("There isn't a core yet for {:?}", console)
             }
         } else {

@@ -3,7 +3,7 @@
 // Filename: core.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:34:12 2017 (+0100)
-// Last-Updated: Tue Dec 26 23:30:24 2017 (+0100)
+// Last-Updated: Thu Jan  4 13:15:29 2018 (+0100)
 //           By: Louise <louise>
 //
 
@@ -12,7 +12,7 @@
 #[derive(Debug, Clone, Copy)]
 pub enum Console {
     Gameboy,
-    GameboyAdvance,
+    GBA,
     NDS,
     None
 }
@@ -81,4 +81,21 @@ pub trait Platform {
     fn poll_event(&mut self) -> Option<Event> {
         None
     }
+
+    fn read_line(&self, prompt: &str) -> Option<String> {
+        None
+    }
+}
+
+// Functions
+
+pub fn fnv_hash(data: &[u8]) -> u32 {
+    let mut hash: u32 = 0x811c9dc5;
+    
+    for byte in data.iter() {
+        hash = hash.wrapping_mul(16777619);
+        hash ^= (*byte) as u32;
+    }
+
+    hash
 }

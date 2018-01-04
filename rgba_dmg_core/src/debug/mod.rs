@@ -3,17 +3,18 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Sun Dec 31 15:42:53 2017 (+0100)
+// Last-Updated: Thu Jan  4 13:15:50 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
 
 use std::collections::{BTreeSet, VecDeque};
-use readline::{readline, add_history};
 
 use ::Gameboy;
 use io::Interconnect;
 use debug::disasm::disasm;
+
+use rgba_common::Platform;
 
 pub struct Debugger {
     breakpoints: BTreeSet<usize>,
@@ -34,18 +35,14 @@ impl Debugger {
         self.steps = 1;
     }
     
-    pub fn handle(&mut self, gb: &mut Gameboy) {
+    pub fn handle<T: Platform>(&mut self, gb: &mut Gameboy, platform: &T) {
         if self.should_break(gb.cpu.pc()) || self.enough_steps() ||
             self.hit_watchpoint(&mut gb.io) {
                 println!("{}", gb.cpu);
                 println!("Timer track: {:04x}", gb.io.get_internal());
                 println!("0x{:04x}: {}", gb.cpu.pc(), disasm(&gb.io, gb.cpu.pc()));
                 
-                while let Ok(s) = readline("> ") {
-                    if let Err(_e) = add_history(&s) {
-                        error!("Couldn't add to history!");
-                    }
-                    
+                while let Some(s) = platform.read_line("> ") {
                     let mut command: VecDeque<&str> =
                         s.split_whitespace().collect();
 

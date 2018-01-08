@@ -3,10 +3,13 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Mon Jan  8 14:13:11 2018 (+0100)
+// Last-Updated: Mon Jan  8 16:46:53 2018 (+0100)
 //           By: Louise <louise>
-// 
+//
+mod disasm;
+
 use ::GBA;
+use debug::disasm::{disasm_arm, disasm_thumb};
 use rgba_common::Platform;
 
 use std::collections::VecDeque;
@@ -42,7 +45,19 @@ impl Debugger {
                         gba.cpu.get_register(15) as usize
                     };
                     
-                    println!("{:08x}: {:02x}", addr, gba.io.read_u32(addr));
+                    println!("{:08x}: {:08x}", addr, gba.io.read_u32(addr));
+                }
+                
+                Some("d") | Some("dis") => {
+                    let addr = if let Some(u) = get_argument(&mut cmd) {
+                        u
+                    } else {
+                        gba.cpu.get_register(15)
+                    };
+
+                    let instr = gba.io.read_u32(addr as usize);
+                    
+                    println!("{:08x}: {}", addr, disasm_arm(addr, instr));
                 }
                 
                 Some(c) => println!("The command {} doesn't exist.", c),

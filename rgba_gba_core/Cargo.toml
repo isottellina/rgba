@@ -23,3 +23,4 @@ panic = 'unwind'
 [dependencies]
 rgba_common = { path = '../rgba_common' }
 log = "~0.4.0"
+byteorder="1"

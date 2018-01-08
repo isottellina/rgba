@@ -3,9 +3,10 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Thu Jan  4 20:57:25 2018 (+0100)
+// Last-Updated: Mon Jan  8 14:12:29 2018 (+0100)
 //           By: Louise <louise>
-// 
+//
+use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;
 use std::io::Read;
 
@@ -16,7 +17,16 @@ pub struct Interconnect {
 impl Interconnect {
     pub fn new() -> Interconnect {
         Interconnect {
-            bios: vec![]
+            bios: vec![],
+            
+        }
+    }
+
+    pub fn read_u32(&self, address: usize) -> u32 {
+        match address & 0x0F000000 {
+            0x00000000 if address < 0x4000 =>
+                LittleEndian::read_u32(&self.bios[address..]),
+            _ => unimplemented!(),
         }
     }
     

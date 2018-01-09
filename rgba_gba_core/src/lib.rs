@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Mon Jan  8 14:08:58 2018 (+0100)
+// Last-Updated: Mon Jan  8 17:24:18 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -46,6 +46,8 @@ impl Core for GBA {
     fn run<T: Platform>(&mut self, platform: &mut T, debug: bool) {
         let mut debugger = Debugger::new();
 
+        self.cpu.reset(&self.io);
+        
         while self.state {
             debugger.handle(self, platform);
         }

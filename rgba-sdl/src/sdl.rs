@@ -3,7 +3,7 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Thu Jan  4 13:15:39 2018 (+0100)
+// Last-Updated: Tue Jan  9 12:51:46 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -168,7 +168,7 @@ impl Platform for SDLPlatform {
 
     fn read_line(&self, prompt: &str) -> Option<String> {
         if let Ok(s) = readline(prompt) {
-            if let Err(_) = add_history(&s) {
+            if add_history(&s).is_err() {
                 warn!("Couldn't add to history");
             }
 

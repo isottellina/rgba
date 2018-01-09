@@ -3,7 +3,7 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Thu Jan  4 13:15:50 2018 (+0100)
+// Last-Updated: Tue Jan  9 12:58:05 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -164,7 +164,7 @@ impl Debugger {
     }
     
     fn should_break(&mut self, pc: usize) -> bool {
-        if self.breakpoints.len() == 0 {
+        if self.breakpoints.is_empty() {
             false
         } else {
             let r = self.breakpoints.contains(&pc);
@@ -193,7 +193,7 @@ fn get_argument(command: &mut VecDeque<&str>) -> Option<u32> {
                 u32::from_str_radix(&arg[2..], 16).ok()
             } else if arg.starts_with("0b") {
                 u32::from_str_radix(&arg[2..], 2).ok()
-            } else if arg.starts_with("0") {
+            } else if arg.starts_with('0') {
                 u32::from_str_radix(arg, 8).ok()
             } else {
                 u32::from_str_radix(arg, 10).ok()

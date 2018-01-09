@@ -3,7 +3,7 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Sun Dec 31 19:49:07 2017 (+0100)
+// Last-Updated: Tue Jan  9 13:06:01 2018 (+0100)
 //           By: Louise <louise>
 // 
 use ::Interconnect;
@@ -340,7 +340,7 @@ impl LR35902 {
 
         self.sub = false;
         self.half = (hl ^ v ^ res) & 0x1000 == 0x1000;
-        self.carry = (res & 0x10000) != 0;
+        self.carry = (res & 0x1_0000) != 0;
 
         self.set_hl(res as u16);
         io.delay(1);
@@ -696,7 +696,7 @@ impl LR35902 {
             0x3C => { let a = self.a; self.a = self.inc_u8(a) }
             0x3D => { let a = self.a; self.a = self.dec_u8(a) }
             0x3E => self.a = self.next_u8(io),
-            0x3F => { self.sub= false;self.half= false;self.carry =!self.carry }
+            0x3F => { self.sub = false; self.half = false; self.carry = !self.carry }
 
             0x40 => { }
             0x41 => { self.b = self.c }

@@ -3,7 +3,7 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Thu Dec 28 21:48:28 2017 (+0100)
+// Last-Updated: Tue Jan  9 14:25:46 2018 (+0100)
 //           By: Louise <louise>
 // 
 mod square;
@@ -69,7 +69,7 @@ impl APU {
             samples_index: 0,
             buffer_complete: false,
 
-            downsample_count: 95,
+            downsample_count: 0,
         }
     }
 
@@ -271,9 +271,11 @@ impl APU {
         self.channel3.step();
         self.channel4.step();
 
-        self.downsample_count = (self.downsample_count + 1) % 88;
+        self.downsample_count = self.downsample_count + 1;
 
-        if self.downsample_count == 0 {
+        if self.downsample_count == 88 {
+            self.downsample_count = 0;
+            
             let so1 = self.get_so1() as u16;
             let so2 = self.get_so2() as u16;
 

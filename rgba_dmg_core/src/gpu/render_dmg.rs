@@ -3,7 +3,7 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Sat Dec 30 10:02:50 2017 (+0100)
+// Last-Updated: Tue Jan  9 13:07:53 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common::Platform;
@@ -134,12 +134,10 @@ impl GPU {
                     
                     let tile_y = if !sprite.y_flip {
                         y - sprite_y
+                    } else if self.obj_size {
+                        15 - (y - sprite_y)
                     } else {
-                        if self.obj_size {
-                            15 - (y - sprite_y)
-                        } else {
-                            7 - (y - sprite_y)
-                        }
+                        7 - (y - sprite_y)
                     };
                     
                     let c = self.tile_get(true, tile, tile_x, tile_y);

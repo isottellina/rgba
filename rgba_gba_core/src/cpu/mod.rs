@@ -3,10 +3,11 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Thu Jan  4 20:16:50 2018 (+0100)
+// Last-Updated: Mon Jan  8 19:35:26 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
+use io::Interconnect;
 
 #[derive(Debug, Default)]
 pub struct ARM7TDMI {
@@ -36,6 +37,31 @@ impl ARM7TDMI {
         Default::default()
     }
 
+    pub fn reset(&mut self, io: &Interconnect) {
+        self.mode = CpuMode::SVC;
+        self.state = CpuState::ARM;
+        self.registers[15] = 0;
+        self.irq = false;
+        self.fiq = false;
+
+        self.fill_pipeline(io);
+    }
+    
+    pub fn read_u32(&self, io: &Interconnect, address: usize) -> u32 {
+        io.read_u32(address)
+    }
+    
+    pub fn next_u32(&mut self, io: &Interconnect) -> u32 {
+        let v = self.read_u32(io, self.registers[15] as usize);
+
+        self.registers[15] += 4;
+        v
+    }
+
+    pub fn state(&self) -> CpuState {
+        self.state
+    }
+    
     pub fn get_register(&self, n: usize) -> u32 {
         match self.mode {
             CpuMode::User | CpuMode::System => self.registers[n],
@@ -45,6 +71,18 @@ impl ARM7TDMI {
             CpuMode::ABT if (n == 13) || (n == 14) => self.registers[n + 9],
             CpuMode::FIQ if (n >= 8) || (n <= 14)  => self.registers[n + 11],
             _ => self.registers[n]
+        }
+    }
+
+    pub fn fill_pipeline(&mut self, io: &Interconnect) {
+        match self.state {
+            CpuState::ARM => {
+                self.instr_decoded = self.next_u32(io);
+                self.instr_fetched = self.next_u32(io);
+            }
+            CpuState::Thumb => {
+                unimplemented!();
+            }
         }
     }
 }
@@ -75,8 +113,8 @@ impl fmt::Display for ARM7TDMI {
     }
 }
 
-#[derive(Debug)]
-enum CpuState {
+#[derive(Copy, Clone, Debug)]
+pub enum CpuState {
     ARM = 0,
     Thumb = 1
 }

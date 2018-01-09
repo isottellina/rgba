@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Sat Jan  6 19:01:28 2018 (+0100)
+// Last-Updated: Tue Jan  9 13:26:14 2018 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -17,7 +17,7 @@ pub enum Cartridge {
     ),
     MBC1 {
         rom: Vec<u8>,
-        ram: [u8; 0x8000],
+        ram: Box<[u8; 0x8000]>,
         
         mode: bool,
         ram_enable: bool,
@@ -31,7 +31,7 @@ pub enum Cartridge {
     },
     MBC3 {
         rom: Vec<u8>,
-        ram: [u8; 0x8000],
+        ram: Box<[u8; 0x8000]>,
 
         ram_enable: bool,
         rom_bank: u8,
@@ -43,7 +43,7 @@ pub enum Cartridge {
     },
     MBC5 {
         rom: Vec<u8>,
-        ram: [u8; 0x20000],
+        ram: Box<[u8; 0x20_000]>,
 
         ram_enable: bool,
         rom_bank: usize,
@@ -66,10 +66,10 @@ impl Cartridge {
 
             0x01...0x03 => {
                 let save_filename = format!("{}.sav", filename);
-                let mut ram: [u8; 0x8000] = [0; 0x8000];
+                let mut ram: Box<[u8; 0x8000]> = Box::new([0; 0x8000]);
 
                 if let Ok(mut file) = File::open(&save_filename) {
-                    if let Err(e) = file.read_exact(&mut ram) {
+                    if let Err(e) = file.read_exact(ram.as_mut()) {
                         warn!("Couldn't read savefile : {}", e);
                     } else {
                         info!("Savefile loaded!");
@@ -90,10 +90,10 @@ impl Cartridge {
 
             0x0F...0x13 => {
                 let save_filename = format!("{}.sav", filename);
-                let mut ram: [u8; 0x8000] = [0; 0x8000];
+                let mut ram: Box<[u8; 0x8000]> = Box::new([0; 0x8000]);
 
                 if let Ok(mut file) = File::open(&save_filename) {
-                    if let Err(e) = file.read_exact(&mut ram) {
+                    if let Err(e) = file.read_exact(ram.as_mut()) {
                         warn!("Couldn't read savefile : {}", e);
                     } else {
                         info!("Savefile loaded!");
@@ -114,10 +114,10 @@ impl Cartridge {
 
             0x19...0x1E => {
                 let save_filename = format!("{}.sav", filename);
-                let mut ram: [u8; 0x20000] = [0; 0x20000];
+                let mut ram: Box<[u8; 0x20_000]> = Box::new([0; 0x20_000]);
                 
                 if let Ok(mut file) = File::open(&save_filename) {
-                    if let Err(e) = file.read_exact(&mut ram) {
+                    if let Err(e) = file.read_exact(ram.as_mut()) {
                         warn!("Couldn't read savefile : {}", e);
                     } else {
                         info!("Savefile loaded!");
@@ -166,10 +166,10 @@ impl Cartridge {
     }
 
     pub fn write_rom(&mut self, address: usize, value: u8) {
-        match self {
-            &mut Cartridge::NoCartridge => { }
-            &mut Cartridge::RomOnly(_) => { },
-            &mut Cartridge::MBC1 {
+        match *self {
+            Cartridge::NoCartridge |
+            Cartridge::RomOnly(_) => { },
+            Cartridge::MBC1 {
                 ref mut rom_bank,
                 ref mut ram_bank,
                 ref mut mode,
@@ -184,7 +184,7 @@ impl Cartridge {
 
                         if !*ram_enable {
                             if let Ok(mut file) = File::create(save_filename) {
-                                if let Err(e) = file.write(ram) {
+                                if let Err(e) = file.write(ram.as_ref()) {
                                     warn!("Couldn't save to savefile {}: {}",
                                           save_filename,
                                           e
@@ -213,7 +213,7 @@ impl Cartridge {
                     _ => unreachable!(),
                 }
             }
-            &mut Cartridge::MBC3 {
+            Cartridge::MBC3 {
                 ref mut rom_bank,
                 ref mut ram_bank,
                 ref mut ram_enable,
@@ -227,7 +227,7 @@ impl Cartridge {
 
                         if !*ram_enable {
                             if let Ok(mut file) = File::create(save_filename) {
-                                if let Err(e) = file.write(ram) {
+                                if let Err(e) = file.write(ram.as_ref()) {
                                     warn!("Couldn't save to savefile : {}", e);
                                 }
                             } else {
@@ -255,7 +255,7 @@ impl Cartridge {
                     _ => unreachable!(),
                 }
             }
-            &mut Cartridge::MBC5 {
+            Cartridge::MBC5 {
                 ref mut rom_bank,
                 ref mut ram_bank,
                 ref mut ram_enable,
@@ -269,7 +269,7 @@ impl Cartridge {
 
                         if !*ram_enable {
                             if let Ok(mut file) = File::create(save_filename) {
-                                if let Err(e) = file.write(ram) {
+                                if let Err(e) = file.write(ram.as_ref()) {
                                     warn!("Couldn't save to savefile : {}", e);
                                 }
                             } else {
@@ -295,25 +295,25 @@ impl Cartridge {
     }
 
     pub fn read_ram(&self, address: usize) -> u8 {
-        match self {
-            &Cartridge::NoCartridge => 0xFF,
-            &Cartridge::RomOnly(_) => 0xFF,
-            &Cartridge::MBC1 { ref ram, ram_bank, .. } |
-            &Cartridge::MBC3 { ref ram, ram_bank, .. } =>
+        match *self {
+            Cartridge::NoCartridge |
+            Cartridge::RomOnly(_) => 0xFF,
+            Cartridge::MBC1 { ref ram, ram_bank, .. } |
+            Cartridge::MBC3 { ref ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)],
-            &Cartridge::MBC5 { ref ram, ram_bank, .. } =>
+            Cartridge::MBC5 { ref ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)],
         }
     }
 
     pub fn write_ram(&mut self, address: usize, value: u8) {
-        match self {
-            &mut Cartridge::NoCartridge => { },
-            &mut Cartridge::RomOnly(_) => { },
-            &mut Cartridge::MBC1 { ref mut ram, ram_bank, .. } |
-            &mut Cartridge::MBC3 { ref mut ram, ram_bank, .. } =>
+        match *self {
+            Cartridge::NoCartridge |
+            Cartridge::RomOnly(_) => { },
+            Cartridge::MBC1 { ref mut ram, ram_bank, .. } |
+            Cartridge::MBC3 { ref mut ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)] = value,
-            &mut Cartridge::MBC5 { ref mut ram, ram_bank, .. } =>
+            Cartridge::MBC5 { ref mut ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)] = value,
         }
     }

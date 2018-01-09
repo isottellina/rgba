@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Wed Dec 27 23:31:01 2017 (+0100)
+// Last-Updated: Tue Jan  9 13:04:33 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -212,10 +212,10 @@ impl SquareChannel {
             if self.envelope_period == 0 {
                 self.envelope_period = self.envelope_period_load;
                 
-                if self.envelope_direction {
-                    if self.volume < 15 { self.volume += 1; }
-                } else {
-                    if self.volume > 0 { self.volume -= 1; }
+                if self.envelope_direction && self.volume < 15 {
+                    self.volume += 1;
+                } else if self.volume > 0{
+                    self.volume -= 1;
                 }
 
                 if (self.volume == 0) || (self.volume == 15) {

@@ -3,7 +3,7 @@
 // Filename: noise.rs
 // Author: Louise <louise>
 // Created: Thu Dec 28 00:06:44 2017 (+0100)
-// Last-Updated: Thu Dec 28 01:04:09 2017 (+0100)
+// Last-Updated: Tue Jan  9 13:03:05 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -116,10 +116,10 @@ impl NoiseChannel {
             if self.envelope_period == 0 {
                 self.envelope_period = self.envelope_period_load;
                 
-                if self.envelope_direction {
-                    if self.volume < 15 { self.volume += 1; }
-                } else {
-                    if self.volume > 0 { self.volume -= 1; }
+                if self.envelope_direction && self.volume < 15 {
+                    self.volume += 1;
+                } else if self.volume > 0 {
+                    self.volume -= 1;
                 }
 
                 if (self.volume == 0) || (self.volume == 15) {

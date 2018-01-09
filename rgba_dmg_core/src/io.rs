@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sun Dec 31 21:24:43 2017 (+0100)
+// Last-Updated: Tue Jan  9 13:03:54 2018 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -334,10 +334,8 @@ impl Interconnect {
     }
     
     pub fn write_u8(&mut self, address: usize, value: u8) {
-        if self.watchpoints_enabled {
-            if self.watchpoints.contains(&address) {
-                self.watchpoint_hit = Some((address, value));
-            }
+        if self.watchpoints_enabled && self.watchpoints.contains(&address) {
+            self.watchpoint_hit = Some((address, value));
         }
         
         match address {
@@ -515,22 +513,20 @@ impl Interconnect {
 
         if self.hdma_ongoing && (value & 0x80 == 0) {
             self.hdma_ongoing = false;
-        } else {
-            if value & 0x80 == 0 {
-                // General purpose DMA
-                while length != 0 {
-                    let byte = self.read_u8(src);
-                    self.gpu.write_vram_u8(dst, byte);
-                    
-                    src += 1;
-                    dst += 1;
-                    length -= 1;
-                }
-            } else {
-                // H-Blank DMA
-                self.hdma_ongoing = true;
-                self.hdma_length = length;
+        } else if value & 0x80 == 0 {
+            // General purpose DMA
+            while length != 0 {
+                let byte = self.read_u8(src);
+                self.gpu.write_vram_u8(dst, byte);
+                
+                src += 1;
+                dst += 1;
+                length -= 1;
             }
+        } else {
+            // H-Blank DMA
+            self.hdma_ongoing = true;
+            self.hdma_length = length;
         }
     }
     

@@ -3,7 +3,7 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Thu Jan  4 13:05:12 2018 (+0100)
+// Last-Updated: Tue Jan  9 12:51:08 2018 (+0100)
 //           By: Louise <louise>
 //
 extern crate rgba_common;
@@ -60,7 +60,7 @@ fn main() {
 
         let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
         
-        let _ = console.run(&mut platform, debug).unwrap();
+        let _ = console.run(&mut platform, debug);
     } else {
         panic!("Couldn't build Console");
     }

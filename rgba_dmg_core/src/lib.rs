@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Thu Jan  4 13:14:18 2018 (+0100)
+// Last-Updated: Tue Jan  9 13:00:56 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -57,15 +57,15 @@ impl Gameboy {
                              platform: &mut T) {
         let elapsed = self.last_frame.elapsed();
                 
-        if elapsed < Duration::new(0, 16600000) {
-            let to_wait = Duration::new(0, 16600000) - elapsed;
+        if elapsed < Duration::new(0, 16_600_000) {
+            let to_wait = Duration::new(0, 16_600_000) - elapsed;
             
             thread::sleep(to_wait);
         }
         
         let new_elapsed = self.last_frame.elapsed();
-        let elapsed_nanos = new_elapsed.as_secs() * 1000000000 +
-            new_elapsed.subsec_nanos() as u64;
+        let elapsed_nanos = new_elapsed.as_secs() * 1_000_000_000 +
+            u64::from(new_elapsed.subsec_nanos());
         
         let s = format!(
             "rGBA [{}/60]",
@@ -116,14 +116,12 @@ impl Core for Gameboy {
                     warn!("Couldn't seek in ROM file : {}", e);
 
                     false
+                } else if let Err(e) = file.read_exact(&mut logo) {
+                    warn!("Couldn't read ROM file : {}", e);
+                    
+                    false
                 } else {
-                    if let Err(e) = file.read_exact(&mut logo) {
-                        warn!("Couldn't read ROM file : {}", e);
-
-                        false
-                    } else {
-                        fnv_hash(&logo) == 0x8fcbd5b7
-                    }
+                    fnv_hash(&logo) == 0x8fcb_d5b7
                 }
             },
 
@@ -149,4 +147,8 @@ impl Core for Gameboy {
     fn get_console_type() -> Console {
         Console::Gameboy
     }
+}
+
+impl Default for Gameboy {
+    fn default() -> Gameboy { Gameboy::new() }
 }

@@ -3,7 +3,7 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Sat Dec 30 22:56:04 2017 (+0100)
+// Last-Updated: Tue Jan  9 13:06:48 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -549,9 +549,9 @@ impl PaletteRegister for [DmgColor; 4] {
     }
 
     fn set_register(&mut self, value: u8) {
-        self[0] = DmgColor::from(value & 0b00000011);
-        self[1] = DmgColor::from((value & 0b00001100) >> 2);
-        self[2] = DmgColor::from((value & 0b00110000) >> 4);
-        self[3] = DmgColor::from((value & 0b11000000) >> 6);
+        self[0] = DmgColor::from( value & 0b0000_0011);
+        self[1] = DmgColor::from((value & 0b0000_1100) >> 2);
+        self[2] = DmgColor::from((value & 0b0011_0000) >> 4);
+        self[3] = DmgColor::from((value & 0b1100_0000) >> 6);
     }
 }

@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Wed Dec 13 17:39:26 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:18:12 2017 (+0100)
+// Last-Updated: Tue Jan  9 12:56:11 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -54,9 +54,9 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
 
         match (x, y, z) {
             // X = 0 and Z = 0
-            (0, 0, 0) => format!("NOP"),
+            (0, 0, 0) => "NOP".to_owned(),
             (0, 1, 0) => format!("LD {}, SP", address(io, addr + 1)),
-            (0, 2, 0) => format!("STOP"),
+            (0, 2, 0) => "STOP".to_owned(),
             (0, 3, 0) => format!("JR {}", rel_address(io, addr + 1)),
             (0, 4...7, 0) => format!("JR {}, {}",
                                      CONDITIONS[(y - 4) as usize],
@@ -72,14 +72,14 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             },
 
             // X = 0 and Z = 2
-            (0, 0, 2) => format!("LD (BC), A"),
-            (0, 1, 2) => format!("LD A, (BC)"),
-            (0, 2, 2) => format!("LD (DE), A"),
-            (0, 3, 2) => format!("LD A, (DE)"),
-            (0, 4, 2) => format!("LD (HL+), A"),
-            (0, 5, 2) => format!("LD A, (HL+)"),
-            (0, 6, 2) => format!("LD (HL-), A"),
-            (0, 7, 2) => format!("LD A, (HL-)"),
+            (0, 0, 2) => "LD (BC), A".to_owned(),
+            (0, 1, 2) => "LD A, (BC)".to_owned(),
+            (0, 2, 2) => "LD (DE), A".to_owned(),
+            (0, 3, 2) => "LD A, (DE)".to_owned(),
+            (0, 4, 2) => "LD (HL+), A".to_owned(),
+            (0, 5, 2) => "LD A, (HL+)".to_owned(),
+            (0, 6, 2) => "LD (HL-), A".to_owned(),
+            (0, 7, 2) => "LD A, (HL-)".to_owned(),
 
             // X = 0 and Z = 3
             (0, _, 3) => match y & 1 {
@@ -96,17 +96,17 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             (0, _, 6) => format!("LD {}, {}", R[y as usize], d8(io, addr + 1)),
 
             // X = 0 and Z = 7
-            (0, 0, 7) => format!("RLCA"),
-            (0, 1, 7) => format!("RRCA"),
-            (0, 2, 7) => format!("RLA"),
-            (0, 3, 7) => format!("RRA"),
-            (0, 4, 7) => format!("DAA"),
-            (0, 5, 7) => format!("CPL"),
-            (0, 6, 7) => format!("SCF"),
-            (0, 7, 7) => format!("CCF"),
+            (0, 0, 7) => "RLCA".to_owned(),
+            (0, 1, 7) => "RRCA".to_owned(),
+            (0, 2, 7) => "RLA".to_owned(),
+            (0, 3, 7) => "RRA".to_owned(),
+            (0, 4, 7) => "DAA".to_owned(),
+            (0, 5, 7) => "CPL".to_owned(),
+            (0, 6, 7) => "SCF".to_owned(),
+            (0, 7, 7) => "CCF".to_owned(),
 
             // X = 1
-            (1, 6, 6) => format!("HALT"),
+            (1, 6, 6) => "HALT".to_owned(),
             (1, _, _) => format!("LD {}, {}", R[y as usize], R[z as usize]),
 
             // X = 2
@@ -122,10 +122,10 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             // X = 3 and Z = 1
             (3, _, 1) => match (y >> 1, y & 1) {
                 (p, 0) => format!("POP {}", RP2[p as usize]),
-                (0, 1) => format!("RET"),
-                (1, 1) => format!("RETI"),
-                (2, 1) => format!("JP (HL)"),
-                (3, 1) => format!("LD SP, HL"),
+                (0, 1) => "RET".to_owned(),
+                (1, 1) => "RETI".to_owned(),
+                (2, 1) => "JP (HL)".to_owned(),
+                (3, 1) => "LD SP, HL".to_owned(),
                 _ => unreachable!(),
             },
 
@@ -133,15 +133,15 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             (3, 0...3, 2) => format!("JP {}, {}",
                                      CONDITIONS[y as usize],
                                      address(io, addr + 1)),
-            (3, 4, 2) => format!("LD (C), A"),
+            (3, 4, 2) => "LD (C), A".to_owned(),
             (3, 5, 2) => format!("LD {}, A", address(io, addr + 1)),
-            (3, 6, 2) => format!("LD A, (C)"),
+            (3, 6, 2) => "LD A, (C)".to_owned(),
             (3, 7, 2) => format!("LD A, {}", address(io, addr + 1)),
             
             // X = 3 and Z = 3
             (3, 0, 3) => format!("JP {}", address(io, addr + 1)),
-            (3, 6, 3) => format!("DI"),
-            (3, 7, 3) => format!("EI"),
+            (3, 6, 3) => "DI".to_owned(),
+            (3, 7, 3) => "EI".to_owned(),
 
             // X = 3 and Z = 4
             (3, 0...3, 4) => format!("CALL {}, {}",

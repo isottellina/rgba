@@ -3,7 +3,7 @@
 // Filename: core.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:34:12 2017 (+0100)
-// Last-Updated: Thu Jan  4 13:15:29 2018 (+0100)
+// Last-Updated: Tue Jan  9 20:47:00 2018 (+0100)
 //           By: Louise <louise>
 //
 
@@ -78,13 +78,8 @@ pub trait Platform {
     }
     
     // Input functions
-    fn poll_event(&mut self) -> Option<Event> {
-        None
-    }
-
-    fn read_line(&self, prompt: &str) -> Option<String> {
-        None
-    }
+    fn poll_event(&mut self) -> Option<Event> { None }
+    fn read_line(&self, _: &str) -> Option<String> { None }
 }
 
 // Functions

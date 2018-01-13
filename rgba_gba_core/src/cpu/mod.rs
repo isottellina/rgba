@@ -3,11 +3,13 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Mon Jan  8 19:35:26 2018 (+0100)
+// Last-Updated: Sat Jan 13 11:58:11 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
 use io::Interconnect;
+
+mod arm;
 
 #[derive(Debug, Default)]
 pub struct ARM7TDMI {
@@ -28,8 +30,10 @@ pub struct ARM7TDMI {
     mode: CpuMode,
     
     // Pipeline
-    instr_fetched: u32,
-    instr_decoded: u32,
+    instr_fetched_arm: u32,
+    instr_decoded_arm: u32,
+    instr_fetched_thumb: u16,
+    instr_decoded_thumb: u16
 }
 
 impl ARM7TDMI {
@@ -74,15 +78,39 @@ impl ARM7TDMI {
         }
     }
 
-    pub fn fill_pipeline(&mut self, io: &Interconnect) {
+    pub fn advance_pipeline(&mut self, io: &Interconnect) {
         match self.state {
             CpuState::ARM => {
-                self.instr_decoded = self.next_u32(io);
-                self.instr_fetched = self.next_u32(io);
+                self.instr_decoded_arm = self.instr_fetched_arm;
+                self.instr_fetched_arm = self.next_u32(io);
             }
             CpuState::Thumb => {
                 unimplemented!();
             }
+        }
+    }
+    
+    pub fn fill_pipeline(&mut self, io: &Interconnect) {
+        match self.state {
+            CpuState::ARM => {
+                self.instr_decoded_arm = self.next_u32(io);
+                self.instr_fetched_arm = self.next_u32(io);
+            }
+            CpuState::Thumb => {
+                unimplemented!();
+            }
+        }
+    }
+
+    pub fn next_instruction(&mut self, io: &mut Interconnect) {
+        match self.state {
+            CpuState::ARM => {
+                let instr = self.instr_decoded_arm;
+                self.advance_pipeline(io);
+
+                self.next_instruction_arm(io, instr);
+            },
+            _ => unimplemented!(),
         }
     }
 }

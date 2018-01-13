@@ -3,7 +3,7 @@
 // Filename: arm.rs
 // Author: Louise <louise>
 // Created: Sat Jan 13 11:44:36 2018 (+0100)
-// Last-Updated: Sat Jan 13 18:12:22 2018 (+0100)
+// Last-Updated: Sat Jan 13 22:43:30 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
@@ -17,7 +17,6 @@ impl ARM7TDMI {
         let function = ARM_INSTRUCTIONS[(instr_high | instr_low) as usize];
 
         function(self, io, instr);
-        println!("{:08x}", instr);
     }
 }
 

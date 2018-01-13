@@ -24,6 +24,3 @@ panic = 'unwind'
 rgba_common = { path = '../rgba_common' }
 log = "~0.4.0"
 byteorder="1"
-
-[build-dependencies]
-cpython = "0.1.0"

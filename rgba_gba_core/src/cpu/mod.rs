@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Sat Jan 13 11:58:11 2018 (+0100)
+// Last-Updated: Sat Jan 13 22:33:58 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -78,6 +78,18 @@ impl ARM7TDMI {
         }
     }
 
+    pub fn set_register(&mut self, n: usize, value: u32) {
+        match self.mode {
+            CpuMode::User | CpuMode::System => self.registers[n] = value,
+            CpuMode::IRQ if (n == 13) || (n == 14) => self.registers[n + 3] = value,
+            CpuMode::SVC if (n == 13) || (n == 14) => self.registers[n + 5] = value,
+            CpuMode::UND if (n == 13) || (n == 14) => self.registers[n + 7] = value,
+            CpuMode::ABT if (n == 13) || (n == 14) => self.registers[n + 9] = value,
+            CpuMode::FIQ if (n >= 8) || (n <= 14)  => self.registers[n + 11] = value,
+            _ => self.registers[n] = value
+        }
+    }
+
     pub fn advance_pipeline(&mut self, io: &Interconnect) {
         match self.state {
             CpuState::ARM => {
@@ -106,9 +118,9 @@ impl ARM7TDMI {
         match self.state {
             CpuState::ARM => {
                 let instr = self.instr_decoded_arm;
-                self.advance_pipeline(io);
-
                 self.next_instruction_arm(io, instr);
+
+                self.advance_pipeline(io);
             },
             _ => unimplemented!(),
         }

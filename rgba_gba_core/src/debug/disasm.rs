@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Fri Jan 12 21:45:15 2018 (+0100)
+// Last-Updated: Sat Jan 13 00:38:08 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -126,7 +126,11 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
         }
     }
 
-    dis
+    if dis.len() == 0 {
+        "Couldn't disassemble this instruction".to_owned()
+    } else {
+        dis
+    }
 }
 
 pub fn disasm_thumb(instr: u16) -> String {

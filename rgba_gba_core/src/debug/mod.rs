@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Mon Jan  8 19:36:48 2018 (+0100)
+// Last-Updated: Sat Jan 13 12:14:54 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -20,59 +20,76 @@ pub struct Debugger {
 }
 
 impl Debugger {
-    pub fn new() -> Debugger {
+    pub fn new(debug: bool) -> Debugger {
         Debugger {
-            steps: 0,
+            steps: if debug { 1 } else { 0 },
         }
     }
 
     pub fn handle<T: Platform>(&mut self, gba: &mut GBA, platform: &T) {
-        let pc = gba.cpu.get_register(15) - 8;
+        if self.should_break() || self.enough_steps() {
+            let pc = gba.cpu.get_register(15) - 8;
         
-        println!("{}", gba.cpu);
-        println!("{:08x}: {}",
-                 pc,
-                 match gba.cpu.state() {
-                     CpuState::ARM => disasm_arm(pc, gba.io.read_u32(pc as usize)),
-                     CpuState::Thumb => "u16 reading not implementd".to_string(),
-                 }
-        );
-        
-        while let Some(s) = platform.read_line("> ") {
-            let mut cmd: VecDeque<&str> = s.split_whitespace().collect();
-
-            match cmd.pop_front() {
-                Some("q") | Some("quit") => {
-                    gba.state = false;
-                    break;
-                },
-
-                Some("c") | Some("continue") => break,
-                Some("x") | Some("read") => {
-                    let addr = if let Some(u) = get_argument(&mut cmd) {
-                        u as usize
-                    } else {
-                        gba.cpu.get_register(15) as usize
-                    };
-                    
-                    println!("{:08x}: {:08x}", addr, gba.io.read_u32(addr));
-                }
+            println!("{}", gba.cpu);
+            println!("{:08x}: {}",
+                     pc,
+                     match gba.cpu.state() {
+                         CpuState::ARM => disasm_arm(pc, gba.io.read_u32(pc as usize)),
+                         CpuState::Thumb => "u16 reading not implementd".to_string(),
+                     }
+            );
+            
+            while let Some(s) = platform.read_line("> ") {
+                let mut cmd: VecDeque<&str> = s.split_whitespace().collect();
                 
-                Some("d") | Some("dis") => {
-                    let addr = if let Some(u) = get_argument(&mut cmd) {
-                        u
-                    } else {
-                        gba.cpu.get_register(15) - 8
-                    };
-
-                    let instr = gba.io.read_u32(addr as usize);
+                match cmd.pop_front() {
+                    Some("q") | Some("quit") => {
+                        gba.state = false;
+                        break;
+                    },
                     
-                    println!("{:08x}: {}", addr, disasm_arm(addr, instr));
+                    Some("c") | Some("continue") => break,
+                    Some("s") | Some("step") => {
+                        self.steps = 1;
+                        break;
+                    }
+                    Some("x") | Some("read") => {
+                        let addr = if let Some(u) = get_argument(&mut cmd) {
+                            u as usize
+                        } else {
+                            gba.cpu.get_register(15) as usize
+                        };
+                        
+                        println!("{:08x}: {:08x}", addr, gba.io.read_u32(addr));
+                    }
+                    
+                    Some("d") | Some("dis") => {
+                        let addr = if let Some(u) = get_argument(&mut cmd) {
+                            u
+                        } else {
+                            gba.cpu.get_register(15) - 8
+                        };
+                        
+                        let instr = gba.io.read_u32(addr as usize);
+                        
+                        println!("{:08x}: {}", addr, disasm_arm(addr, instr));
+                    }
+                    
+                    Some(c) => println!("The command {} doesn't exist.", c),
+                    None => { },
                 }
-                
-                Some(c) => println!("The command {} doesn't exist.", c),
-                None => { },
             }
+        }
+    }
+    
+    pub fn should_break(&self) -> bool { false }
+    pub fn enough_steps(&mut self) -> bool {
+        if self.steps > 0 {
+            self.steps -= 1;
+
+            self.steps == 0
+        } else {
+            false
         }
     }
 }

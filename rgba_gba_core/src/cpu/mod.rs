@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Sat Jan 13 22:33:58 2018 (+0100)
+// Last-Updated: Sun Jan 14 15:19:21 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -14,17 +14,17 @@ mod arm;
 #[derive(Debug, Default)]
 pub struct ARM7TDMI {
     // Registers
-    registers: [u32; 31],
-    spsr: [u32; 5],
+    pub registers: [u32; 31],
+    pub spsr: [u32; 5],
 
     // CPSR
-    sign: bool,
-    zero: bool,
-    carry: bool,
-    overflow: bool,
+    pub sign: bool,
+    pub zero: bool,
+    pub carry: bool,
+    pub overflow: bool,
 
-    irq: bool,
-    fiq: bool,
+    pub irq: bool,
+    pub fiq: bool,
 
     state: CpuState,
     mode: CpuMode,

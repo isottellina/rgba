@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan 15 16:02:34 2018 (+0100)
+// Last-Updated: Mon Jan 15 17:00:10 2018 (+0100)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -11,7 +11,9 @@ use std::fs::File;
 use std::io::Read;
 
 pub struct Interconnect {
-    bios: Vec<u8>
+    bios: Vec<u8>,
+
+    postflg: u8,
 }
 
 impl Interconnect {
@@ -19,7 +21,7 @@ impl Interconnect {
         Interconnect {
             bios: vec![],
 
-            postflg: u8,
+            postflg: 0,
         }
     }
 

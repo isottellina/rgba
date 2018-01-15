@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Mon Jan 15 15:59:29 2018 (+0100)
+// Last-Updated: Mon Jan 15 21:36:26 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -144,7 +144,6 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
                                 
                             let rn = (instr >> 16) & 0xF;
                             let pre = (instr & 0x01000000) != 0;
-                            let dir = (instr & 0x00800000) != 0;
 
                             if rn == 15 {
                                 push_op(&mut dis, instr);

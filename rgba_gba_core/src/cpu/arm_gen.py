@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Mon Jan 15 18:49:52 2018 (+0100)
+# Last-Updated: Mon Jan 15 21:35:26 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -185,6 +185,7 @@ def write_sdt(high, low):
         print('\tunimplemented!("LDR instructions are not implemented : {:08x}", instr);')
         
 def write_instruction(high, low):
+    print("#[allow(unreachable_code, unused_variables)]")
     print(
         "fn arm_%03x(_cpu: &mut ARM7TDMI, _io: &mut Interconnect, instr: u32) {"
         % (high * 16 + low)

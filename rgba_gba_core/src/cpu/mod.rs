@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Mon Jan 15 17:18:47 2018 (+0100)
+// Last-Updated: Mon Jan 15 23:01:46 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -57,6 +57,10 @@ impl ARM7TDMI {
 
     pub fn read_u16(&self, io: &Interconnect, address: usize) -> u16 {
         io.read_u16(address)
+    }
+
+    pub fn read_u8(&self, io: &Interconnect, address: usize) -> u8 {
+        io.read_u8(address)
     }
     
     pub fn next_u32(&mut self, io: &Interconnect) -> u32 {

@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Mon Jan 15 21:35:26 2018 (+0100)
+# Last-Updated: Mon Jan 15 23:01:20 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -179,10 +179,41 @@ def write_alu(high, low):
         print("\tif rd == 15 { unimplemented!(\"Setting r15 via ALU\"); }")
 
 def write_sdt(high, low):
+    pre = high & 0x10 != 0
+    
+    print("\tlet rd = (instr >> 12) & 0xF;")
+    print("\tif rd == 15 { unimplemented!(\"Writing to r15\"); }")
+    print("\tlet rn = _cpu.get_register(((instr >> 16) & 0xF) as usize);")
+    
+    if high & 0x20 == 0:
+        print("\tlet off = instr & 0xFFF;")
+    else:
+        write_op2_reg(low, False)
+        print("\tlet off = op2;")
+
+    if pre:
+        if high & 0x08 != 0:
+            print("\tlet addr = rn.wrapping_add(off);")
+        else:
+            print("\tlet addr = rn.wrapping_sub(off);")
+    else:
+        print("\tlet addr = rn;")
+        
     if high & 0x01 == 0:
         print('\tunimplemented!("STR instructions are not implemented : {:08x}", instr);')
     else:
-        print('\tunimplemented!("LDR instructions are not implemented : {:08x}", instr);')
+        if high & 0x04 != 0: # Byte quantity
+            print("\tlet res = _cpu.read_u8(_io, addr as usize) as u32;")
+        else: # Word quantity
+            print("\tlet res = if addr & 3 != 0 { ")
+            print("\t\tlet rot = (addr & 3) << 3; _cpu.read_u32(_io, (addr & !3) as usize).rotate_right(rot)")
+            print("\t} else {")
+            print("\t\t_cpu.read_u32(_io, addr as usize)")
+            print("\t};")
+        print("_cpu.set_register(rd as usize, res);")
+
+    if not pre:
+        print('\tunimplemented!("Post instruction not implemented");')
         
 def write_instruction(high, low):
     print("#[allow(unreachable_code, unused_variables)]")
@@ -200,7 +231,7 @@ def write_instruction(high, low):
     else:
         print("\tunimplemented!(\"{:08x}\", instr);")
 
-    print("}")
+    print("}\n")
 
 for high in range(0x0, 0x100):
     for low in range(0x0, 0x10):

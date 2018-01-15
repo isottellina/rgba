@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan  8 17:22:08 2018 (+0100)
+// Last-Updated: Mon Jan 15 16:02:34 2018 (+0100)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -18,7 +18,8 @@ impl Interconnect {
     pub fn new() -> Interconnect {
         Interconnect {
             bios: vec![],
-            
+
+            postflg: u8,
         }
     }
 
@@ -27,6 +28,22 @@ impl Interconnect {
             0x00000000 if address < 0x4000 =>
                 LittleEndian::read_u32(&self.bios[address..]),
             _ => unimplemented!(),
+        }
+    }
+
+    pub fn read_u16(&self, address: usize) -> u16 {
+        match address & 0x0F000000 {
+            0x00000000 if address < 0x4000 =>
+                LittleEndian::read_u16(&self.bios[address..]),
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn read_u8(&self, address: usize) -> u8 {
+        match address & 0x0F000000 {
+            0x00000000 if address < 0x4000 => self.bios[address],
+            POSTFLG => self.postflg,
+            _ => unimplemented!()
         }
     }
     
@@ -50,3 +67,5 @@ impl Interconnect {
         }
     }
 }
+
+const POSTFLG: usize = 0x04000300;

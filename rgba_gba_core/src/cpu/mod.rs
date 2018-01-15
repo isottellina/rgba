@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Sun Jan 14 15:19:21 2018 (+0100)
+// Last-Updated: Mon Jan 15 17:18:47 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -54,11 +54,22 @@ impl ARM7TDMI {
     pub fn read_u32(&self, io: &Interconnect, address: usize) -> u32 {
         io.read_u32(address)
     }
+
+    pub fn read_u16(&self, io: &Interconnect, address: usize) -> u16 {
+        io.read_u16(address)
+    }
     
     pub fn next_u32(&mut self, io: &Interconnect) -> u32 {
         let v = self.read_u32(io, self.registers[15] as usize);
 
         self.registers[15] += 4;
+        v
+    }
+
+    pub fn next_u16(&mut self, io: &Interconnect) -> u16 {
+        let v = self.read_u16(io, self.registers[15] as usize);
+
+        self.registers[15] += 2;
         v
     }
 
@@ -97,7 +108,8 @@ impl ARM7TDMI {
                 self.instr_fetched_arm = self.next_u32(io);
             }
             CpuState::Thumb => {
-                unimplemented!();
+                self.instr_decoded_thumb = self.instr_fetched_thumb;
+                self.instr_fetched_thumb = self.next_u16(io);
             }
         }
     }
@@ -109,7 +121,8 @@ impl ARM7TDMI {
                 self.instr_fetched_arm = self.next_u32(io);
             }
             CpuState::Thumb => {
-                unimplemented!();
+                self.instr_decoded_thumb = self.next_u16(io);
+                self.instr_fetched_thumb = self.next_u16(io);
             }
         }
     }

@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Sat Jan 13 00:38:08 2018 (+0100)
+// Last-Updated: Mon Jan 15 15:59:29 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -18,7 +18,7 @@ const SHIFTS: [&str; 5] = [
     "lsl", "lsr", "asr", "ror", "rrx"
 ];
 
-const ARM_INSTRS: [(u32, u32, &str); 25] = [
+const ARM_INSTRS: [(u32, u32, &str); 27] = [
     // Branches
     (0x0F000000, 0x0A000000, "b%c %o"),
     (0x0F000000, 0x0B000000, "bl%c %o"),
@@ -32,6 +32,9 @@ const ARM_INSTRS: [(u32, u32, &str); 25] = [
     // Multiply long
     (0x0FA000F0, 0x00800090, "%umull%s%c %r3, %r4, %r0, %r2"),
     (0x0FA000F0, 0x00A00090, "%umlal%s%c %r3, %r4, %r0, %r2"),
+    // Load/Store instructions
+    (0x0C100000, 0x04000000, "str%b%t%c %r3, %a"),
+    (0x0C100000, 0x04100000, "ldr%b%t%c %r3, %a"),
     // ALU
     (0x0DE00000, 0x00000000, "and%s%c %r3, %r4, %i"),
     (0x0DE00000, 0x00200000, "eor%s%c %r3, %r4, %i"),
@@ -63,7 +66,17 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
                     match it.next() {
                         Some('c') =>
                             dis.push_str(CONDITIONS[(instr >> 28) as usize]),
-                        Some('p') => dis.push_str(if instr & 0x400000 != 0 { "spsr" } else { "cpsr" }),
+                        Some('b') =>
+                            if instr & 0x00400000 != 0 { dis.push('b'); },
+                        Some('t') =>
+                            if instr & 0x01200000 == 0x00200000 { dis.push('t'); },
+                        Some('p') => {
+                            dis.push_str(if instr & 0x400000 != 0 { "spsr" } else { "cpsr" });
+
+                            if instr & 0x00010000 != 0 {
+                                dis.push_str("_flg");
+                            }
+                        },
                         Some('r') => {
                             let shifted = instr >> (it.next().unwrap().to_digit(10).unwrap() << 2);
                             
@@ -101,6 +114,53 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
                                 }
                             }
                         }
+                        Some('a') => {
+                            fn push_op(dis: &mut String, instr: u32) {
+                                let dir = (instr & 0x00800000) != 0;
+                                let imm = (instr & 0x02000000) == 0;
+
+                                dis.push(if dir { '+' } else { '-' });
+
+                                if imm {
+                                    let d = instr & 0xFFF;
+                                    dis.push_str(&format!("0x{:x}", d));
+                                } else {
+                                    let mut shift = (instr & 0x60) >> 5;
+                                    let mut amount = (instr & 0xF00) >> 8;
+                                    let rm = instr & 0xF;
+
+                                    if shift == 3 && amount == 0 { shift = 4; }
+                                    if amount == 0 { amount = 32; }
+
+                                    dis.push_str(&format!(" r{}", rm));
+                                    
+                                    if amount != 32 || shift != 0 {
+                                        dis.push(' ');
+                                        dis.push_str(SHIFTS[shift as usize]);
+                                        dis.push_str(&format!(" #{}", amount));
+                                    }
+                                }
+                            }
+                                
+                            let rn = (instr >> 16) & 0xF;
+                            let pre = (instr & 0x01000000) != 0;
+                            let dir = (instr & 0x00800000) != 0;
+
+                            if rn == 15 {
+                                push_op(&mut dis, instr);
+                            } else if pre {
+                                dis.push_str(&format!("[r{}, ", rn));
+                                push_op(&mut dis, instr);
+                                dis.push_str(&format!("]"));
+
+                                if (instr & 0x00200000) != 0 {
+                                    dis.push('!');
+                                }
+                            } else {
+                                dis.push_str(&format!("[r{}], ", rn));
+                                push_op(&mut dis, instr);
+                            }
+                        }
                         Some('o') => {
                             let mut off = instr & 0xFFFFFF;
                             
@@ -123,6 +183,8 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
                     dis.push(c);
                 }
             }
+
+            break;
         }
     }
 

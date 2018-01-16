@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Tue Jan 16 20:18:47 2018 (+0100)
+// Last-Updated: Tue Jan 16 22:40:48 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -194,6 +194,78 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
     }
 }
 
+const THUMB_INSTRS: [(u16, u16, &str); 25] = [
+    // Format 1 (move shifted register)
+    (0xF800, 0x0000, "lsl %r0, %r3, %s"),
+    (0xF800, 0x0800, "lsr %r0, %r3, %s"),
+    (0xF800, 0x1000, "asr %r0, %r3, %s"),
+    // Format 2 (add/substract)
+    (0xFA00, 0x1800, "add %r0, %r3, %I"),
+    (0xFA00, 0x1A00, "sub %r0, %r3, %I"),
+    // Format 3 (move/cmp/add/sub immediate)
+    (0xF800, 0x2000, "mov %r8, %i"),
+    (0xF800, 0x2800, "cmp %r8, %i"),
+    (0xF800, 0x3000, "add %r8, %i"),
+    (0xF800, 0x3800, "sub %r8, %i"),
+    // Format 4 (ALU operations)
+    (0xFFC0, 0x4000, "and %r0, %r3"),
+    (0xFFC0, 0x4040, "eor %r0, %r3"),
+    (0xFFC0, 0x4080, "lsl %r0, %r3"),
+    (0xFFC0, 0x40C0, "lsr %r0, %r3"),
+    (0xFFC0, 0x4100, "asr %r0, %r3"),
+    (0xFFC0, 0x4140, "adc %r0, %r3"),
+    (0xFFC0, 0x4180, "sbc %r0, %r3"),
+    (0xFFC0, 0x41C0, "ror %r0, %r3"),
+    (0xFFC0, 0x4200, "tst %r0, %r3"),
+    (0xFFC0, 0x4240, "neg %r0, %r3"),
+    (0xFFC0, 0x4280, "cmp %r0, %r3"),
+    (0xFFC0, 0x42C0, "cmn %r0, %r3"),
+    (0xFFC0, 0x4300, "orr %r0, %r3"),
+    (0xFFC0, 0x4340, "mul %r0, %r3"),
+    (0xFFC0, 0x4380, "bic %r0, %r3"),
+    (0xFFC0, 0x43C0, "mvn %r0, %r3"),
+    // Format 5 (Hi register operations)
+    
+];
+
 pub fn disasm_thumb(offset: u32, instr: u16) -> String {
-    format!("")
+    let mut dis = String::new();
+    
+    for &(mask, res, disasm) in THUMB_INSTRS.iter() {
+        if instr & mask == res {
+            let mut it = disasm.chars();
+
+            while let Some(c) = it.next() {
+                if c == '%' {
+                    match it.next() {
+                        Some('r') => {
+                            let shifted = instr >> it.next().unwrap().to_digit(10).unwrap();
+                            
+                            dis.push_str(&format!("r{}", shifted & 0x7))
+                        },
+                        Some('s') => dis.push_str(&format!("#{}", (instr >> 6) & 0x1f)),
+                        Some('i') => dis.push_str(&format!("0x{:02x}", instr & 0xFF)),
+                        Some('I') => {
+                            if instr & 0x0200 != 0 {
+                                dis.push_str(&format!("#{}", (instr >> 6) & 0x7));
+                            } else {
+                                dis.push_str(&format!("r{}", (instr >> 6) & 0x7));
+                            }
+                        }
+                        _ => panic!("Bad disasm data"),
+                    }
+                } else {
+                    dis.push(c);
+                }
+            }
+
+            break;
+        }
+    }
+
+    if dis.len() == 0 {
+        "Couldn't disassemble this instruction".to_owned()
+    } else {
+        dis
+    }
 }

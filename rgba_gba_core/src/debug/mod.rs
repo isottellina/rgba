@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Sat Jan 13 12:14:54 2018 (+0100)
+// Last-Updated: Tue Jan 16 20:24:25 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -14,28 +14,34 @@ use debug::disasm::{disasm_arm, disasm_thumb};
 use rgba_common::Platform;
 
 use std::collections::VecDeque;
+use std::collections::HashSet;
 
 pub struct Debugger {
     steps: u32,
+    breakpoints: HashSet<u32>
 }
 
 impl Debugger {
     pub fn new(debug: bool) -> Debugger {
         Debugger {
             steps: if debug { 1 } else { 0 },
+            breakpoints: HashSet::new(),
         }
     }
 
     pub fn handle<T: Platform>(&mut self, gba: &mut GBA, platform: &T) {
-        if self.should_break() || self.enough_steps() {
-            let pc = gba.cpu.get_register(15) - 8;
+        let pc = match gba.cpu.state() {
+            CpuState::ARM => gba.cpu.get_register(15) - 8,
+            CpuState::Thumb => gba.cpu.get_register(15) - 4,
+        };
         
+        if self.should_break(pc) || self.enough_steps() {
             println!("{}", gba.cpu);
             println!("{:08x}: {}",
                      pc,
                      match gba.cpu.state() {
                          CpuState::ARM => disasm_arm(pc, gba.io.read_u32(pc as usize)),
-                         CpuState::Thumb => "u16 reading not implementd".to_string(),
+                         CpuState::Thumb => disasm_thumb(pc, gba.io.read_u16(pc as usize)),
                      }
             );
             
@@ -62,6 +68,29 @@ impl Debugger {
                         
                         println!("{:08x}: {:08x}", addr, gba.io.read_u32(addr));
                     }
+
+                    Some("b") | Some("break") => {
+                        match get_argument(&mut cmd) {
+                            Some(address) => {
+                                println!("Setting breakpoint at {:08x}", address);
+                                self.breakpoints.insert(address);
+                            }
+                            _ => println!("This command requires an argument"),
+                        }
+                    }
+
+                    Some("rb") | Some("rbreak") => {
+                        match get_argument(&mut cmd) {
+                            Some(address) => {
+                                if self.breakpoints.remove(&address) {
+                                    println!("Breakpoint removed at {:08x}", address);
+                                } else {
+                                    println!("There was no breakpoint to remove at {:08x}", address);
+                                }
+                            }
+                            _ => println!("This command requires an argument"),
+                        }
+                    }
                     
                     Some("d") | Some("dis") => {
                         let addr = if let Some(u) = get_argument(&mut cmd) {
@@ -82,7 +111,14 @@ impl Debugger {
         }
     }
     
-    pub fn should_break(&self) -> bool { false }
+    pub fn should_break(&self, pc: u32) -> bool {
+        if !self.breakpoints.is_empty() {
+            self.breakpoints.contains(&pc)
+        } else {
+            false
+        }
+    }
+    
     pub fn enough_steps(&mut self) -> bool {
         if self.steps > 0 {
             self.steps -= 1;

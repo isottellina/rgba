@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Tue Jan 16 12:02:47 2018 (+0100)
+# Last-Updated: Tue Jan 16 20:11:07 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -13,12 +13,18 @@ def write_branch(high, low):
     print("\tlet old_pc = _cpu.get_register(15);")
     
     if link:
-        print("\t_cpu.set_register(14, old_pc);")
+        print("\t_cpu.set_register(14, old_pc - 4);")
 
     print("\tlet new_pc = ((old_pc as i32) + offset) as u32;")
     print("\t_cpu.set_register(15, new_pc);")
     print("\t_cpu.advance_pipeline(_io);")
 
+def write_branch_exchange():
+    print("\tlet dest = _cpu.get_register((instr & 0xF) as usize);")
+    print("\tif dest & 1 != 0 { _cpu.state = CpuState::Thumb; }")
+    print("\t_cpu.registers[15] = dest & 0xFFFFFFFE;")
+    print("\t_cpu.advance_pipeline(_io);")
+    
 def write_op2_imm(high, low):
     s = (high & 0x01) != 0
     
@@ -178,6 +184,22 @@ def write_alu(high, low):
         print("\t_cpu.set_register(rd as usize, res);")
         print("\tif rd == 15 { unimplemented!(\"Setting r15 via ALU\"); }")
 
+def write_psr(high, low):
+    reg = "cpsr" if (high & 0x04 == 0) else "spsr"
+    
+    if high & 0x02 == 0x02:
+        if high & 0x20 != 0: # Immediate value
+            print("\tlet val = (instr & 0xFF).rotate_right((instr & 0xF00) >> 7);")
+        else: # Register
+            print("\tlet val = _cpu.get_register((instr & 0xF) as usize);")
+
+        print("\tif instr & 0x000F0000 == 0x00080000 { _cpu.set_%s_flg(val); } else { _cpu.set_%s(val); }"
+              % (reg, reg))
+    else:
+        print("\tlet val = _cpu.%s();" % reg)
+        print("\tlet rd = (instr & 0xF000) >> 12;")
+        print("\t_cpu.set_register(rd as usize, val);")
+        
 def write_sdt(high, low):
     pre = high & 0x10 != 0
     
@@ -200,7 +222,11 @@ def write_sdt(high, low):
         print("\tlet addr = rn;")
         
     if high & 0x01 == 0:
-        print('\tunimplemented!("STR instructions are not implemented : {:08x}", instr);')
+        print("\tlet val = _cpu.get_register(rd as usize);")
+        if high & 0x04 != 0: # Byte quantity
+            print("\t_cpu.write_u8(_io, addr as usize, val as u8);")
+        else: # Word quantity
+            print("\t_cpu.write_u32(_io, addr as usize, val);")
     else:
         if high & 0x04 != 0: # Byte quantity
             print("\tlet res = _cpu.read_u8(_io, addr as usize) as u32;")
@@ -214,6 +240,8 @@ def write_sdt(high, low):
 
     if not pre:
         print('\tunimplemented!("Post instruction not implemented");')
+    if high & 0x02 != 0:
+        print('\tunimplemented!("Write-back not implemented");')
         
 def write_instruction(high, low):
     print("#[allow(unreachable_code, unused_variables)]")
@@ -224,6 +252,10 @@ def write_instruction(high, low):
 
     if (high & 0xE0) == 0xA0: # B/BL
         write_branch(high, low)
+    elif high == 0x12 and low == 1: # BX
+        write_branch_exchange()
+    elif (high & 0xD9) == 0x10: # PSR transfer
+        write_psr(high, low)
     elif (high & 0xC0) == 0x00: # ALU
         write_alu(high, low)
     elif (high & 0xC0) == 0x40: # SDT

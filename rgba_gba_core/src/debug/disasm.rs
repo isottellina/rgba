@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Mon Jan 15 21:36:26 2018 (+0100)
+// Last-Updated: Tue Jan 16 12:08:13 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -73,7 +73,7 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
                         Some('p') => {
                             dis.push_str(if instr & 0x400000 != 0 { "spsr" } else { "cpsr" });
 
-                            if instr & 0x00010000 != 0 {
+                            if instr & 0x00010000 == 0 {
                                 dis.push_str("_flg");
                             }
                         },

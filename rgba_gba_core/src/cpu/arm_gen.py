@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Mon Jan 15 23:01:20 2018 (+0100)
+# Last-Updated: Tue Jan 16 12:02:47 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -105,7 +105,7 @@ def write_alu(high, low):
     test = (op & 0xc == 0x8)
         
     if (op & 0xc == 0x8) and not s:
-        print("\tpanic!(\"Generating bad ALU instruction (s)\");")
+        print("\tpanic!(\"Generating bad ALU instruction ({:08x}))\", instr);")
         return
     
     if op != 13 and op != 15:

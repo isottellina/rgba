@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Mon Jan 15 23:01:46 2018 (+0100)
+// Last-Updated: Tue Jan 16 12:17:43 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -105,6 +105,13 @@ impl ARM7TDMI {
         }
     }
 
+    pub fn cpsr(&self) -> u32 {
+        ((self.sign as u32) << 31) | ((self.zero as u32) << 30) |
+        ((self.carry as u32) << 29) | ((self.overflow as u32) << 28) |
+        ((self.irq as u32) << 7) | ((self.fiq as u32) << 6) |
+        ((self.state as u32) << 5) | (self.mode as u32)
+    }
+    
     pub fn advance_pipeline(&mut self, io: &Interconnect) {
         match self.state {
             CpuState::ARM => {
@@ -152,7 +159,7 @@ impl fmt::Display for ARM7TDMI {
                 R04={:08x} R05={:08x} R06={:08x} R07={:08x}\n\
                 R08={:08x} R09={:08x} R10={:08x} R11={:08x}\n\
                 R12={:08x} R13={:08x} R14={:08x} R15={:08x}\n\
-                State: {:?}, Mode: {:?}, IRQ = {}, FIQ = {}, [{}{}{}{}]",
+                CPSR: {:08x}, State: {:?}, Mode: {:?}, [{}{}{}{}{}{}]",
                self.get_register(0), self.get_register(1),
                self.get_register(2), self.get_register(3),
                self.get_register(4), self.get_register(5),
@@ -161,11 +168,13 @@ impl fmt::Display for ARM7TDMI {
                self.get_register(10), self.get_register(11),
                self.get_register(12), self.get_register(13),
                self.get_register(14), self.get_register(15),
-               self.state, self.mode, self.irq, self.fiq,
-               if self.sign { "N" } else { "-" },
-               if self.zero { "Z" } else { "-" },
-               if self.carry { "C" } else { "-" },
-               if self.overflow { "V" } else { "-" }
+               self.cpsr(), self.state, self.mode,
+               if self.sign { 'N' } else { '-' },
+               if self.zero { 'Z' } else { '-' },
+               if self.carry { 'C' } else { '-' },
+               if self.overflow { 'V' } else { '-' },
+               if self.irq { 'I' } else { '-' },
+               if self.fiq { 'F' } else { '-' },
         )
     }
 }
@@ -180,7 +189,7 @@ impl Default for CpuState {
     fn default() -> CpuState { CpuState::ARM }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 #[allow(dead_code)]
 enum CpuMode {
     User = 0x10,

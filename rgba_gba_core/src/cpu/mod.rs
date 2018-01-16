@@ -3,13 +3,14 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Tue Jan 16 12:17:43 2018 (+0100)
+// Last-Updated: Tue Jan 16 20:06:34 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
 use io::Interconnect;
 
 mod arm;
+mod thumb;
 
 #[derive(Debug, Default)]
 pub struct ARM7TDMI {
@@ -62,6 +63,18 @@ impl ARM7TDMI {
     pub fn read_u8(&self, io: &Interconnect, address: usize) -> u8 {
         io.read_u8(address)
     }
+
+    pub fn write_u32(&self, io: &mut Interconnect, address: usize, value: u32) {
+        io.write_u32(address, value)
+    }
+
+    pub fn write_u16(&self, io: &mut Interconnect, address: usize, value: u16) {
+        io.write_u16(address, value)
+    }
+
+    pub fn write_u8(&self, io: &mut Interconnect, address: usize, value: u8) {
+        io.write_u8(address, value)
+    }
     
     pub fn next_u32(&mut self, io: &Interconnect) -> u32 {
         let v = self.read_u32(io, self.registers[15] as usize);
@@ -111,6 +124,73 @@ impl ARM7TDMI {
         ((self.irq as u32) << 7) | ((self.fiq as u32) << 6) |
         ((self.state as u32) << 5) | (self.mode as u32)
     }
+
+    pub fn set_cpsr(&mut self, cpsr: u32) {
+        self.sign = (cpsr & 0x80000000) != 0;
+        self.zero = (cpsr & 0x40000000) != 0;
+        self.carry = (cpsr & 0x20000000) != 0;
+        self.overflow = (cpsr & 0x10000000) != 0;
+
+        self.irq = (cpsr & 0x00000080) != 0;
+        self.fiq = (cpsr & 0x00000040) != 0;
+        // Thumb bit cannot be set by this function
+        self.mode = CpuMode::from_u32(cpsr & 0x1f);
+    }
+
+    pub fn set_cpsr_flg(&mut self, cpsr: u32) {
+        self.sign = (cpsr & 0x80000000) != 0;
+        self.zero = (cpsr & 0x40000000) != 0;
+        self.carry = (cpsr & 0x20000000) != 0;
+        self.overflow = (cpsr & 0x10000000) != 0;
+    }
+    
+    pub fn spsr(&self) -> u32 {
+        match self.mode {
+            CpuMode::IRQ => self.spsr[0],
+            CpuMode::SVC => self.spsr[1],
+            CpuMode::UND => self.spsr[2],
+            CpuMode::ABT => self.spsr[3],
+            CpuMode::FIQ => self.spsr[4],
+            _ => panic!("Mode {:?} doesn't have a SPSR", self.mode),
+        }
+    }
+
+    pub fn set_spsr(&mut self, spsr: u32) {
+        match self.mode {
+            CpuMode::IRQ => self.spsr[0] = spsr,
+            CpuMode::SVC => self.spsr[1] = spsr,
+            CpuMode::UND => self.spsr[2] = spsr,
+            CpuMode::ABT => self.spsr[3] = spsr,
+            CpuMode::FIQ => self.spsr[4] = spsr,
+            _ => panic!("Mode {:?} doesn't have a SPSR", self.mode),
+        }
+    }
+
+    pub fn set_spsr_flg(&mut self, spsr: u32) {
+        match self.mode {
+            CpuMode::IRQ => {
+                self.spsr[0] = self.spsr[0] & 0x0FFFFFFF;
+                self.spsr[0] |= spsr & 0xF0000000;
+            },
+            CpuMode::SVC => {
+                self.spsr[1] = self.spsr[1] & 0x0FFFFFFF;
+                self.spsr[1] |= spsr & 0xF0000000;
+            },
+            CpuMode::UND => {
+                self.spsr[2] = self.spsr[2] & 0x0FFFFFFF;
+                self.spsr[2] |= spsr & 0xF0000000;
+            },
+            CpuMode::ABT => {
+                self.spsr[3] = self.spsr[3] & 0x0FFFFFFF;
+                self.spsr[3] |= spsr & 0xF0000000;
+            },
+            CpuMode::FIQ => {
+                self.spsr[4] = self.spsr[4] & 0x0FFFFFFF;
+                self.spsr[4] |= spsr & 0xF0000000;
+            },
+            _ => panic!("Mode {:?} doesn't have a SPSR", self.mode),
+        }
+    }
     
     pub fn advance_pipeline(&mut self, io: &Interconnect) {
         match self.state {
@@ -146,7 +226,12 @@ impl ARM7TDMI {
 
                 self.advance_pipeline(io);
             },
-            _ => unimplemented!(),
+            CpuState::Thumb => {
+                let instr = self.instr_decoded_thumb;
+                self.next_instruction_thumb(io, instr);
+
+                self.advance_pipeline(io);
+            }
         }
     }
 }
@@ -203,4 +288,19 @@ enum CpuMode {
 
 impl Default for CpuMode {
     fn default() -> CpuMode { CpuMode::SVC }
+}
+
+impl CpuMode {
+    pub fn from_u32(value: u32) -> CpuMode {
+        match value {
+            0x10 => CpuMode::User,
+            0x1f => CpuMode::System,
+            0x11 => CpuMode::FIQ,
+            0x12 => CpuMode::IRQ,
+            0x13 => CpuMode::SVC,
+            0x17 => CpuMode::ABT,
+            0x1B => CpuMode::UND,
+            _ => panic!("Writing bad bits to mode bits"),
+        }
+    }
 }

@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Tue Jan 16 12:08:13 2018 (+0100)
+// Last-Updated: Tue Jan 16 20:18:47 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -194,6 +194,6 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
     }
 }
 
-pub fn disasm_thumb(instr: u16) -> String {
+pub fn disasm_thumb(offset: u32, instr: u16) -> String {
     format!("")
 }

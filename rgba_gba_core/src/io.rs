@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan 15 23:04:36 2018 (+0100)
+// Last-Updated: Tue Jan 16 18:26:44 2018 (+0100)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -14,6 +14,7 @@ pub struct Interconnect {
     bios: Vec<u8>,
 
     postflg: u8,
+    ime: bool,
 }
 
 impl Interconnect {
@@ -22,6 +23,7 @@ impl Interconnect {
             bios: vec![],
 
             postflg: 0,
+            ime: false,
         }
     }
 
@@ -51,7 +53,37 @@ impl Interconnect {
 
     fn io_read_u8(&self, address: usize) -> u8 {
         match address {
+            IME => self.ime as u8,
             POSTFLG => self.postflg,
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn write_u32(&mut self, address: usize, value: u32) {
+        match address & 0x0F000000 {
+            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn write_u16(&mut self, address: usize, value: u16) {
+        match address & 0x0F000000 {
+            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            _ => unimplemented!(),
+        }
+    }
+    
+    pub fn write_u8(&mut self, address: usize, value: u8) {
+        match address & 0x0F000000 {
+            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            0x04000000 => self.io_write_u8(address, value),
+            _ => unimplemented!(),
+        }
+    }
+
+    fn io_write_u8(&mut self, address: usize, value: u8) {
+        match address {
+            IME => self.ime = value != 0,
             _ => unimplemented!(),
         }
     }
@@ -78,3 +110,4 @@ impl Interconnect {
 }
 
 const POSTFLG: usize = 0x04000300;
+const IME: usize = 0x04000208;

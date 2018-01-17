@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Wed Jan 17 20:46:27 2018 (+0100)
+// Last-Updated: Wed Jan 17 23:05:25 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -292,7 +292,6 @@ pub fn disasm_thumb(offset: u32, instr: u16) -> String {
                             )
                         }
                         Some('l') => {
-                            let rlst = instr & 0xff;
 			    let mut msk = 0;
 			    let mut not_first = false;
                             

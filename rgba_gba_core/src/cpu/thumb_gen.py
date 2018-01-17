@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 22:40:18 2018 (+0100)
+# Last-Updated: Wed Jan 17 23:05:20 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f2(high):
@@ -166,7 +166,7 @@ def write_f16(high):
     print("\t}")
 
 def write_instruction(high):
-    print("#[allow(unreachable_code, unused_variables)]")
+    print("#[allow(unreachable_code, unused_variables, unused_assignments)]")
     print(
         "fn thumb_%02x(_cpu: &mut ARM7TDMI, _io: &mut Interconnect, instr: u16) {"
         % high

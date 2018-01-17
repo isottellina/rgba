@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Wed Jan 17 22:48:31 2018 (+0100)
+// Last-Updated: Wed Jan 17 23:04:44 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -58,15 +58,6 @@ impl Debugger {
                     Some("s") | Some("step") => {
                         self.steps = 1;
                         break;
-                    }
-                    Some("x") | Some("read") => {
-                        let addr = if let Some(u) = get_argument(&mut cmd) {
-                            u as usize
-                        } else {
-                            gba.cpu.get_register(15) as usize
-                        };
-                        
-                        println!("{:08x}: {:08x}", addr, gba.io.read_u32(addr));
                     }
 
                     Some("b") | Some("break") => {
@@ -149,6 +140,18 @@ impl Debugger {
                         let instr = gba.io.read_u32(addr as usize);
                         
                         println!("{:08x}: {}", addr, disasm_arm(addr, instr));
+                    }
+
+                    Some("h") | Some("help") => {
+                        println!("h, help\t\tPrint this help \n\
+                                  c, continue\tResume execution \n\
+                                  s, step\t\tExecute one instruction \n\
+                                  b, break\tSet a breakpoint \n\
+                                  rb, rbreak\tRemove a breakpoint \n\
+                                  x/1\t\tRead bytes at a specified address \n\
+                                  x/2\t\tRead halfwords at a specified address \n\
+                                  x/4\t\tRead words at a specified address \n\
+                                  q, quit\t\tQuit the emulator");
                     }
                     
                     Some(c) => println!("The command {} doesn't exist.", c),

@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 12:20:08 2018 (+0100)
+# Last-Updated: Wed Jan 17 15:18:04 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f2(high):
@@ -54,6 +54,36 @@ def write_f3(high):
     if op != 1:
         print("\t_cpu.registers[rd as usize] = res;")
 
+def write_f5(high):
+    op = high & 3
+
+    print("\tlet rd = (instr & 7) | ((instr & 0x80) >> 4);")
+    print("\tlet rs = _cpu.get_register(((instr >> 3) & 0xF) as usize);")
+    
+    if op == 0: # ADD
+        print("\tlet op1 = _cpu.get_register(rd as usize);")
+        print("\tlet res = op1.wrapping_add(rs);")
+        print("\t_cpu.set_register(rd as usize, res);")
+        print("\tif rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+    elif op == 1: # CMP
+        print("\tlet op1 = _cpu.get_register(rd as usize);")
+        print("\tlet res = op1.wrapping_sub(rs);")
+        print("\t_cpu.sign = (res as i32) < 0;")
+        print("\t_cpu.zero = res == 0;")
+        print("\t_cpu.carry = op1 >= res;")
+        print("\t_cpu.overflow = (op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
+        print("\tif rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+    elif op == 2: # MOV
+        print("\t_cpu.set_register(rd as usize, rs);")
+        print("\tif rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+    elif op == 3: # BX
+        print("\tif rs & 1 == 0 {")
+        print("\t\t_cpu.state = CpuState::ARM; _cpu.registers[15] = rs & 0xFFFFFFFC;")
+        print("\t} else {")
+        print("\t\t_cpu.registers[15] = rs & 0xFFFFFFFE;")
+        print("\t}")
+        print("\t_cpu.advance_pipeline(_io);")
+        
 def write_f6(high):
     rd = high & 7
     
@@ -110,6 +140,8 @@ def write_instruction(high):
         write_f2(high)
     elif high & 0xE0 == 0x20:
         write_f3(high)
+    elif high & 0xFC == 0x44:
+        write_f5(high)
     elif high & 0xF8 == 0x48:
         write_f6(high)
     elif high & 0xF2 == 0x50:

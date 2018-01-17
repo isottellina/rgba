@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 23:05:20 2018 (+0100)
+# Last-Updated: Wed Jan 17 23:56:58 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f2(high):
@@ -111,6 +111,15 @@ def write_f7(high):
         else:
             print("\t_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
 
+def write_f13(high):
+    print("\tlet off = ((instr & 0x7f) as u32) << 2;")
+    print("\tlet sp = _cpu.get_register(13);")
+    print("\tif instr & 0x80 == 0 {")
+    print("\t\t_cpu.set_register(13, sp + off);")
+    print("\t} else {")
+    print("\t\t_cpu.set_register(13, sp - off);")
+    print("\t}")
+            
 def write_f14(high):
     pop = high & 0x08 != 0
 
@@ -182,6 +191,8 @@ def write_instruction(high):
         write_f6(high)
     elif high & 0xF2 == 0x50:
         write_f7(high)
+    elif high & 0xFF == 0xB0:
+        write_f13(high)
     elif high & 0xF6 == 0xB4:
         write_f14(high)
     elif high & 0xF0 == 0xD0:

@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Wed Jan 17 23:05:25 2018 (+0100)
+// Last-Updated: Wed Jan 17 23:50:53 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -194,7 +194,7 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 40] = [
+const THUMB_INSTRS: [(u16, u16, &str); 42] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -234,6 +234,9 @@ const THUMB_INSTRS: [(u16, u16, &str); 40] = [
     // Format 7 (Load/Store with register offset)
     (0xFA00, 0x5000, "str%b %r0, [%r3, %r6]"),
     (0xFA00, 0x5800, "ldr%b %r0, [%r3, %r6]"),
+    // Format 13 (add offset to SP)
+    (0xFF80, 0xB000, "add r13, %m"),
+    (0xFF80, 0xB080, "sub r13, %m"),
     // Format 14
     (0xFFFF, 0xB500, "push {r14}"),
     (0xFF00, 0xB500, "push {%l, r14}"),
@@ -268,6 +271,7 @@ pub fn disasm_thumb(offset: u32, instr: u16) -> String {
 
                             dis.push_str(&format!("r{}", if h { r + 8 } else { r }))
                         }
+                        Some('m') => dis.push_str(&format!("0x{:x}", (instr & 0x7f) << 2)),
                         Some('b') => if instr & 0x0400 != 0 { dis.push('b'); },
                         Some('c') => dis.push_str(CONDITIONS[((instr >> 8) & 0xF) as usize]),
                         Some('p') => dis.push_str(

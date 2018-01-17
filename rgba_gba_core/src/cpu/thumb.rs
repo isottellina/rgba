@@ -3,10 +3,11 @@
 // Filename: thumb.rs
 // Author: Louise <louise>
 // Created: Tue Jan 16 20:00:15 2018 (+0100)
-// Last-Updated: Tue Jan 16 20:04:20 2018 (+0100)
+// Last-Updated: Wed Jan 17 15:10:39 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
+use cpu::CpuState;
 use io::Interconnect;
 
 impl ARM7TDMI {

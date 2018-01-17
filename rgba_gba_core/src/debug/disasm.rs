@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Wed Jan 17 00:52:18 2018 (+0100)
+// Last-Updated: Wed Jan 17 11:38:09 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -194,7 +194,7 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 28] = [
+const THUMB_INSTRS: [(u16, u16, &str); 30] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -230,6 +230,10 @@ const THUMB_INSTRS: [(u16, u16, &str); 28] = [
     // Format 7 (Load/Store with register offset)
     (0xFA00, 0x5000, "str%b %r0, [%r3, %r6]"),
     (0xFA00, 0x5800, "ldr%b %r0, [%r3, %r6]"),
+    // Format 17 (SWI)
+    (0xFF00, 0xDF00, "swi %w"),
+    // Format 16 (Conditionnal branch)
+    (0xF000, 0xD000, "b%c %o"),
 ];
 
 pub fn disasm_thumb(offset: u32, instr: u16) -> String {
@@ -248,17 +252,27 @@ pub fn disasm_thumb(offset: u32, instr: u16) -> String {
                             dis.push_str(&format!("r{}", shifted & 0x7))
                         },
                         Some('b') => if instr & 0x0400 != 0 { dis.push('b'); },
+                        Some('c') => dis.push_str(CONDITIONS[((instr >> 8) & 0xF) as usize]),
                         Some('p') => dis.push_str(
                             &format!("0x{:08x}", (offset & !3) + (((instr & 0xFF) as u32) << 2) + 4)
                         ),
                         Some('s') => dis.push_str(&format!("#{}", (instr >> 6) & 0x1f)),
                         Some('i') => dis.push_str(&format!("0x{:02x}", instr & 0xFF)),
                         Some('I') => {
-                            if instr & 0x0200 != 0 {
+                            if instr & 0x0400 != 0 {
                                 dis.push_str(&format!("#{}", (instr >> 6) & 0x7));
                             } else {
                                 dis.push_str(&format!("r{}", (instr >> 6) & 0x7));
                             }
+                        }
+                        Some('o') => {
+                            let off = (((instr & 0xFF) as i8) as i32) << 1;
+                            
+                            dis.push_str(
+                                &format!("0x{:x}",
+                                         offset as i32 + off as i32 + 4
+                                )
+                            )
                         }
                         _ => panic!("Bad disasm data"),
                     }

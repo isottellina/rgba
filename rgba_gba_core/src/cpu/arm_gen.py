@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Tue Jan 16 20:11:07 2018 (+0100)
+# Last-Updated: Wed Jan 17 20:14:29 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -236,7 +236,7 @@ def write_sdt(high, low):
             print("\t} else {")
             print("\t\t_cpu.read_u32(_io, addr as usize)")
             print("\t};")
-        print("_cpu.set_register(rd as usize, res);")
+        print("\t_cpu.set_register(rd as usize, res);")
 
     if not pre:
         print('\tunimplemented!("Post instruction not implemented");')

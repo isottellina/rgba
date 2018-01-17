@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Wed Jan 17 01:17:37 2018 (+0100)
+// Last-Updated: Wed Jan 17 22:51:58 2018 (+0100)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -33,6 +33,8 @@ impl Interconnect {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 =>
                 LittleEndian::read_u32(&self.bios[address..]),
+            0x03000000 =>
+                LittleEndian::read_u32(&self.iram[(address & 0x7fff)..]),
             _ => unimplemented!(),
         }
     }
@@ -41,6 +43,8 @@ impl Interconnect {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 =>
                 LittleEndian::read_u16(&self.bios[address..]),
+            0x03000000 =>
+                LittleEndian::read_u16(&self.iram[(address & 0x7fff)..]),
             _ => unimplemented!(),
         }
     }
@@ -48,6 +52,7 @@ impl Interconnect {
     pub fn read_u8(&self, address: usize) -> u8 {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 => self.bios[address],
+            0x03000000 => self.iram[address & 0x7fff],
             0x04000000 => self.io_read_u8(address),
             _ => unimplemented!("Reading a byte from {:08x}", address)
         }

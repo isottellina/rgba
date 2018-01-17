@@ -3,9 +3,34 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 01:11:58 2018 (+0100)
+# Last-Updated: Wed Jan 17 11:23:00 2018 (+0100)
 #           By: Louise <louise>
-# 
+#
+def write_f2(high):
+    imm = (high & 0x04) != 0
+    op = (high & 0x02) != 0
+
+    print("\tlet rd = instr & 7;")
+    print("\tlet op1 = _cpu.registers[((instr >> 3) & 7) as usize];")
+
+    if imm:
+        print("\tlet op2 = ((instr >> 6) & 7) as u32;")
+    else:
+        print("\tlet op2 = _cpu.registers[((instr >> 6) & 7) as usize];")
+    
+    if op: # SUB
+        print("\tlet res = op1.wrapping_sub(op2);")
+        print("\t_cpu.carry = op1 >= op2;")
+        print("\t_cpu.overflow = (op1 ^ op2) & (op1 ^ op2) & 0x80000000 != 0;")
+    else: # ADD
+        print("\tlet res = op1.wrapping_add(op2);")
+        print("\t_cpu.carry = res < op1;")
+        print("\t_cpu.overflow = !(op1 ^ op2) & (op1 ^ res) & 0x80000000 != 0;")
+
+    print("\t_cpu.zero = res == 0;")
+    print("\t_cpu.sign = (res as i32) < 0;")
+    print("\t_cpu.registers[rd as usize] = res")
+    
 def write_f3(high):
     op = (high >> 3) & 0x3;
 
@@ -63,7 +88,9 @@ def write_instruction(high):
         % high
     )
 
-    if high & 0xE0 == 0x20:
+    if high & 0xF8 == 0x18:
+        write_f2(high)
+    elif high & 0xE0 == 0x20:
         write_f3(high)
     elif high & 0xF8 == 0x48:
         write_f6(high)

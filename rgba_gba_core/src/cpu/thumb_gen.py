@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 11:23:00 2018 (+0100)
+# Last-Updated: Wed Jan 17 12:20:08 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f2(high):
@@ -80,7 +80,25 @@ def write_f7(high):
             print("\t_cpu.write_u8(_io, addr as usize, _cpu.registers[rd as usize] as u8);")
         else:
             print("\t_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
+
+def write_f16(high):
+    conditions = [
+        "_cpu.zero", "!_cpu.zero",
+        "_cpu.carry", "!_cpu.carry",
+        "_cpu.sign", "!_cpu.sign",
+        "_cpu.overflow", "!_cpu.overflow",
+        "_cpu.carry && !_cpu.zero", "!_cpu.carry && _cpu.zero",
+        "_cpu.sign == _cpu.overflow", "_cpu.sign != _cpu.overflow",
+        "_cpu.zero && (_cpu.sign == _cpu.overflow)", "!_cpu.zero || (_cpu.sign != _cpu.overflow)",
+        "false", "false"
+    ]
     
+    print("\tlet off = (((instr & 0xFF) as i8) as i32) << 1;")
+    print("\tif %s {" % conditions[high & 0xF])
+    print("\t\t_cpu.registers[15] = (_cpu.registers[15] as i32).wrapping_add(off) as u32;")
+    print("\t\t_cpu.advance_pipeline(_io);")
+    print("\t}")
+
 def write_instruction(high):
     print("#[allow(unreachable_code, unused_variables)]")
     print(
@@ -96,6 +114,8 @@ def write_instruction(high):
         write_f6(high)
     elif high & 0xF2 == 0x50:
         write_f7(high)
+    elif high & 0xF0 == 0xD0:
+        write_f16(high)
     else:
         print("\tunimplemented!(\"{:04x}\", instr);")
 

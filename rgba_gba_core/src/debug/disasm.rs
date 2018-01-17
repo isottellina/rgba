@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Wed Jan 17 14:02:36 2018 (+0100)
+// Last-Updated: Wed Jan 17 20:46:27 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -194,7 +194,7 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 34] = [
+const THUMB_INSTRS: [(u16, u16, &str); 40] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -234,6 +234,13 @@ const THUMB_INSTRS: [(u16, u16, &str); 34] = [
     // Format 7 (Load/Store with register offset)
     (0xFA00, 0x5000, "str%b %r0, [%r3, %r6]"),
     (0xFA00, 0x5800, "ldr%b %r0, [%r3, %r6]"),
+    // Format 14
+    (0xFFFF, 0xB500, "push {r14}"),
+    (0xFF00, 0xB500, "push {%l, r14}"),
+    (0xFF00, 0xB400, "push {%l}"),
+    (0xFFFF, 0xBD00, "pop {r15}"),
+    (0xFF00, 0xBD00, "pop {%l, r15}"),
+    (0xFF00, 0xBC00, "pop {%l}"),
     // Format 17 (SWI)
     (0xFF00, 0xDF00, "swi %w"),
     // Format 16 (Conditionnal branch)
@@ -283,6 +290,32 @@ pub fn disasm_thumb(offset: u32, instr: u16) -> String {
                                          offset as i32 + off as i32 + 4
                                 )
                             )
+                        }
+                        Some('l') => {
+                            let rlst = instr & 0xff;
+			    let mut msk = 0;
+			    let mut not_first = false;
+                            
+                            while msk < 8 {
+				if (instr & (1 << msk)) != 0 {
+				    let fr = msk;
+				    while (instr & (1 << msk)) != 0 && msk < 8 { msk += 1; }
+				    let to = msk - 1;
+				    if not_first { dis.push(','); }
+
+                                    dis.push_str(&format!("r{}", fr));
+                                    
+				    if fr != to {
+					if fr == to-1 { dis.push(','); }
+					else { dis.push('-'); }
+					dis.push_str(&format!("r{}", to));
+				    }
+                                    
+				    not_first = true;
+				} else {
+				    msk += 1;
+				}
+                            }
                         }
                         _ => panic!("Bad disasm data"),
                     }

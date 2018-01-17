@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Tue Jan 16 20:24:25 2018 (+0100)
+// Last-Updated: Wed Jan 17 22:48:31 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -87,6 +87,53 @@ impl Debugger {
                                 } else {
                                     println!("There was no breakpoint to remove at {:08x}", address);
                                 }
+                            }
+                            _ => println!("This command requires an argument"),
+                        }
+                    }
+
+                    Some("x/1") => {
+                        match get_argument(&mut cmd) {
+                            Some(address) => {
+                                print!("{:08x}:", address);
+
+                                for i in 0..16 {
+                                    print!(" {:02x}", gba.io.read_u8((address as usize) + i));
+                                }
+
+                                println!("");
+                            }
+                            _ => println!("This command requires an argument"),
+                        }
+                    }
+
+                    Some("x/2") => {
+                        match get_argument(&mut cmd) {
+                            Some(address) => {
+                                let aligned = (address & 0xFFFFFFFE) as usize;
+                                print!("{:08x}:", aligned);
+
+                                for i in 0..8 {
+                                    print!(" {:04x}", gba.io.read_u16(aligned + (i << 1)));
+                                }
+
+                                println!("");
+                            }
+                            _ => println!("This command requires an argument"),
+                        }
+                    }
+
+                    Some("x/4") => {
+                        match get_argument(&mut cmd) {
+                            Some(address) => {
+                                let aligned = (address & 0xFFFFFFFC) as usize;
+                                print!("{:08x}:", aligned);
+
+                                for i in 0..4 {
+                                    print!(" {:08x}", gba.io.read_u32(aligned + (i << 2)));
+                                }
+
+                                println!("");
                             }
                             _ => println!("This command requires an argument"),
                         }

@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 15:18:04 2018 (+0100)
+# Last-Updated: Wed Jan 17 22:40:18 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f2(high):
@@ -111,6 +111,42 @@ def write_f7(high):
         else:
             print("\t_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
 
+def write_f14(high):
+    pop = high & 0x08 != 0
+
+    if pop:
+        print("\tlet mut sp = _cpu.get_register(13) as usize;")
+    else:
+        print("\tlet count = (instr & 0x1FF).count_ones();")
+        print("\tlet mut sp = (_cpu.get_register(13) - (count << 2)) as usize;")
+        print("\t_cpu.set_register(13, sp as u32);")
+    
+    for i in range(9):
+        print("\tif instr & (1 << %s) != 0 {" % i)
+        
+        if i == 8:
+            i = 15 if pop else 14
+        
+        if pop:
+            if i == 15:
+                print("\t\t_cpu.registers[15] = _cpu.read_u32(_io, sp) & 0xFFFFFFFE;")
+                print("\t\t_cpu.advance_pipeline(_io);")
+            else:
+                print("\t\t_cpu.registers[%s] = _cpu.read_u32(_io, sp);" % i)
+        else:
+            if i == 14:
+                print("\t\tlet reg = _cpu.get_register(14);")
+            else:
+                print("\t\tlet reg = _cpu.registers[%s];" % i)
+            print("\t\t_cpu.write_u32(_io, sp, reg);")
+
+        print("\t\tsp += 4;")
+        print("\t}")
+        
+    if pop:
+        print("\t_cpu.set_register(13, sp as u32);")
+        
+            
 def write_f16(high):
     conditions = [
         "_cpu.zero", "!_cpu.zero",
@@ -146,6 +182,8 @@ def write_instruction(high):
         write_f6(high)
     elif high & 0xF2 == 0x50:
         write_f7(high)
+    elif high & 0xF6 == 0xB4:
+        write_f14(high)
     elif high & 0xF0 == 0xD0:
         write_f16(high)
     else:

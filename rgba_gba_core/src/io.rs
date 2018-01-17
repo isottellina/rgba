@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Tue Jan 16 18:26:44 2018 (+0100)
+// Last-Updated: Wed Jan 17 01:17:37 2018 (+0100)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -12,6 +12,7 @@ use std::io::Read;
 
 pub struct Interconnect {
     bios: Vec<u8>,
+    iram: [u8; 0x8000],
 
     postflg: u8,
     ime: bool,
@@ -21,6 +22,7 @@ impl Interconnect {
     pub fn new() -> Interconnect {
         Interconnect {
             bios: vec![],
+            iram: [0; 0x8000],
 
             postflg: 0,
             ime: false,
@@ -62,22 +64,29 @@ impl Interconnect {
     pub fn write_u32(&mut self, address: usize, value: u32) {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
-            _ => unimplemented!(),
+            0x03000000 => LittleEndian::write_u32(
+                &mut self.iram[(address & 0x7fff)..], value
+            ),
+            _ => unimplemented!("Writing 4 bytes to {:08x}", address),
         }
     }
 
     pub fn write_u16(&mut self, address: usize, value: u16) {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
-            _ => unimplemented!(),
+            0x03000000 => LittleEndian::write_u16(
+                &mut self.iram[(address & 0x7fff)..], value
+            ),
+            _ => unimplemented!("Writing 2 bytes to {:08x}", address),
         }
     }
     
     pub fn write_u8(&mut self, address: usize, value: u8) {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            0x03000000 => self.iram[address & 0x7fff] = value,
             0x04000000 => self.io_write_u8(address, value),
-            _ => unimplemented!(),
+            _ => unimplemented!("Writing a byte to {:08x}", address),
         }
     }
 

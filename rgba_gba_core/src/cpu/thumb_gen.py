@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 00:36:33 2018 (+0100)
+# Last-Updated: Wed Jan 17 01:11:58 2018 (+0100)
 #           By: Louise <louise>
 # 
 def write_f3(high):
@@ -29,6 +29,33 @@ def write_f3(high):
     if op != 1:
         print("\t_cpu.registers[rd as usize] = res;")
 
+def write_f6(high):
+    rd = high & 7
+    
+    print("\tlet off = ((instr & 0xFF) as u32) << 2;")
+    print("\tlet addr = (_cpu.registers[15] & 0xFFFFFFFC) + off;")
+    print("\t_cpu.registers[%s] = _cpu.read_u32(_io, addr as usize);" % rd)
+
+def write_f7(high):
+    load = high & 0x08 != 0
+    byte = high & 0x04 != 0
+
+    print("\tlet rb = (instr >> 3) & 7;")
+    print("\tlet ro = (instr >> 6) & 7;")
+    print("\tlet rd = instr & 7;")
+    print("\tlet addr = _cpu.registers[rb as usize].wrapping_add(_cpu.registers[ro as usize]);")
+    if load:
+        if byte:
+            print("\tlet val = _cpu.read_u8(_io, addr as usize) as u32;")
+        else:
+            print("\tlet val = _cpu.read_u32(_io, addr as usize) as u32;")
+        print("\t_cpu.registers[rd as usize] = val;")
+    else:
+        if byte:
+            print("\t_cpu.write_u8(_io, addr as usize, _cpu.registers[rd as usize] as u8);")
+        else:
+            print("\t_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
+    
 def write_instruction(high):
     print("#[allow(unreachable_code, unused_variables)]")
     print(
@@ -38,6 +65,10 @@ def write_instruction(high):
 
     if high & 0xE0 == 0x20:
         write_f3(high)
+    elif high & 0xF8 == 0x48:
+        write_f6(high)
+    elif high & 0xF2 == 0x50:
+        write_f7(high)
     else:
         print("\tunimplemented!(\"{:04x}\", instr);")
 

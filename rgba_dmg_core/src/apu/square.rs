@@ -3,7 +3,7 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:04:33 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:35:16 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -17,9 +17,10 @@ const DUTY_TABLE: [[bool; 8]; 4] = [
 #[derive(Debug, Default)]
 pub struct SquareChannel {
     timer: u16,
+    timer_load: u16,
     frequency: u16,
 
-    enabled: bool,
+    pub enabled: bool,
     dac_enabled: bool,
 
     duty: u8,
@@ -55,6 +56,7 @@ impl SquareChannel {
     pub fn new() -> SquareChannel {
         SquareChannel {
             timer: 0,
+            timer_load: 0,
             frequency: 0,
             
             enabled: false,
@@ -148,7 +150,8 @@ impl SquareChannel {
                 self.length_counter = 64;
             }
 
-            self.timer = (2048 - self.frequency) << 2;
+            self.timer_load = (2048 - self.frequency) << 2;
+            self.timer = 0;
             self.volume = self.volume_load;
 
             self.envelope_running = true;
@@ -239,11 +242,11 @@ impl SquareChannel {
         self.out_volume
     }
     
-    pub fn step(&mut self) {
-        self.timer = self.timer.wrapping_sub(1);
+    pub fn spend_cycles(&mut self, cycles: u16) {
+        self.timer += cycles;
 
-        if self.timer <= 0 {
-            self.timer = (2048 - self.frequency) << 2;
+        if self.timer >= self.timer_load {
+            self.timer -= self.timer_load;
             self.duty_state = (self.duty_state + 1) & 0x7;
             
             self.out_volume = if self.enabled && self.dac_enabled {

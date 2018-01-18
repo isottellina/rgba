@@ -3,7 +3,7 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:06:48 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:25:39 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -356,13 +356,16 @@ impl GPU {
         self.mode0_irq = (stat & 0x08) != 0;
     }
 
+    #[inline]
     pub fn has_hblank(&self) -> bool { self.has_hblank }
     pub fn ack_hblank(&mut self) { self.has_hblank = false }
-    
+
+    #[inline]
     pub fn it_vblank(&self) -> bool { self.it_vblank }
     pub fn ack_it_vblank(&mut self) { self.it_vblank = false }
     pub fn set_it_vblank(&mut self, v: bool) { self.it_vblank = v }
 
+    #[inline]
     pub fn it_lcd(&self) -> bool { self.it_lcd }
     pub fn ack_it_lcd(&mut self) { self.it_lcd = false }
     pub fn set_it_lcd(&mut self, v: bool) { self.it_lcd = v }

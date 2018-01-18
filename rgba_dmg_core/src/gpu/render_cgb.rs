@@ -3,7 +3,7 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:08:10 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:05:17 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common::Platform;
@@ -152,6 +152,8 @@ impl GPU {
                     
                     return Some(self.ocpd[sprite.cgb_palette as usize][c as usize]);
                 }
+            } else {
+                return None;
             }
         }
 

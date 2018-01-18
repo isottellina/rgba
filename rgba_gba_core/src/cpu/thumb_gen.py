@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Thu Jan 18 22:09:12 2018 (+0100)
+# Last-Updated: Thu Jan 18 22:53:13 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f1(high):

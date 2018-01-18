@@ -3,7 +3,7 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Tue Jan  9 14:25:46 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:44:41 2018 (+0100)
 //           By: Louise <louise>
 // 
 mod square;
@@ -179,10 +179,6 @@ impl APU {
     }
 
     // Actual APU
-    pub fn enabled(&self) -> bool {
-        self.enabled
-    }
-    
     pub fn render<T: Platform>(&mut self, platform: &mut T) {
         if self.buffer_complete {
             platform.queue_samples(&self.samples);
@@ -235,11 +231,13 @@ impl APU {
         so2
     }
     
-    pub fn step(&mut self) {
-        self.frame_cycles = self.frame_cycles - 1;
+    pub fn spend_cycles(&mut self, cycles: u32) {
+        let cycles_16 = cycles as u16;
+        
+        self.frame_cycles += cycles;
 
-        if self.frame_cycles == 0 {
-            self.frame_cycles = 8192;
+        if self.frame_cycles >= 8192 {
+            self.frame_cycles -= 8192;
             
             match self.frame_sequencer {
                 0 | 4 => {
@@ -266,15 +264,26 @@ impl APU {
             self.frame_sequencer = (self.frame_sequencer + 1) & 0x7;
         }
 
-        self.channel1.step();
-        self.channel2.step();
-        self.channel3.step();
-        self.channel4.step();
+        if self.channel1.enabled {
+            self.channel1.spend_cycles(cycles_16);
+        }
 
-        self.downsample_count = self.downsample_count + 1;
+        if self.channel2.enabled {
+            self.channel2.spend_cycles(cycles_16);
+        }
 
-        if self.downsample_count == 88 {
-            self.downsample_count = 0;
+        if self.channel3.enabled {
+            self.channel3.spend_cycles(cycles_16);
+        }
+
+        if self.channel4.enabled {
+            self.channel4.spend_cycles(cycles_16);
+        }
+
+        self.downsample_count = self.downsample_count + cycles;
+
+        if self.downsample_count >= 88 {
+            self.downsample_count -= 88;
             
             let so1 = self.get_so1() as u16;
             let so2 = self.get_so2() as u16;
@@ -285,8 +294,6 @@ impl APU {
             self.samples_index = (self.samples_index + 1) & 0x3ff;
 
             if self.samples_index == 0 {
-                self.samples_index = 0;
-
                 self.buffer_complete = true;
             }
         }

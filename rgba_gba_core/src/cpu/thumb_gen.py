@@ -3,9 +3,29 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Thu Jan 18 13:45:29 2018 (+0100)
+# Last-Updated: Thu Jan 18 14:05:46 2018 (+0100)
 #           By: Louise <louise>
 #
+def write_f1(high):
+    op = (high >> 3)
+    print("\tlet rd = instr & 7;")
+    print("\tlet rs = _cpu.registers[((instr >> 3) & 7) as usize];")
+    print("\tlet shift = (instr >> 6) & 0x1f;")
+
+    if op == 0:
+        print("if shift != 0 { _cpu.carry = ((rs << (shift - 1)) & 0x80000000) != 0; }")
+        print("let res = rs << shift;")
+    elif op == 1:
+        print("if shift != 0 { _cpu.carry = ((rs >> (shift - 1)) & 1) != 0; }")
+        print("let res = rs >> shift;")
+    elif op == 2:
+        print("\tif shift != 0 { _cpu.carry = (((rs as i32) >> (shift - 1)) & 1) != 0; }")
+        print("\tlet res = ((rs as i32) >> shift) as u32;")
+
+    print("\t_cpu.registers[rd as usize] = res;")
+    print("\t_cpu.zero = res == 0;")
+    print("\t_cpu.sign = (res as i32) < 0;")
+
 def write_f2(high):
     imm = (high & 0x04) != 0
     op = (high & 0x02) != 0
@@ -214,6 +234,8 @@ def write_instruction(high):
 
     if high & 0xF8 == 0x18:
         write_f2(high)
+    elif high & 0xE0 == 0x00:
+        write_f1(high)
     elif high & 0xE0 == 0x20:
         write_f3(high)
     elif high & 0xFC == 0x40:
@@ -259,15 +281,15 @@ def write_alu(op):
     elif op == 2: # LSL
         print("\tlet shift = rs & 0xFF;")
         print("\tlet res = op1 << shift;")
-        print("\tif shift != 0 { _cpu.carry = ((res << (shift - 1)) & 0x80000000) != 0; }")
+        print("\tif shift != 0 { _cpu.carry = ((op1 << (shift - 1)) & 0x80000000) != 0; }")
     elif op == 3: # LSR
         print("\tlet shift = rs & 0xFF;")
         print("\tlet res = op1 >> shift;")
-        print("\tif shift != 0 { _cpu.carry = ((res >> (shift - 1)) & 1) != 0; }")
+        print("\tif shift != 0 { _cpu.carry = ((op1 >> (shift - 1)) & 1) != 0; }")
     elif op == 4: # ASR
         print("\tlet shift = rs & 0xFF;")
         print("\tlet res = ((op1 as i32) >> shift) as u32;")
-        print("\tif shift != 0 { _cpu.carry = (((res as i32) >> (shift - 1)) & 1) != 0; }")
+        print("\tif shift != 0 { _cpu.carry = (((op1 as i32) >> (shift - 1)) & 1) != 0; }")
     elif op == 5: # ADC
         print("\tlet res = op1.wrapping_add(rs).wrapping_add(_cpu.carry as u32);")
         print("\t_cpu.carry = if _cpu.carry { op1 >= res } else { op1 > res };")

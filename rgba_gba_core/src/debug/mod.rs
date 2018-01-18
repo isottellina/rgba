@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Thu Jan 18 11:16:51 2018 (+0100)
+// Last-Updated: Thu Jan 18 12:49:30 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -40,8 +40,8 @@ impl Debugger {
             println!("{:08x}: {}",
                      pc,
                      match gba.cpu.state() {
-                         CpuState::ARM => disasm_arm(pc, gba.io.read_u32(pc as usize)),
-                         CpuState::Thumb => disasm_thumb(pc, gba.io.read_u16(pc as usize)),
+                         CpuState::ARM => disasm_arm(&gba.io, pc),
+                         CpuState::Thumb => disasm_thumb(&gba.io, pc),
                      }
             );
             
@@ -139,12 +139,10 @@ impl Debugger {
 
                         match gba.cpu.state() {
                             CpuState::ARM => {
-                                let instr = gba.io.read_u32(addr as usize);
-                                println!("{:08x}: {}", addr, disasm_arm(addr, instr));
+                                println!("{:08x}: {}", addr, disasm_arm(&gba.io, addr));
                             },
                             CpuState::Thumb => {
-                                let instr = gba.io.read_u16(addr as usize);
-                                println!("{:08x}: {}", addr, disasm_thumb(addr, instr));
+                                println!("{:08x}: {}", addr, disasm_thumb(&gba.io, addr));
                             }
                         }
                     }
@@ -156,8 +154,7 @@ impl Debugger {
                             pc
                         } & 0xFFFFFFFC;
                         
-                        let instr = gba.io.read_u32(addr as usize);
-                        println!("{:08x}: {}", addr, disasm_arm(addr, instr));
+                        println!("{:08x}: {}", addr, disasm_arm(&gba.io, addr));
                     }
 
                     Some("d/t") => {
@@ -167,8 +164,7 @@ impl Debugger {
                             pc
                         } & 0xFFFFFFFE;
                         
-                        let instr = gba.io.read_u16(addr as usize);
-                        println!("{:08x}: {}", addr, disasm_thumb(addr, instr));
+                        println!("{:08x}: {}", addr, disasm_thumb(&gba.io, addr));
                     }
                     
                     Some("h") | Some("help") => {

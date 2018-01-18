@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:00:56 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:38:46 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -98,6 +98,7 @@ impl Core for Gameboy {
             debugger.handle(self, platform);
             
             self.cpu.step(&mut self.io);
+            self.io.spend_cycles();
             self.io.render(platform);
 
             if self.io.is_frame_done() {

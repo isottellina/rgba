@@ -3,7 +3,7 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:07:53 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:05:12 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common::Platform;
@@ -107,7 +107,7 @@ impl GPU {
 
     fn get_sprite(&self, x: u8, y: u8, bg_color: u8) -> Option<DmgColor> {
         let sprites = self.line_cache[y as usize];
-
+        
         for opt_sprite in sprites.iter() {
             if let &Some(nb_sprite) = opt_sprite {
                 let sprite = self.oam[nb_sprite as usize];
@@ -152,6 +152,8 @@ impl GPU {
                         Some(self.obp0[c as usize])
                     }
                 }
+            } else {
+                return None;
             }
         }
 

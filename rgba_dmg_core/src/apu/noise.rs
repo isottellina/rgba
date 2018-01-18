@@ -3,7 +3,7 @@
 // Filename: noise.rs
 // Author: Louise <louise>
 // Created: Thu Dec 28 00:06:44 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:03:05 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:43:37 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -12,10 +12,11 @@ const DIVISORS: [u16; 8] = [8, 16, 32, 48, 64, 80, 96, 112];
 #[derive(Debug, Default)]
 pub struct NoiseChannel {
     timer: u16,
+    timer_load: u16,
     divisor: u8,
     out_volume: u8,
     
-    enabled: bool,
+    pub enabled: bool,
     dac_enabled: bool,
     
     lfsr: u16,
@@ -101,7 +102,8 @@ impl NoiseChannel {
                 self.length_counter = 64;
             }
 
-            self.timer = DIVISORS[self.divisor as usize] << self.clock_shift;
+            self.timer_load = DIVISORS[self.divisor as usize] << self.clock_shift;
+            self.timer = 0;
             self.volume = self.volume_load;
 
             self.envelope_running = true;
@@ -143,11 +145,11 @@ impl NoiseChannel {
         self.out_volume
     }
 
-    pub fn step(&mut self) {
-        self.timer = self.timer.wrapping_sub(1);
+    pub fn spend_cycles(&mut self, cycles: u16) {
+        self.timer += cycles;
 
-        if self.timer == 0 {
-            self.timer = DIVISORS[self.divisor as usize] << self.clock_shift;
+        while self.timer >= self.timer_load {
+            self.timer -= self.timer_load;
 
             let res = (self.lfsr & 1) ^ ((self.lfsr >> 1) & 1);
             self.lfsr = (self.lfsr >> 1) | (res << 14);

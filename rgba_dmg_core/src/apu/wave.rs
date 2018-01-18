@@ -3,14 +3,16 @@
 // Filename: wave.rs
 // Author: Louise <louise>
 // Created: Wed Dec 27 15:27:30 2017 (+0100)
-// Last-Updated: Wed Dec 27 22:40:12 2017 (+0100)
+// Last-Updated: Fri Jan 19 00:34:18 2018 (+0100)
 //           By: Louise <louise>
 // 
 
 #[derive(Debug, Default)]
 pub struct WaveChannel {
-    enabled: bool,
+    pub enabled: bool,
+    
     timer: u16,
+    timer_load: u16,
     frequency: u16,
     out_volume: u8,
     volume: u8,
@@ -62,7 +64,8 @@ impl WaveChannel {
                 self.length_counter = 255;
             }
 
-            self.timer = (2048 - self.frequency) << 2;
+            self.timer_load = (2048 - self.frequency) << 2;
+            self.timer = 0;
         }
     }
 
@@ -88,11 +91,11 @@ impl WaveChannel {
 
     pub fn render(&self) -> u8 { self.out_volume }
     
-    pub fn step(&mut self) {
-        self.timer = self.timer.wrapping_sub(1);
+    pub fn spend_cycles(&mut self, cycles: u16) {
+        self.timer += cycles;
 
-        if self.timer <= 0 {
-            self.timer = (2048 - self.frequency) << 2;
+        if self.timer >= self.timer_load {
+            self.timer -= self.timer_load;
             self.wave_state = (self.wave_state + 1) & 0x1f;
             
             self.out_volume = if self.enabled  {

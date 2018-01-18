@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:03:54 2018 (+0100)
+// Last-Updated: Fri Jan 19 00:40:42 2018 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -128,6 +128,7 @@ pub struct Interconnect {
     // Other
     bios_inplace: bool,
     cgb: bool,
+    cycles_to_spend: u32,
 }
 
 impl Interconnect {
@@ -166,6 +167,7 @@ impl Interconnect {
             
             bios_inplace: false,
             cgb: false,
+            cycles_to_spend: 0,
         }
     }
 
@@ -576,10 +578,18 @@ impl Interconnect {
     }
     #[inline]
     pub fn ack_watchpoint(&mut self) { self.watchpoint_hit = None }
-
     
     pub fn delay(&mut self, m_cycles: u32) {
-        let mut cycles = m_cycles << 2;
+        self.cycles_to_spend += m_cycles;
+    }
+
+    pub fn handle_event(&mut self, event: Event) {
+        self.joypad.handle_event(event);
+    }
+
+    pub fn spend_cycles(&mut self) {
+        let mut cycles = self.cycles_to_spend << 2;
+        self.cycles_to_spend = 0;
 
         if self.gpu.has_hblank() {
             self.gpu.ack_hblank();
@@ -588,7 +598,8 @@ impl Interconnect {
         }
         
         self.gpu.spend_cycles(cycles);
-
+        self.apu.spend_cycles(cycles);
+        
         while cycles != 0 {
             if self.dma_ongoing {
                 self.handle_dma();
@@ -596,16 +607,8 @@ impl Interconnect {
             
             self.timer.handle();
 
-            if self.apu.enabled() {
-                self.apu.step();
-            }
-
             cycles -= 1;
         }
-    }
-
-    pub fn handle_event(&mut self, event: Event) {
-        self.joypad.handle_event(event);
     }
     
     pub fn render<T: Platform>(&mut self, platform: &mut T) {

@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Wed Jan 17 23:04:44 2018 (+0100)
+// Last-Updated: Thu Jan 18 11:16:51 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -134,14 +134,43 @@ impl Debugger {
                         let addr = if let Some(u) = get_argument(&mut cmd) {
                             u
                         } else {
-                            gba.cpu.get_register(15) - 8
+                            pc
                         };
+
+                        match gba.cpu.state() {
+                            CpuState::ARM => {
+                                let instr = gba.io.read_u32(addr as usize);
+                                println!("{:08x}: {}", addr, disasm_arm(addr, instr));
+                            },
+                            CpuState::Thumb => {
+                                let instr = gba.io.read_u16(addr as usize);
+                                println!("{:08x}: {}", addr, disasm_thumb(addr, instr));
+                            }
+                        }
+                    }
+
+                    Some("d/a") => {
+                        let addr = if let Some(u) = get_argument(&mut cmd) {
+                            u
+                        } else {
+                            pc
+                        } & 0xFFFFFFFC;
                         
                         let instr = gba.io.read_u32(addr as usize);
-                        
                         println!("{:08x}: {}", addr, disasm_arm(addr, instr));
                     }
 
+                    Some("d/t") => {
+                        let addr = if let Some(u) = get_argument(&mut cmd) {
+                            u
+                        } else {
+                            pc
+                        } & 0xFFFFFFFE;
+                        
+                        let instr = gba.io.read_u16(addr as usize);
+                        println!("{:08x}: {}", addr, disasm_thumb(addr, instr));
+                    }
+                    
                     Some("h") | Some("help") => {
                         println!("h, help\t\tPrint this help \n\
                                   c, continue\tResume execution \n\
@@ -151,6 +180,9 @@ impl Debugger {
                                   x/1\t\tRead bytes at a specified address \n\
                                   x/2\t\tRead halfwords at a specified address \n\
                                   x/4\t\tRead words at a specified address \n\
+                                  d, dis\t\tDisassemble one instruction \n\
+                                  d/a\t\tDisassemble one ARM instruction \n\
+                                  d/t\t\tDisassemble one Thumb instruction \n\
                                   q, quit\t\tQuit the emulator");
                     }
                     

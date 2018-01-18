@@ -3,9 +3,11 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Wed Jan 17 22:51:58 2018 (+0100)
+// Last-Updated: Thu Jan 18 20:53:50 2018 (+0100)
 //           By: Louise <louise>
 //
+use gpu::GPU;
+
 use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;
 use std::io::Read;
@@ -13,6 +15,11 @@ use std::io::Read;
 pub struct Interconnect {
     bios: Vec<u8>,
     iram: [u8; 0x8000],
+
+    gpu: GPU,
+
+    cycles_to_spend: u32,
+    waitstates: [[[u32; 2]; 3]; 16],
 
     postflg: u8,
     ime: bool,
@@ -23,12 +30,43 @@ impl Interconnect {
         Interconnect {
             bios: vec![],
             iram: [0; 0x8000],
+            gpu: GPU::new(),
+
+            cycles_to_spend: 0,
+            waitstates: [
+                [[1, 1], [1, 1], [1, 1]], // BIOS
+                [[1, 1], [1, 1], [1, 1]],
+                [[3, 3], [3, 3], [6, 6]], // ERAM
+                [[1, 1], [1, 1], [1, 1]], // IRAM
+                [[1, 1], [1, 1], [1, 1]], // IO
+                [[1, 1], [1, 1], [2, 2]], // Palette RAM
+                [[1, 1], [1, 1], [2, 2]], // VRAM
+                [[1, 1], [1, 1], [1, 1]], // OAM
+                [[5, 5], [5, 5], [8, 8]], // GamePak WaitState 0
+                [[5, 5], [5, 5], [8, 8]],
+                [[5, 5], [5, 5], [8, 8]], // GamePak WaitState 1
+                [[5, 5], [5, 5], [8, 8]],
+                [[5, 5], [5, 5], [8, 8]], // GamePak WaitState 2
+                [[5, 5], [5, 5], [8, 8]],
+                [[1, 1], [1, 1], [1, 1]], // GamePak SRAM
+                [[1, 1], [1, 1], [1, 1]],
+            ],
 
             postflg: 0,
             ime: false,
         }
     }
 
+    pub fn declare_access(&mut self, address: usize, width: usize) {
+        self.cycles_to_spend += self.waitstates[address >> 24][width][0];
+    }
+
+    pub fn spend(&mut self) {
+        self.gpu.spend_cycles(self.cycles_to_spend);
+        
+        self.cycles_to_spend = 0;
+    }
+    
     pub fn read_u32(&self, address: usize) -> u32 {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 =>
@@ -82,6 +120,7 @@ impl Interconnect {
             0x03000000 => LittleEndian::write_u16(
                 &mut self.iram[(address & 0x7fff)..], value
             ),
+            0x04000000 => self.io_write_u16(address, value),
             _ => unimplemented!("Writing 2 bytes to {:08x}", address),
         }
     }
@@ -95,6 +134,13 @@ impl Interconnect {
         }
     }
 
+    fn io_write_u16(&mut self, address: usize, value: u16) {
+        match address {
+            0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
+            _ => unimplemented!(),
+        }
+    }
+    
     fn io_write_u8(&mut self, address: usize, value: u8) {
         match address {
             IME => self.ime = value != 0,

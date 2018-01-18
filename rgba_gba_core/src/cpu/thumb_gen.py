@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 17 23:56:58 2018 (+0100)
+# Last-Updated: Thu Jan 18 11:10:43 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f2(high):
@@ -54,6 +54,11 @@ def write_f3(high):
     if op != 1:
         print("\t_cpu.registers[rd as usize] = res;")
 
+def write_f4(high):
+    print("\tlet op = (instr >> 6) & 0xf;")
+    print("\tlet function = THUMB_ALU[op as usize];")
+    print("\tfunction(_cpu, instr);")
+        
 def write_f5(high):
     op = high & 3
 
@@ -111,6 +116,19 @@ def write_f7(high):
         else:
             print("\t_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
 
+def write_f11(high):
+    load = high & 0x08 != 0
+    rd = high & 0x7
+    print("\tlet off = ((instr & 0xFF) as usize) << 2;")
+    print("\tlet sp = _cpu.get_register(13) as usize;")
+    print("\tlet addr = off.wrapping_add(sp);")
+    
+    if load:
+        print("\t_cpu.registers[%s] = _cpu.read_u32(_io, addr);" % rd)
+    else:
+        print("\tlet reg = _cpu.registers[%s];" % rd)
+        print("\t_cpu.write_u32(_io, addr, reg)")
+            
 def write_f13(high):
     print("\tlet off = ((instr & 0x7f) as u32) << 2;")
     print("\tlet sp = _cpu.get_register(13);")
@@ -185,12 +203,16 @@ def write_instruction(high):
         write_f2(high)
     elif high & 0xE0 == 0x20:
         write_f3(high)
+    elif high & 0xFC == 0x40:
+        write_f4(high)
     elif high & 0xFC == 0x44:
         write_f5(high)
     elif high & 0xF8 == 0x48:
         write_f6(high)
     elif high & 0xF2 == 0x50:
         write_f7(high)
+    elif high & 0xF0 == 0x90:
+        write_f11(high)
     elif high & 0xFF == 0xB0:
         write_f13(high)
     elif high & 0xF6 == 0xB4:
@@ -202,8 +224,85 @@ def write_instruction(high):
 
     print("}\n")
 
-for high in range(0x0, 0x100):
+def write_alu(op):
+    print("#[allow(unreachable_code, unused_variables, unused_assignments)]")
+    print(
+        "fn thumb_alu_%01x(_cpu: &mut ARM7TDMI, instr: u16) {"
+        % op
+    )
+
+    test = op in [8, 10, 11]
+
+    print("\tlet rd = instr & 0x7;")
+    print("\tlet op1 = _cpu.registers[rd as usize];")
+    print("\tlet rs = _cpu.registers[((instr >> 3) & 7) as usize];")
+    
+    if op == 8 or op == 0: # AND, TST
+        print("\tlet res = op1 & rs;")
+    elif op == 1: # EOR
+        print("\tlet res = op1 | rs;");
+    elif op == 2: # LSL
+        print("\tlet shift = rs & 0xFF;")
+        print("\tlet res = op1 << shift;")
+        print("\tif shift != 0 { _cpu.carry = ((res << (shift - 1)) & 0x80000000) != 0; }")
+    elif op == 3: # LSR
+        print("\tlet shift = rs & 0xFF;")
+        print("\tlet res = op1 >> shift;")
+        print("\tif shift != 0 { _cpu.carry = ((res >> (shift - 1)) & 1) != 0; }")
+    elif op == 4: # ASR
+        print("\tlet shift = rs & 0xFF;")
+        print("\tlet res = ((op1 as i32) >> shift) as u32;")
+        print("\tif shift != 0 { _cpu.carry = (((res as i32) >> (shift - 1)) & 1) != 0; }")
+    elif op == 5: # ADC
+        print("\tlet res = op1.wrapping_add(rs).wrapping_add(_cpu.carry as u32);")
+        print("\t_cpu.carry = if _cpu.carry { op1 >= res } else { op1 > res };")
+        print("\t_cpu.overflow = !(op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
+    elif op == 6: # SBC
+        print("\tlet res = op1.wrapping_sub(rs).wrapping_sub(_cpu.carry as u32);")
+        print("\t_cpu.carry = if _cpu.carry { op1 > rs } else { op1 >= rs };")
+        print("\t_cpu.overflow = (op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
+    elif op == 7: # ROR
+        print("\tlet shift = rs & 0xFF;")
+        print("\tlet res = op1.rotate_right(shift & 0x1f);")
+        print("\tif shift != 0 { _cpu.carry = (res & 0x80000000) != 0; }")
+    elif op == 9: # NEG
+        print("\tlet res = 0_u32.wrapping_sub(rs);")
+        print("\t_cpu.carry = 0 >= res;")
+        print("\t_cpu.overflow = (rs & res & 0x80000000) != 0;")
+    elif op == 10: # CMP
+        print("\tlet res = op1.wrapping_sub(rs);")
+        print("\t_cpu.carry = op1 >= rs;")
+        print("\t_cpu.overflow = (op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
+    elif op == 11: # CMN
+        print("\tlet res = op1.wrapping_add(rs);")
+        print("\t_cpu.carry = op1 > res;")
+        print("\t_cpu.overflow = !(op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
+    elif op == 12: # ORR
+        print("\tlet res = op1 | rs;")
+    elif op == 13: # MUL
+        print("\tlet res = op1.wrapping_mul(rs);")
+        print("\t_cpu.carry = false;")
+    elif op == 14: # BIC
+        print("\tlet res = op1 & !rs;");
+    elif op == 15: # MVN
+        print("\tlet res = !rs;");
+        
+    print("\t_cpu.sign = (res as i32) < 0;")
+    print("\t_cpu.zero = res == 0;")
+
+    if not test:
+        print("\t_cpu.set_register(rd as usize, res);")
+
+    print("}\n")
+    
+for high in range(0x100):
     write_instruction(high)
 
-print("const THUMB_INSTRUCTIONS: [fn(&mut ARM7TDMI, &mut Interconnect, u16); 256] = ")
+for opcode in range(0x10):
+    write_alu(opcode)
+    
+print("const THUMB_INSTRUCTIONS: [fn(&mut ARM7TDMI, &mut Interconnect, u16); 256] = ", end = "")
 print("[" + ", ".join(["thumb_%02x" % i for i in range(0x0, 0x100)]) + "];")
+
+print("const THUMB_ALU: [fn(&mut ARM7TDMI, u16); 16] = ", end = "")
+print("[" + ", ".join(["thumb_alu_%01x" % i for i in range(0x0, 0x10)]) + "];")

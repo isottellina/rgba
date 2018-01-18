@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Thu Jan 18 11:10:43 2018 (+0100)
+# Last-Updated: Thu Jan 18 13:45:29 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f2(high):
@@ -192,6 +192,19 @@ def write_f16(high):
     print("\t\t_cpu.advance_pipeline(_io);")
     print("\t}")
 
+def write_f19(high):
+    stage = (high & 0x08) >> 3
+
+    if stage == 0:
+        print("\tlet pc = _cpu.registers[15] as i32;")
+        print("\tlet new_lr = pc + (((((instr & 0x7FF) as u32) << 21) as i32) >> 9);")
+        print("\t_cpu.set_register(14, new_lr as u32);")
+    else:
+        print("\tlet tmp = (_cpu.registers[15] - 2) | 1;")
+        print("\t_cpu.registers[15] = _cpu.get_register(14) + (((instr & 0x7FF) as u32) << 1);")
+        print("\t_cpu.set_register(14, tmp);")
+        print("\t_cpu.advance_pipeline(_io);")
+    
 def write_instruction(high):
     print("#[allow(unreachable_code, unused_variables, unused_assignments)]")
     print(
@@ -219,6 +232,8 @@ def write_instruction(high):
         write_f14(high)
     elif high & 0xF0 == 0xD0:
         write_f16(high)
+    elif high & 0xF0 == 0xF0:
+        write_f19(high)
     else:
         print("\tunimplemented!(\"{:04x}\", instr);")
 

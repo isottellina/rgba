@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Thu Jan 18 14:07:11 2018 (+0100)
+# Last-Updated: Thu Jan 18 21:37:45 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f1(high):
@@ -136,6 +136,18 @@ def write_f7(high):
         else:
             print("\t_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
 
+def write_f10(high):
+    print("\tlet rb = _cpu.registers[((instr >> 3) & 7) as usize];")
+    print("\tlet rd = instr & 7;")
+    print("\tlet offset = ((instr >> 6) & 0x1f) << 1;")
+    print("\tlet addr = rb + (offset as u32);")
+    
+    if high & 0x08 == 0: # STRH
+        print("\tlet val = _cpu.registers[rd as usize];")
+        print("\t_cpu.write_u16(_io, addr as usize, val as u16);")
+    else:
+        print("\t_cpu.registers[rd as usize] = _cpu.read_u16(_io, addr as usize) as u32;")
+            
 def write_f11(high):
     load = high & 0x08 != 0
     rd = high & 0x7
@@ -246,6 +258,8 @@ def write_instruction(high):
         write_f6(high)
     elif high & 0xF2 == 0x50:
         write_f7(high)
+    elif high & 0xF0 == 0x80:
+        write_f10(high)
     elif high & 0xF0 == 0x90:
         write_f11(high)
     elif high & 0xFF == 0xB0:

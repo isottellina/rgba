@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Thu Jan 18 14:05:46 2018 (+0100)
+# Last-Updated: Thu Jan 18 14:07:11 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f1(high):
@@ -13,11 +13,11 @@ def write_f1(high):
     print("\tlet shift = (instr >> 6) & 0x1f;")
 
     if op == 0:
-        print("if shift != 0 { _cpu.carry = ((rs << (shift - 1)) & 0x80000000) != 0; }")
-        print("let res = rs << shift;")
+        print("\tif shift != 0 { _cpu.carry = ((rs << (shift - 1)) & 0x80000000) != 0; }")
+        print("\tlet res = rs << shift;")
     elif op == 1:
-        print("if shift != 0 { _cpu.carry = ((rs >> (shift - 1)) & 1) != 0; }")
-        print("let res = rs >> shift;")
+        print("\tif shift != 0 { _cpu.carry = ((rs >> (shift - 1)) & 1) != 0; }")
+        print("\tlet res = rs >> shift;")
     elif op == 2:
         print("\tif shift != 0 { _cpu.carry = (((rs as i32) >> (shift - 1)) & 1) != 0; }")
         print("\tlet res = ((rs as i32) >> shift) as u32;")

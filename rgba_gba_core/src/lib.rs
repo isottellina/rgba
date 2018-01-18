@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Sat Jan 13 12:12:56 2018 (+0100)
+// Last-Updated: Thu Jan 18 20:04:41 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -15,6 +15,7 @@ use rgba_common::fnv_hash;
 mod debug;
 mod cpu;
 mod io;
+mod gpu;
 
 use cpu::ARM7TDMI;
 use io::Interconnect;
@@ -46,12 +47,13 @@ impl Core for GBA {
     fn run<T: Platform>(&mut self, platform: &mut T, debug: bool) {
         let mut debugger = Debugger::new(debug);
 
-        self.cpu.reset(&self.io);
+        self.cpu.reset(&mut self.io);
         
         while self.state {
             debugger.handle(self, platform);
             
             self.cpu.next_instruction(&mut self.io);
+            self.io.spend();
         }
     }
     

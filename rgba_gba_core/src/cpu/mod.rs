@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Tue Jan 16 20:06:34 2018 (+0100)
+// Last-Updated: Thu Jan 18 19:57:02 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -42,7 +42,7 @@ impl ARM7TDMI {
         Default::default()
     }
 
-    pub fn reset(&mut self, io: &Interconnect) {
+    pub fn reset(&mut self, io: &mut Interconnect) {
         self.mode = CpuMode::SVC;
         self.state = CpuState::ARM;
         self.registers[15] = 0;
@@ -52,38 +52,51 @@ impl ARM7TDMI {
         self.fill_pipeline(io);
     }
     
-    pub fn read_u32(&self, io: &Interconnect, address: usize) -> u32 {
+    pub fn read_u32(&self, io: &mut Interconnect, address: usize) -> u32 {
+        io.declare_access(address, 2);
+        
         io.read_u32(address)
     }
 
-    pub fn read_u16(&self, io: &Interconnect, address: usize) -> u16 {
+    pub fn read_u16(&self, io: &mut Interconnect, address: usize) -> u16 {
+        io.declare_access(address, 1);
+
+        
         io.read_u16(address)
     }
 
-    pub fn read_u8(&self, io: &Interconnect, address: usize) -> u8 {
+    pub fn read_u8(&self, io: &mut Interconnect, address: usize) -> u8 {
+        io.declare_access(address, 0);
+        
         io.read_u8(address)
     }
 
     pub fn write_u32(&self, io: &mut Interconnect, address: usize, value: u32) {
+        io.declare_access(address, 2);
+        
         io.write_u32(address, value)
     }
 
     pub fn write_u16(&self, io: &mut Interconnect, address: usize, value: u16) {
+        io.declare_access(address, 1);
+        
         io.write_u16(address, value)
     }
 
     pub fn write_u8(&self, io: &mut Interconnect, address: usize, value: u8) {
+        io.declare_access(address, 0);
+        
         io.write_u8(address, value)
     }
     
-    pub fn next_u32(&mut self, io: &Interconnect) -> u32 {
+    pub fn next_u32(&mut self, io: &mut Interconnect) -> u32 {
         let v = self.read_u32(io, self.registers[15] as usize);
 
         self.registers[15] += 4;
         v
     }
 
-    pub fn next_u16(&mut self, io: &Interconnect) -> u16 {
+    pub fn next_u16(&mut self, io: &mut Interconnect) -> u16 {
         let v = self.read_u16(io, self.registers[15] as usize);
 
         self.registers[15] += 2;
@@ -192,7 +205,7 @@ impl ARM7TDMI {
         }
     }
     
-    pub fn advance_pipeline(&mut self, io: &Interconnect) {
+    pub fn advance_pipeline(&mut self, io: &mut Interconnect) {
         match self.state {
             CpuState::ARM => {
                 self.instr_decoded_arm = self.instr_fetched_arm;
@@ -205,7 +218,7 @@ impl ARM7TDMI {
         }
     }
     
-    pub fn fill_pipeline(&mut self, io: &Interconnect) {
+    pub fn fill_pipeline(&mut self, io: &mut Interconnect) {
         match self.state {
             CpuState::ARM => {
                 self.instr_decoded_arm = self.next_u32(io);

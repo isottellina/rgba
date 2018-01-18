@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Thu Jan 18 13:09:38 2018 (+0100)
+// Last-Updated: Thu Jan 18 21:20:33 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -196,7 +196,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 46] = [
+const THUMB_INSTRS: [(u16, u16, &str); 48] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -236,6 +236,9 @@ const THUMB_INSTRS: [(u16, u16, &str); 46] = [
     // Format 7 (Load/Store with register offset)
     (0xFA00, 0x5000, "str%b %r0, [%r3, %r6]"),
     (0xFA00, 0x5800, "ldr%b %r0, [%r3, %r6]"),
+    // Format 10 (load/store halfword)
+    (0xF800, 0x8000, "strh %r0, [%r3, %s]"),
+    (0xF800, 0x8800, "ldrh %r0, [%r3, %s]"),
     // Format 11 (load/store with SP base)
     (0xF800, 0x9000, "str %r8, [r13, %f]"),
     (0xF800, 0x9800, "ldr %r8, [r13, %f]"),

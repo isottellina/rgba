@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Thu Jan 18 21:20:33 2018 (+0100)
+// Last-Updated: Thu Jan 18 21:56:37 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -196,7 +196,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 48] = [
+const THUMB_INSTRS: [(u16, u16, &str); 49] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -256,6 +256,8 @@ const THUMB_INSTRS: [(u16, u16, &str); 48] = [
     (0xFF00, 0xDF00, "swi %w"),
     // Format 16 (Conditionnal branch)
     (0xF000, 0xD000, "b%c %o"),
+    // Format 18 (Unconditionnal branch)
+    (0xF800, 0xE000, "b %u"),
     // Format 19 (Long branch)
     (0xF800, 0xF000, "bl %Lh"),
     (0xF800, 0xF800, "bl %Ll"),
@@ -291,6 +293,9 @@ pub fn disasm_thumb(io: &Interconnect, offset: u32) -> String {
                             &format!("0x{:08x}", (offset & !3) + (((instr & 0xFF) as u32) << 2) + 4)
                         ),
                         Some('s') => dis.push_str(&format!("#{}", (instr >> 6) & 0x1f)),
+                        Some('u') => dis.push_str(
+                            &format!("0x{:08x}", offset + (((instr & 0x7ff) << 1) as u32) + 4)
+                        ),
                         Some('i') => dis.push_str(&format!("0x{:02x}", instr & 0xFF)),
                         Some('I') => {
                             if instr & 0x0400 != 0 {

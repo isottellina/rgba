@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Thu Jan 18 21:37:45 2018 (+0100)
+# Last-Updated: Thu Jan 18 22:09:12 2018 (+0100)
 #           By: Louise <louise>
 #
 def write_f1(high):
@@ -215,7 +215,7 @@ def write_f16(high):
         "_cpu.carry && !_cpu.zero", "!_cpu.carry && _cpu.zero",
         "_cpu.sign == _cpu.overflow", "_cpu.sign != _cpu.overflow",
         "_cpu.zero && (_cpu.sign == _cpu.overflow)", "!_cpu.zero || (_cpu.sign != _cpu.overflow)",
-        "false", "false"
+        "true", "false"
     ]
     
     print("\tlet off = (((instr & 0xFF) as i8) as i32) << 1;")
@@ -224,6 +224,11 @@ def write_f16(high):
     print("\t\t_cpu.advance_pipeline(_io);")
     print("\t}")
 
+def write_f18(high):
+    print("\tlet offset = (((instr << 5) as i16) >> 4) as i32;")
+    print("\t_cpu.registers[15] = ((_cpu.registers[15] as i32) + offset) as u32;")
+    print("\t_cpu.advance_pipeline(_io);")
+    
 def write_f19(high):
     stage = (high & 0x08) >> 3
 
@@ -266,8 +271,10 @@ def write_instruction(high):
         write_f13(high)
     elif high & 0xF6 == 0xB4:
         write_f14(high)
-    elif high & 0xF0 == 0xD0:
+    elif high & 0xF0 == 0xD0 and high & 0xF != 0xF:
         write_f16(high)
+    elif high & 0xF8 == 0xE0:
+        write_f18(high)
     elif high & 0xF0 == 0xF0:
         write_f19(high)
     else:

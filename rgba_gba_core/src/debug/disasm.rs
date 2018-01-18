@@ -3,9 +3,10 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Thu Jan 18 09:43:02 2018 (+0100)
+// Last-Updated: Thu Jan 18 13:09:38 2018 (+0100)
 //           By: Louise <louise>
 // 
+use io::Interconnect;
 
 const CONDITIONS: [&str; 16] = [
     "eq", "ne", "cs", "cc",
@@ -54,7 +55,8 @@ const ARM_INSTRS: [(u32, u32, &str); 27] = [
     (0x0DE00000, 0x01E00000, "mvn%s%c %r3, %i"),
 ];
 
-pub fn disasm_arm(offset: u32, instr: u32) -> String {
+pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
+    let instr = io.read_u32(offset as usize);
     let mut dis = String::new();
     
     for &(mask, res, disasm) in ARM_INSTRS.iter() {
@@ -194,7 +196,7 @@ pub fn disasm_arm(offset: u32, instr: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 44] = [
+const THUMB_INSTRS: [(u16, u16, &str); 46] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -251,9 +253,13 @@ const THUMB_INSTRS: [(u16, u16, &str); 44] = [
     (0xFF00, 0xDF00, "swi %w"),
     // Format 16 (Conditionnal branch)
     (0xF000, 0xD000, "b%c %o"),
+    // Format 19 (Long branch)
+    (0xF800, 0xF000, "bl %Lh"),
+    (0xF800, 0xF800, "bl %Ll"),
 ];
 
-pub fn disasm_thumb(offset: u32, instr: u16) -> String {
+pub fn disasm_thumb(io: &Interconnect, offset: u32) -> String {
+    let instr = io.read_u16(offset as usize);
     let mut dis = String::new();
     
     for &(mask, res, disasm) in THUMB_INSTRS.iter() {
@@ -323,6 +329,19 @@ pub fn disasm_thumb(offset: u32, instr: u16) -> String {
 				    msk += 1;
 				}
                             }
+                        }
+                        Some('L') => {
+                            let (pc, instr, next_instr) = match it.next().unwrap() {
+                                'h' => (offset, instr, io.read_u16((offset + 2) as usize)),
+                                'l' => (offset - 2, io.read_u16((offset - 2) as usize), instr),
+                                _ => panic!("Bad disasm data"),
+                            };
+                            
+                            let offset_high = ((((instr & 0x7FF) as u32) << 21) as i32) >> 9;
+                            let offset_low = (next_instr & 0x7FF) as i32;
+                            let addr = (pc as i32) + 4 + offset_high + (offset_low << 1);
+
+                            dis.push_str(&format!("0x{:08x}", addr));
                         }
                         _ => panic!("Bad disasm data"),
                     }

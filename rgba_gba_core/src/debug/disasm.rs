@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Fri Jan 19 22:36:37 2018 (+0100)
+// Last-Updated: Fri Jan 19 22:46:29 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -17,6 +17,13 @@ const CONDITIONS: [&str; 16] = [
 
 const SHIFTS: [&str; 5] = [
     "lsl", "lsr", "asr", "ror", "rrx"
+];
+
+const REGS: [&str; 16] = [
+    "r0", "r1", "r2", "r3",
+    "r4", "r5", "r6", "r7",
+    "r8", "r9", "r10", "r11",
+    "r12", "sp", "lr", "pc"
 ];
 
 const ARM_INSTRS: [(u32, u32, &str); 29] = [
@@ -85,7 +92,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                         Some('r') => {
                             let shifted = instr >> (it.next().unwrap().to_digit(10).unwrap() << 2);
                             
-                            dis.push_str(&format!("r{}", shifted & 0xF))
+                            dis.push_str(REGS[(shifted & 0xF) as usize])
                         }
                         Some('s') => if instr & 0x100000 != 0 { dis.push('s'); },
                         Some('u') => if instr & 0x400000 != 0 { dis.push('u'); },
@@ -99,12 +106,13 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                                 let rm = instr & 0xF;
                                 let mut shift = (instr & 0x60) >> 5;
 
-                                dis.push_str(&format!("r{}", rm));
+                                dis.push_str(REGS[rm as usize]);
                                 
                                 if instr & 0x10 != 0 {
                                     dis.push(' ');
                                     dis.push_str(SHIFTS[shift as usize]);
-                                    dis.push_str(&format!(" r{}", (instr & 0xF00) >> 8));
+                                    dis.push(' ');
+                                    dis.push_str(REGS[((instr & 0xF00) >> 8) as usize]);
                                 } else {
                                     let mut amount = (instr & 0xF80) >> 7;
 
@@ -137,7 +145,8 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                                     if shift == 3 && amount == 0 { shift = 4; }
                                     if amount == 0 { amount = 32; }
 
-                                    dis.push_str(&format!(" r{}", rm));
+                                    dis.push(' ');
+                                    dis.push_str(REGS[rm as usize]);
                                     
                                     if amount != 32 || shift != 0 {
                                         dis.push(' ');
@@ -153,7 +162,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                             if rn == 15 {
                                 push_op(&mut dis, instr);
                             } else if pre {
-                                dis.push_str(&format!("[r{}, ", rn));
+                                dis.push_str(&format!("[{}, ", REGS[rn as usize]));
                                 push_op(&mut dis, instr);
                                 dis.push_str(&format!("]"));
 
@@ -161,7 +170,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                                     dis.push('!');
                                 }
                             } else {
-                                dis.push_str(&format!("[r{}], ", rn));
+                                dis.push_str(&format!("[{}], ", REGS[rn as usize]));
                                 push_op(&mut dis, instr);
                             }
                         }
@@ -178,12 +187,12 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
 				    let to = msk - 1;
 				    if not_first { dis.push(','); }
 
-                                    dis.push_str(&format!("r{}", fr));
+                                    dis.push_str(REGS[fr as usize]);
                                     
 				    if fr != to {
 					if fr == to-1 { dis.push(','); }
 					else { dis.push('-'); }
-					dis.push_str(&format!("r{}", to));
+					dis.push_str(REGS[to as usize]);
 				    }
                                     
 				    not_first = true;
@@ -313,13 +322,13 @@ pub fn disasm_thumb(io: &Interconnect, offset: u32) -> String {
                         Some('r') => {
                             let shifted = instr >> it.next().unwrap().to_digit(10).unwrap();
                             
-                            dis.push_str(&format!("r{}", shifted & 0x7))
+                            dis.push_str(REGS[(shifted & 0x7) as usize])
                         }
                         Some('h') => {
                             let r = (instr >> it.next().unwrap().to_digit(10).unwrap()) & 7;
                             let h = (instr & (1 << it.next().unwrap().to_digit(10).unwrap())) != 0;
 
-                            dis.push_str(&format!("r{}", if h { r + 8 } else { r }))
+                            dis.push_str(REGS[(if h { r + 8 } else { r }) as usize]);
                         }
                         Some('m') => dis.push_str(&format!("0x{:x}", (instr & 0x7f) << 2)),
                         Some('f') => dis.push_str(&format!("0x{:x}", (instr & 0xff) << 2)),
@@ -337,7 +346,7 @@ pub fn disasm_thumb(io: &Interconnect, offset: u32) -> String {
                             if instr & 0x0400 != 0 {
                                 dis.push_str(&format!("#{}", (instr >> 6) & 0x7));
                             } else {
-                                dis.push_str(&format!("r{}", (instr >> 6) & 0x7));
+                                dis.push_str(REGS[((instr >> 6) & 0x7) as usize]);
                             }
                         }
                         Some('o') => {
@@ -360,12 +369,12 @@ pub fn disasm_thumb(io: &Interconnect, offset: u32) -> String {
 				    let to = msk - 1;
 				    if not_first { dis.push(','); }
 
-                                    dis.push_str(&format!("r{}", fr));
+                                    dis.push_str(REGS[fr as usize]);
                                     
 				    if fr != to {
 					if fr == to-1 { dis.push(','); }
 					else { dis.push('-'); }
-					dis.push_str(&format!("r{}", to));
+					dis.push_str(REGS[to as usize]);
 				    }
                                     
 				    not_first = true;

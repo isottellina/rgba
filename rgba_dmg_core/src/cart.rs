@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:26:14 2018 (+0100)
+// Last-Updated: Fri Jan 19 01:41:31 2018 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -174,26 +174,11 @@ impl Cartridge {
                 ref mut ram_bank,
                 ref mut mode,
                 ref mut ram_enable,
-                ref rom_banks,
-                ref ram,
-                ref save_filename, ..
+                ref rom_banks, ..
             } => {
                 match address {
                     0x0000...0x1FFF => {
                         *ram_enable = (value & 0xF) == 0xA;
-
-                        if !*ram_enable {
-                            if let Ok(mut file) = File::create(save_filename) {
-                                if let Err(e) = file.write(ram.as_ref()) {
-                                    warn!("Couldn't save to savefile {}: {}",
-                                          save_filename,
-                                          e
-                                    );
-                                }
-                            } else {
-                                warn!("Couldn't open savefile");
-                            }
-                        }
                     },
                     0x2000...0x3FFF => {
                         *rom_bank &= 0xe0;
@@ -217,23 +202,11 @@ impl Cartridge {
                 ref mut rom_bank,
                 ref mut ram_bank,
                 ref mut ram_enable,
-                ref rom_banks,
-                ref ram,
-                ref save_filename, ..
+                ref rom_banks, ..
             } => {
                 match address {
                     0x0000...0x1FFF => {
                         *ram_enable = (value & 0xF) == 0xA;
-
-                        if !*ram_enable {
-                            if let Ok(mut file) = File::create(save_filename) {
-                                if let Err(e) = file.write(ram.as_ref()) {
-                                    warn!("Couldn't save to savefile : {}", e);
-                                }
-                            } else {
-                                warn!("Couldn't open savefile");
-                            }
-                        }
                     },
                     0x2000...0x3FFF => {
                         *rom_bank = if value == 0 {
@@ -259,23 +232,11 @@ impl Cartridge {
                 ref mut rom_bank,
                 ref mut ram_bank,
                 ref mut ram_enable,
-                ref rom_banks,
-                ref ram,
-                ref save_filename, ..
+                ref rom_banks, ..
             } => {
                 match address {
                     0x0000...0x1FFF => {
                         *ram_enable = (value & 0xF) == 0xA;
-
-                        if !*ram_enable {
-                            if let Ok(mut file) = File::create(save_filename) {
-                                if let Err(e) = file.write(ram.as_ref()) {
-                                    warn!("Couldn't save to savefile : {}", e);
-                                }
-                            } else {
-                                warn!("Couldn't open savefile");
-                            }
-                        }
                     },
                     0x2000...0x2FFF => {
                         *rom_bank = (*rom_bank & 0x100) | value as usize;
@@ -315,6 +276,28 @@ impl Cartridge {
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)] = value,
             Cartridge::MBC5 { ref mut ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)] = value,
+        }
+    }
+
+    pub fn write_savefile(&self) {
+        match *self {
+            Cartridge::NoCartridge | Cartridge::RomOnly(_) => { },
+            Cartridge::MBC1 { ref ram, ref save_filename, .. } |
+            Cartridge::MBC3 { ref ram, ref save_filename, .. } => {
+                if let Ok(mut file) = File::create(save_filename) {
+                    if let Err(e) = file.write(ram.as_ref()) {
+                        warn!("Couldn't save to savefile : {}", e);
+                    }
+                }
+            }
+            
+            Cartridge::MBC5 { ref ram, ref save_filename, .. } => {
+                if let Ok(mut file) = File::create(save_filename) {
+                    if let Err(e) = file.write(ram.as_ref()) {
+                        warn!("Couldn't save to savefile : {}", e);
+                    }
+                }
+            }
         }
     }
 }

@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Thu Jan 18 21:56:37 2018 (+0100)
+// Last-Updated: Fri Jan 19 22:36:37 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -19,7 +19,7 @@ const SHIFTS: [&str; 5] = [
     "lsl", "lsr", "asr", "ror", "rrx"
 ];
 
-const ARM_INSTRS: [(u32, u32, &str); 27] = [
+const ARM_INSTRS: [(u32, u32, &str); 29] = [
     // Branches
     (0x0F000000, 0x0A000000, "b%c %o"),
     (0x0F000000, 0x0B000000, "bl%c %o"),
@@ -36,6 +36,9 @@ const ARM_INSTRS: [(u32, u32, &str); 27] = [
     // Load/Store instructions
     (0x0C100000, 0x04000000, "str%b%t%c %r3, %a"),
     (0x0C100000, 0x04100000, "ldr%b%t%c %r3, %a"),
+    // STM/LDM
+    (0x0E100000, 0x08000000, "stm%m%c %r4, %l"),
+    (0x0E100000, 0x08100000, "ldm%m%c %r4, %l"),
     // ALU
     (0x0DE00000, 0x00000000, "and%s%c %r3, %r4, %i"),
     (0x0DE00000, 0x00200000, "eor%s%c %r3, %r4, %i"),
@@ -161,6 +164,39 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                                 dis.push_str(&format!("[r{}], ", rn));
                                 push_op(&mut dis, instr);
                             }
+                        }
+                        Some('l') => {
+			    let mut msk = 0;
+			    let mut not_first = false;
+
+                            dis.push('{');
+                            
+                            while msk < 16 {
+				if (instr & (1 << msk)) != 0 {
+				    let fr = msk;
+				    while (instr & (1 << msk)) != 0 && msk < 16 { msk += 1; }
+				    let to = msk - 1;
+				    if not_first { dis.push(','); }
+
+                                    dis.push_str(&format!("r{}", fr));
+                                    
+				    if fr != to {
+					if fr == to-1 { dis.push(','); }
+					else { dis.push('-'); }
+					dis.push_str(&format!("r{}", to));
+				    }
+                                    
+				    not_first = true;
+				} else {
+				    msk += 1;
+				}
+                            }
+
+                            dis.push('}');
+                        }
+                        Some('m') => {
+                            dis.push(if instr &  0x800000 != 0 { 'i' } else { 'd' });
+                            dis.push(if instr & 0x1000000 != 0 { 'b' } else { 'a' });
                         }
                         Some('o') => {
                             let mut off = instr & 0xFFFFFF;

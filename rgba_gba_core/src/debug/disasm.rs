@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Fri Jan 19 22:46:29 2018 (+0100)
+// Last-Updated: Fri Jan 19 23:14:29 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -285,17 +285,17 @@ const THUMB_INSTRS: [(u16, u16, &str); 49] = [
     (0xF800, 0x8000, "strh %r0, [%r3, %s]"),
     (0xF800, 0x8800, "ldrh %r0, [%r3, %s]"),
     // Format 11 (load/store with SP base)
-    (0xF800, 0x9000, "str %r8, [r13, %f]"),
-    (0xF800, 0x9800, "ldr %r8, [r13, %f]"),
+    (0xF800, 0x9000, "str %r8, [sp, %f]"),
+    (0xF800, 0x9800, "ldr %r8, [sp, %f]"),
     // Format 13 (add offset to SP)
-    (0xFF80, 0xB000, "add r13, %m"),
-    (0xFF80, 0xB080, "sub r13, %m"),
+    (0xFF80, 0xB000, "add sp, %m"),
+    (0xFF80, 0xB080, "sub sp, %m"),
     // Format 14
-    (0xFFFF, 0xB500, "push {r14}"),
-    (0xFF00, 0xB500, "push {%l, r14}"),
+    (0xFFFF, 0xB500, "push {pc}"),
+    (0xFF00, 0xB500, "push {%l,pc}"),
     (0xFF00, 0xB400, "push {%l}"),
-    (0xFFFF, 0xBD00, "pop {r15}"),
-    (0xFF00, 0xBD00, "pop {%l, r15}"),
+    (0xFFFF, 0xBD00, "pop {pc}"),
+    (0xFF00, 0xBD00, "pop {%l,pc}"),
     (0xFF00, 0xBC00, "pop {%l}"),
     // Format 17 (SWI)
     (0xFF00, 0xDF00, "swi %w"),

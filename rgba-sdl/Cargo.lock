@@ -66,9 +66,10 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
+ "atty 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -222,7 +223,7 @@ name = "rgba-sdl"
 version = "1.0.0"
 dependencies = [
  "clap 2.29.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "env_logger 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "env_logger 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "readline 0.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgba_builder 1.0.0",
@@ -236,7 +237,7 @@ version = "1.0.0"
 dependencies = [
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgba_common 1.0.0",
- "rgba_dmg_core 1.0.0",
+ "rgba_dmg_core 1.1.0",
  "rgba_gba_core 0.1.0",
 ]
 
@@ -246,7 +247,7 @@ version = "1.0.0"
 
 [[package]]
 name = "rgba_dmg_core"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgba_common 1.0.0",
@@ -408,7 +409,7 @@ dependencies = [
 "checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
 "checksum chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7c20ebe0b2b08b0aeddba49c609fe7957ba2e33449882cb186a180bc60682fa9"
 "checksum clap 2.29.2 (registry+https://github.com/rust-lang/crates.io-index)" = "4151c5790817c7d21bbdc6c3530811f798172915f93258244948b93ba19604a6"
-"checksum env_logger 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5b2c179f215e998e9e22c159f6b43b6fdbeff2e552f61c7d270b1c1a0209b100"
+"checksum env_logger 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f98112cf5e30982be3514040871a6f310504a7406ce1936691649353ec0607e9"
 "checksum fuchsia-zircon 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2e9763c69ebaae630ba35f74888db465e49e259ba1bc0eda7d06f4a067615d82"
 "checksum fuchsia-zircon-sys 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"

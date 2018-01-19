@@ -3,7 +3,7 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Fri Jan 19 00:25:39 2018 (+0100)
+// Last-Updated: Fri Jan 19 01:04:22 2018 (+0100)
 //           By: Louise <louise>
 //
 use rgba_common;
@@ -223,6 +223,7 @@ impl GPU {
         }
     }
 
+    #[inline]
     pub fn is_frame_done(&self) -> bool { self.frame_done }
     pub fn ack_frame(&mut self) { self.frame_done = false }
     
@@ -369,18 +370,23 @@ impl GPU {
     pub fn it_lcd(&self) -> bool { self.it_lcd }
     pub fn ack_it_lcd(&mut self) { self.it_lcd = false }
     pub fn set_it_lcd(&mut self, v: bool) { self.it_lcd = v }
-    
+
+    #[inline]
     pub fn read_vram_u8(&self, address: usize) -> u8 {
         self.vram[((self.vram_bank as usize) << 13) + (address & 0x1FFF)]
     }
+
+    #[inline]
     pub fn write_vram_u8(&mut self, address: usize, value: u8) {
         self.vram[((self.vram_bank as usize) << 13) + (address & 0x1FFF)] = value
     }
 
+    #[inline]
     pub fn read_oam_u8(&self, address: usize) -> u8 {
         self.oam[(address & 0xFF) >> 2].read(address)
     }
-    
+
+    #[inline]
     pub fn write_oam_u8(&mut self, address: usize, value: u8) {
         self.oam[(address & 0xFF) >> 2].write(address, value);
     }

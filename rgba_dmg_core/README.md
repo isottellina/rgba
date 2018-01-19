@@ -24,5 +24,4 @@ The dmg core is the first core to have been written. It's currently in its 1.0 v
 
  - RTC support for MBC3
  - Booting without bootrom
- - Saving less often
  - Optimisations in general (in the OAM code for example)

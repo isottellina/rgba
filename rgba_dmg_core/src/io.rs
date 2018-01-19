@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Fri Jan 19 00:40:42 2018 (+0100)
+// Last-Updated: Fri Jan 19 01:40:20 2018 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -248,6 +248,10 @@ impl Interconnect {
                 false
             }
         }
+    }
+
+    pub fn write_savefile(&self) {
+        self.cart.write_savefile();
     }
     
     pub fn read_u8(&self, address: usize) -> u8 {

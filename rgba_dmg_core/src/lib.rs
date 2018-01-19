@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Fri Jan 19 00:38:46 2018 (+0100)
+// Last-Updated: Fri Jan 19 01:41:47 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -59,8 +59,10 @@ impl Gameboy {
                 
         if elapsed < Duration::new(0, 16_600_000) {
             let to_wait = Duration::new(0, 16_600_000) - elapsed;
-            
-            thread::sleep(to_wait);
+
+            if to_wait > Duration::new(0, 600_000) {
+                thread::sleep(to_wait);
+            }
         }
         
         let new_elapsed = self.last_frame.elapsed();
@@ -106,6 +108,8 @@ impl Core for Gameboy {
                 self.io.ack_frame();
             }
         }
+
+        self.io.write_savefile();
     }
     
     fn is_file(filename: &str) -> bool {

@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = ["Louise"]
 
 [profile.dev]
-opt-level = 2
+opt-level = 1
 debug = true
 rpath = false
 lto = false

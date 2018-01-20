@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Thu Jan 18 20:53:50 2018 (+0100)
+// Last-Updated: Sat Jan 20 20:39:06 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -73,7 +73,7 @@ impl Interconnect {
                 LittleEndian::read_u32(&self.bios[address..]),
             0x03000000 =>
                 LittleEndian::read_u32(&self.iram[(address & 0x7fff)..]),
-            _ => unimplemented!(),
+            _ => { warn!("Unmapped read_u32 at {:08x}", address); 0 },
         }
     }
 
@@ -83,7 +83,7 @@ impl Interconnect {
                 LittleEndian::read_u16(&self.bios[address..]),
             0x03000000 =>
                 LittleEndian::read_u16(&self.iram[(address & 0x7fff)..]),
-            _ => unimplemented!(),
+            _ => { warn!("Unmapped read_u16 at {:08x}", address); 0 },
         }
     }
 
@@ -92,7 +92,7 @@ impl Interconnect {
             0x00000000 if address < 0x4000 => self.bios[address],
             0x03000000 => self.iram[address & 0x7fff],
             0x04000000 => self.io_read_u8(address),
-            _ => unimplemented!("Reading a byte from {:08x}", address)
+            _ => { warn!("Unmapped read_u8 at {:08x}", address); 0 },
         }
     }
 
@@ -100,7 +100,7 @@ impl Interconnect {
         match address {
             IME => self.ime as u8,
             POSTFLG => self.postflg,
-            _ => unimplemented!(),
+            _ => { warn!("Unmapped io_read_u8 at {:08x}", address); 0 }
         }
     }
 
@@ -110,7 +110,7 @@ impl Interconnect {
             0x03000000 => LittleEndian::write_u32(
                 &mut self.iram[(address & 0x7fff)..], value
             ),
-            _ => unimplemented!("Writing 4 bytes to {:08x}", address),
+            _ => warn!("Unmapped write_u32 at {:08x} (value={:08x})", address, value)
         }
     }
 
@@ -121,7 +121,7 @@ impl Interconnect {
                 &mut self.iram[(address & 0x7fff)..], value
             ),
             0x04000000 => self.io_write_u16(address, value),
-            _ => unimplemented!("Writing 2 bytes to {:08x}", address),
+            _ => warn!("Unmapped write_u16 at {:08x} (value={:04x})", address, value),
         }
     }
     
@@ -130,31 +130,31 @@ impl Interconnect {
             0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
             0x03000000 => self.iram[address & 0x7fff] = value,
             0x04000000 => self.io_write_u8(address, value),
-            _ => unimplemented!("Writing a byte to {:08x}", address),
+            _ => warn!("Unmapped write_u8 at {:08x} (value={:02x})", address, value),
         }
     }
 
     fn io_write_u16(&mut self, address: usize, value: u16) {
         match address {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
-            _ => unimplemented!(),
+            _ => warn!("Unmapped io_write_u16 at {:08x} (value={:04x})", address, value),
         }
     }
     
     fn io_write_u8(&mut self, address: usize, value: u8) {
         match address {
             IME => self.ime = value != 0,
-            _ => unimplemented!(),
+            _ => warn!("Unmapped io_write_u8 at {:08x} (value={:02x})", address, value),
         }
     }
     
     pub fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
         match File::open(filename) {
             Ok(mut file) => {    
-                debug!("BIOS file openend");
+                info!("BIOS file opened");
             
                 if let Err(e) = file.read_to_end(&mut self.bios) {
-                    warn!("Error reading BIOS file : {}", e);
+                    error!("Error reading BIOS file : {}", e);
                     Err("Error reading BIOS")
                 } else {
                     Ok(())
@@ -162,7 +162,7 @@ impl Interconnect {
             }
 
             Err(e) => {
-                warn!("Couldn't load BIOS : {}", e);
+                error!("Couldn't load BIOS : {}", e);
                 Err("Error opening BIOS file")
             }
         }

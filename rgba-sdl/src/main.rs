@@ -3,7 +3,7 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Sat Jan 20 18:38:15 2018 (+0100)
+// Last-Updated: Sat Jan 20 23:14:52 2018 (+0100)
 //           By: Louise <louise>
 //
 extern crate rgba_common;
@@ -26,7 +26,7 @@ use rgba_common::Platform;
 use rgba_builder::ConsoleBuilder;
 
 fn main() {
-    let matches = App::new("rgba").version("0.1")
+    let matches = App::new("rgba").version(env!("CARGO_PKG_VERSION"))
         .about("Multi-console emulator")
         .author("Louise Z.")
         .arg(Arg::with_name("bios")

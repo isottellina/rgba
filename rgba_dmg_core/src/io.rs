@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Fri Jan 19 01:40:20 2018 (+0100)
+// Last-Updated: Sat Jan 20 18:44:24 2018 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -331,7 +331,7 @@ impl Interconnect {
             IF => self.it_f(),
             IE => self.it_e(),
             
-            _ => { warn!("Reading from {:04x} is not supported",address); 0xFF }
+            _ => { warn!("Unmapped read from {:04x}", address); 0xFF }
         }
     }
 
@@ -429,7 +429,7 @@ impl Interconnect {
             IF   => self.set_if(value),
             IE   => self.set_ie(value),
             
-            _ => warn!("Writing to {:04x} is not supported", address),
+            _ => warn!("Unmapped write to {:04x} (value = {:02x})", address, value),
         }
     }
 

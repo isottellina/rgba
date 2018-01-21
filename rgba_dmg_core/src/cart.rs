@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 23:43:31 2017 (+0100)
-// Last-Updated: Fri Jan 19 01:41:31 2018 (+0100)
+// Last-Updated: Sun Jan 21 14:40:54 2018 (+0100)
 //           By: Louise <louise>
 //
 use std::fs::File;
@@ -143,7 +143,10 @@ impl Cartridge {
 
     pub fn read_rom(&self, address: usize) -> u8 {
         match *self {
-            Cartridge::NoCartridge => 0xFF,
+            Cartridge::NoCartridge => {
+                warn!("Unmapped read from {:04x} (Cart ROM)", address);
+                0xFF
+            },
             Cartridge::RomOnly(ref v) => v[address],
             Cartridge::MBC1 { rom: ref v, rom_bank: b, .. } |
             Cartridge::MBC3 { rom: ref v, rom_bank: b, .. } => {
@@ -168,7 +171,8 @@ impl Cartridge {
     pub fn write_rom(&mut self, address: usize, value: u8) {
         match *self {
             Cartridge::NoCartridge |
-            Cartridge::RomOnly(_) => { },
+            Cartridge::RomOnly(_) =>
+                warn!("Unmapped write to {:04x} (Cart ROM, value={:02x})", address, value),
             Cartridge::MBC1 {
                 ref mut rom_bank,
                 ref mut ram_bank,
@@ -249,7 +253,7 @@ impl Cartridge {
                     0x4000...0x5FFF => {
                             *ram_bank = value & 0xF;
                     }
-                    _ => unimplemented!(),
+                    _ => warn!("Unmapped write to {:04x} (Cart ROM, value={:02x})", address, value),
                 }
             }
         }
@@ -258,7 +262,10 @@ impl Cartridge {
     pub fn read_ram(&self, address: usize) -> u8 {
         match *self {
             Cartridge::NoCartridge |
-            Cartridge::RomOnly(_) => 0xFF,
+            Cartridge::RomOnly(_) => {
+                warn!("Unmapped read from {:04x} (Cart RAM)", address);
+                0xFF
+            },
             Cartridge::MBC1 { ref ram, ram_bank, .. } |
             Cartridge::MBC3 { ref ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)],
@@ -270,7 +277,8 @@ impl Cartridge {
     pub fn write_ram(&mut self, address: usize, value: u8) {
         match *self {
             Cartridge::NoCartridge |
-            Cartridge::RomOnly(_) => { },
+            Cartridge::RomOnly(_) =>
+                warn!("Unmapped write to {:04x} (Cart RAM, value={:02x})", address, value),
             Cartridge::MBC1 { ref mut ram, ram_bank, .. } |
             Cartridge::MBC3 { ref mut ram, ram_bank, .. } =>
                 ram[((ram_bank as usize) << 13) + (address & 0x1FFF)] = value,
@@ -280,6 +288,8 @@ impl Cartridge {
     }
 
     pub fn write_savefile(&self) {
+        info!("Writing savefile!");
+            
         match *self {
             Cartridge::NoCartridge | Cartridge::RomOnly(_) => { },
             Cartridge::MBC1 { ref ram, ref save_filename, .. } |

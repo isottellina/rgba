@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Sat Jan 20 20:39:06 2018 (+0100)
+// Last-Updated: Sun Jan 21 20:54:36 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -15,6 +15,7 @@ use std::io::Read;
 pub struct Interconnect {
     bios: Vec<u8>,
     iram: [u8; 0x8000],
+    eram: [u8; 0x40000],
 
     gpu: GPU,
 
@@ -30,6 +31,7 @@ impl Interconnect {
         Interconnect {
             bios: vec![],
             iram: [0; 0x8000],
+            eram: [0; 0x40000],
             gpu: GPU::new(),
 
             cycles_to_spend: 0,
@@ -107,9 +109,15 @@ impl Interconnect {
     pub fn write_u32(&mut self, address: usize, value: u32) {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            0x02000000 => LittleEndian::write_u32(
+                &mut self.eram[(address & 0x3ffff)..], value
+            ),
             0x03000000 => LittleEndian::write_u32(
                 &mut self.iram[(address & 0x7fff)..], value
             ),
+            0x05000000 => self.gpu.pram_write_u32(address, value),
+            0x06000000 => self.gpu.vram_write_u32(address, value),
+            0x07000000 => self.gpu.oam_write_u32(address, value),
             _ => warn!("Unmapped write_u32 at {:08x} (value={:08x})", address, value)
         }
     }

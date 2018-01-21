@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Sun Jan 21 00:51:50 2018 (+0100)
+// Last-Updated: Sun Jan 21 18:09:39 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -243,7 +243,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 49] = [
+const THUMB_INSTRS: [(u16, u16, &str); 51] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -281,8 +281,11 @@ const THUMB_INSTRS: [(u16, u16, &str); 49] = [
     // Format 6 (PC-relative load)
     (0xF800, 0x4800, "ldr %r8, [%p]"),
     // Format 7 (Load/Store with register offset)
-    (0xFA00, 0x5000, "str%b %r0, [%r3, %r6]"),
-    (0xFA00, 0x5800, "ldr%b %r0, [%r3, %r6]"),
+    (0xFA00, 0x5000, "str%ba %r0, [%r3, %r6]"),
+    (0xFA00, 0x5800, "ldr%ba %r0, [%r3, %r6]"),
+    // Format 9 (Load/Store with immediate offset)
+    (0xE800, 0x6000, "str%bc %r0, [%r3, %s]"),
+    (0xE800, 0x6800, "ldr%bc %r0, [%r3, %s]"),
     // Format 10 (load/store halfword)
     (0xF800, 0x8000, "strh %r0, [%r3, %s]"),
     (0xF800, 0x8800, "ldrh %r0, [%r3, %s]"),
@@ -334,7 +337,9 @@ pub fn disasm_thumb(io: &Interconnect, offset: u32) -> String {
                         }
                         Some('m') => dis.push_str(&format!("0x{:x}", (instr & 0x7f) << 2)),
                         Some('f') => dis.push_str(&format!("0x{:x}", (instr & 0xff) << 2)),
-                        Some('b') => if instr & 0x0400 != 0 { dis.push('b'); },
+                        Some('b') => if instr & (1 << it.next().unwrap().to_digit(16).unwrap()) != 0 {
+                            dis.push('b');
+                        },
                         Some('c') => dis.push_str(CONDITIONS[((instr >> 8) & 0xF) as usize]),
                         Some('p') => dis.push_str(
                             &format!("0x{:08x}", (offset & !3) + (((instr & 0xFF) as u32) << 2) + 4)

@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Thu Jan 18 20:04:41 2018 (+0100)
+// Last-Updated: Sun Jan 21 22:27:51 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -16,6 +16,7 @@ mod debug;
 mod cpu;
 mod io;
 mod gpu;
+mod apu;
 
 use cpu::ARM7TDMI;
 use io::Interconnect;

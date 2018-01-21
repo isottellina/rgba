@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Sun Jan 21 17:37:10 2018 (+0100)
+# Last-Updated: Sun Jan 21 17:50:15 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -71,7 +71,7 @@ def write_op2_imm(g, high, low):
         g.write("if rot != 0 { _cpu.carry = (op2 >> 31) != 0; }")
 
 def write_op2_reg(g, low, s):
-    shift = (low & 0x6) >> 2
+    shift = (low & 0x6) >> 1
     
     g.write("let rm = _cpu.get_register((instr & 0xF) as usize);")
     if (low & 1) == 0: # By immediate
@@ -94,7 +94,7 @@ def write_op2_reg(g, low, s):
                 g.write("let tmp = ((rm as i32) >> (amount - 1)) as u32; _cpu.carry = tmp & 1 != 0; ", end="")
                 g.write("((tmp as i32) >> 1) as u32 };")
             else:
-                g.write("((rm as i32) >> 31 } else { ((rm as i32) >> amount) as u32 };")
+                g.write("((rm as i32) >> 31) as u32 } else { ((rm as i32) >> amount) as u32 };")
         elif shift == 3:
             g.write("let op2 = if amount == 0 { ", end="")
             if s:

@@ -3,9 +3,10 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Thu Jan 18 20:53:39 2018 (+0100)
+// Last-Updated: Sun Jan 21 20:55:16 2018 (+0100)
 //           By: Louise <louise>
 // 
+use byteorder::{ByteOrder, LittleEndian};
 
 pub struct GPU {
     // Memory
@@ -42,7 +43,6 @@ impl GPU {
 
     #[inline]
     fn increment_lines(&mut self) {
-        println!("New line");
         self.vcount = (self.vcount + 1) % 228;
     }
     
@@ -90,8 +90,29 @@ impl GPU {
     pub fn io_write_u16(&mut self, address: usize, value: u16) {
         match address {
             DISPCNT => self.dispcnt = value,
-            _ => unimplemented!(),
+            _ => warn!("Unmapped io_write_u16 at {:08x} (GPU, value={:04x})", address, value),
         }
+    }
+
+    #[inline]
+    pub fn pram_write_u32(&mut self, address: usize, value: u32) {
+        LittleEndian::write_u32(
+            &mut self.pram[(address & 0x3ff)..], value
+        );
+    }
+
+    #[inline]
+    pub fn vram_write_u32(&mut self, address: usize, value: u32) {
+        LittleEndian::write_u32(
+            &mut self.vram[(address & 0x17fff)..], value
+        );
+    }
+
+    #[inline]
+    pub fn oam_write_u32(&mut self, address: usize, value: u32) {
+        LittleEndian::write_u32(
+            &mut self.oam[(address & 0x3ff)..], value
+        );
     }
 }
 

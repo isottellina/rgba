@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Sun Jan 21 11:19:05 2018 (+0100)
+# Last-Updated: Sun Jan 21 20:40:29 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -13,7 +13,8 @@ class Generator:
     def set_current(self, current):
         self.current = current
         self.array[current] = ""
-    def write(self, s, end = "\n"):
+    def write(self, s, end = "\n", indent = 1):
+        self.array[self.current] += "\t" * indent
         self.array[self.current] += s
         self.array[self.current] += end
     def optimize(self):
@@ -43,202 +44,224 @@ class Generator:
 
 def write_f1(g, high):
     op = (high >> 3)
-    g.write("\tlet rd = instr & 7;")
-    g.write("\tlet rs = _cpu.registers[((instr >> 3) & 7) as usize];")
-    g.write("\tlet shift = (instr >> 6) & 0x1f;")
+    g.write("let rd = instr & 7;")
+    g.write("let rs = _cpu.registers[((instr >> 3) & 7) as usize];")
+    g.write("let shift = (instr >> 6) & 0x1f;")
 
     if op == 0:
-        g.write("\tif shift != 0 { _cpu.carry = ((rs << (shift - 1)) & 0x80000000) != 0; }")
-        g.write("\tlet res = rs << shift;")
+        g.write("if shift != 0 { _cpu.carry = ((rs << (shift - 1)) & 0x80000000) != 0; }")
+        g.write("let res = rs << shift;")
     elif op == 1:
-        g.write("\tif shift != 0 { _cpu.carry = ((rs >> (shift - 1)) & 1) != 0; }")
-        g.write("\tlet res = rs >> shift;")
+        g.write("if shift != 0 { _cpu.carry = ((rs >> (shift - 1)) & 1) != 0; }")
+        g.write("let res = rs >> shift;")
     elif op == 2:
-        g.write("\tif shift != 0 { _cpu.carry = (((rs as i32) >> (shift - 1)) & 1) != 0; }")
-        g.write("\tlet res = ((rs as i32) >> shift) as u32;")
+        g.write("if shift != 0 { _cpu.carry = (((rs as i32) >> (shift - 1)) & 1) != 0; }")
+        g.write("let res = ((rs as i32) >> shift) as u32;")
 
-    g.write("\t_cpu.registers[rd as usize] = res;")
-    g.write("\t_cpu.zero = res == 0;")
-    g.write("\t_cpu.sign = (res as i32) < 0;")
+    g.write("_cpu.registers[rd as usize] = res;")
+    g.write("_cpu.zero = res == 0;")
+    g.write("_cpu.sign = (res as i32) < 0;")
 
 def write_f2(g, high):
     imm = (high & 0x04) != 0
     op = (high & 0x02) != 0
 
-    g.write("\tlet rd = instr & 7;")
-    g.write("\tlet op1 = _cpu.registers[((instr >> 3) & 7) as usize];")
+    g.write("let rd = instr & 7;")
+    g.write("let op1 = _cpu.registers[((instr >> 3) & 7) as usize];")
 
     if imm:
-        g.write("\tlet op2 = ((instr >> 6) & 7) as u32;")
+        g.write("let op2 = ((instr >> 6) & 7) as u32;")
     else:
-        g.write("\tlet op2 = _cpu.registers[((instr >> 6) & 7) as usize];")
+        g.write("let op2 = _cpu.registers[((instr >> 6) & 7) as usize];")
     
     if op: # SUB
-        g.write("\tlet res = op1.wrapping_sub(op2);")
-        g.write("\t_cpu.carry = op1 >= op2;")
-        g.write("\t_cpu.overflow = (op1 ^ op2) & (op1 ^ op2) & 0x80000000 != 0;")
+        g.write("let res = op1.wrapping_sub(op2);")
+        g.write("_cpu.carry = op1 >= op2;")
+        g.write("_cpu.overflow = (op1 ^ op2) & (op1 ^ op2) & 0x80000000 != 0;")
     else: # ADD
-        g.write("\tlet res = op1.wrapping_add(op2);")
-        g.write("\t_cpu.carry = res < op1;")
-        g.write("\t_cpu.overflow = !(op1 ^ op2) & (op1 ^ res) & 0x80000000 != 0;")
+        g.write("let res = op1.wrapping_add(op2);")
+        g.write("_cpu.carry = res < op1;")
+        g.write("_cpu.overflow = !(op1 ^ op2) & (op1 ^ res) & 0x80000000 != 0;")
 
-    g.write("\t_cpu.zero = res == 0;")
-    g.write("\t_cpu.sign = (res as i32) < 0;")
-    g.write("\t_cpu.registers[rd as usize] = res")
+    g.write("_cpu.zero = res == 0;")
+    g.write("_cpu.sign = (res as i32) < 0;")
+    g.write("_cpu.registers[rd as usize] = res")
     
 def write_f3(g, high):
     op = (high >> 3) & 0x3;
 
-    g.write("\tlet rd = (instr >> 8) & 7;")
-    g.write("\tlet val = (instr & 0xFF) as u32;")
+    g.write("let rd = (instr >> 8) & 7;")
+    g.write("let val = (instr & 0xFF) as u32;")
     if op == 0: # MOV
-        g.write("\tlet res = val;")
+        g.write("let res = val;")
     elif op == 1 or op == 3: # CMP and SUB
-        g.write("\tlet op1 = _cpu.registers[rd as usize];")
-        g.write("\tlet res = op1.wrapping_sub(val as u32);")
-        g.write("\t_cpu.carry = op1 >= val;")
-        g.write("\t_cpu.overflow = (op1 ^ val) & (op1 ^ res) & 0x80000000 != 0;")
+        g.write("let op1 = _cpu.registers[rd as usize];")
+        g.write("let res = op1.wrapping_sub(val as u32);")
+        g.write("_cpu.carry = op1 >= val;")
+        g.write("_cpu.overflow = (op1 ^ val) & (op1 ^ res) & 0x80000000 != 0;")
     elif op == 2: # ADD
-        g.write("\tlet op1 = _cpu.registers[rd as usize];")
-        g.write("\tlet res = op1.wrapping_add(val as u32);")
-        g.write("\t_cpu.carry = res < op1;")
-        g.write("\t_cpu.overflow = !(op1 ^ val) & (op1 ^ res) & 0x80000000 != 0;")
+        g.write("let op1 = _cpu.registers[rd as usize];")
+        g.write("let res = op1.wrapping_add(val as u32);")
+        g.write("_cpu.carry = res < op1;")
+        g.write("_cpu.overflow = !(op1 ^ val) & (op1 ^ res) & 0x80000000 != 0;")
 
-    g.write("\t_cpu.zero = res == 0;")
-    g.write("\t_cpu.sign = (res as i32) < 0;")
+    g.write("_cpu.zero = res == 0;")
+    g.write("_cpu.sign = (res as i32) < 0;")
     if op != 1:
-        g.write("\t_cpu.registers[rd as usize] = res;")
+        g.write("_cpu.registers[rd as usize] = res;")
 
 def write_f4(g, high):
-    g.write("\tlet op = (instr >> 6) & 0xf;")
-    g.write("\tlet function = THUMB_ALU[op as usize];")
-    g.write("\tfunction(_cpu, instr);")
+    g.write("let op = (instr >> 6) & 0xf;")
+    g.write("let function = THUMB_ALU[op as usize];")
+    g.write("function(_cpu, instr);")
         
 def write_f5(g, high):
     op = high & 3
 
-    g.write("\tlet rd = (instr & 7) | ((instr & 0x80) >> 4);")
-    g.write("\tlet rs = _cpu.get_register(((instr >> 3) & 0xF) as usize);")
+    g.write("let rd = (instr & 7) | ((instr & 0x80) >> 4);")
+    g.write("let rs = _cpu.get_register(((instr >> 3) & 0xF) as usize);")
     
     if op == 0: # ADD
-        g.write("\tlet op1 = _cpu.get_register(rd as usize);")
-        g.write("\tlet res = op1.wrapping_add(rs);")
-        g.write("\t_cpu.set_register(rd as usize, res);")
-        g.write("\tif rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+        g.write("let op1 = _cpu.get_register(rd as usize);")
+        g.write("let res = op1.wrapping_add(rs);")
+        g.write("_cpu.set_register(rd as usize, res);")
+        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
     elif op == 1: # CMP
-        g.write("\tlet op1 = _cpu.get_register(rd as usize);")
-        g.write("\tlet res = op1.wrapping_sub(rs);")
-        g.write("\t_cpu.sign = (res as i32) < 0;")
-        g.write("\t_cpu.zero = res == 0;")
-        g.write("\t_cpu.carry = op1 >= res;")
-        g.write("\t_cpu.overflow = (op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
-        g.write("\tif rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+        g.write("let op1 = _cpu.get_register(rd as usize);")
+        g.write("let res = op1.wrapping_sub(rs);")
+        g.write("_cpu.sign = (res as i32) < 0;")
+        g.write("_cpu.zero = res == 0;")
+        g.write("_cpu.carry = op1 >= res;")
+        g.write("_cpu.overflow = (op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
+        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
     elif op == 2: # MOV
-        g.write("\t_cpu.set_register(rd as usize, rs);")
-        g.write("\tif rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+        g.write("_cpu.set_register(rd as usize, rs);")
+        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
     elif op == 3: # BX
-        g.write("\tif rs & 1 == 0 {")
-        g.write("\t\t_cpu.state = CpuState::ARM; _cpu.registers[15] = rs & 0xFFFFFFFC;")
-        g.write("\t} else {")
-        g.write("\t\t_cpu.registers[15] = rs & 0xFFFFFFFE;")
-        g.write("\t}")
-        g.write("\t_cpu.advance_pipeline(_io);")
+        g.write("if rs & 1 == 0 {")
+        g.write("_cpu.state = CpuState::ARM; _cpu.registers[15] = rs & 0xFFFFFFFC;", indent = 2)
+        g.write("} else {")
+        g.write("_cpu.registers[15] = rs & 0xFFFFFFFE;", indent = 2)
+        g.write("}")
+        g.write("_cpu.advance_pipeline(_io);")
         
 def write_f6(g, high):
     rd = high & 7
     
-    g.write("\tlet off = ((instr & 0xFF) as u32) << 2;")
-    g.write("\tlet addr = (_cpu.registers[15] & 0xFFFFFFFC) + off;")
-    g.write("\t_cpu.registers[%s] = _cpu.read_u32(_io, addr as usize);" % rd)
+    g.write("let off = ((instr & 0xFF) as u32) << 2;")
+    g.write("let addr = (_cpu.registers[15] & 0xFFFFFFFC) + off;")
+    g.write("_cpu.registers[%s] = _cpu.read_u32(_io, addr as usize);" % rd)
 
 def write_f7(g, high):
     load = high & 0x08 != 0
     byte = high & 0x04 != 0
 
-    g.write("\tlet rb = (instr >> 3) & 7;")
-    g.write("\tlet ro = (instr >> 6) & 7;")
-    g.write("\tlet rd = instr & 7;")
-    g.write("\tlet addr = _cpu.registers[rb as usize].wrapping_add(_cpu.registers[ro as usize]);")
+    g.write("let rb = (instr >> 3) & 7;")
+    g.write("let ro = (instr >> 6) & 7;")
+    g.write("let rd = instr & 7;")
+    g.write("let addr = _cpu.registers[rb as usize].wrapping_add(_cpu.registers[ro as usize]);")
     if load:
         if byte:
-            g.write("\tlet val = _cpu.read_u8(_io, addr as usize) as u32;")
+            g.write("let val = _cpu.read_u8(_io, addr as usize) as u32;")
         else:
-            g.write("\tlet val = _cpu.read_u32(_io, addr as usize) as u32;")
-        g.write("\t_cpu.registers[rd as usize] = val;")
+            g.write("let val = _cpu.read_u32(_io, addr as usize) as u32;")
+        g.write("_cpu.registers[rd as usize] = val;")
     else:
         if byte:
-            g.write("\t_cpu.write_u8(_io, addr as usize, _cpu.registers[rd as usize] as u8);")
+            g.write("_cpu.write_u8(_io, addr as usize, _cpu.registers[rd as usize] as u8);")
         else:
-            g.write("\t_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
+            g.write("_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
 
+def write_f9(g, high):
+    op = (high >> 3) & 3
+
+    g.write("let offset = ((instr >> 6) & 0x1F) as u32;")
+    g.write("let rb = _cpu.registers[((instr >> 3) & 7) as usize];")
+    g.write("let rd = instr & 7;")
+    
+    if op == 0: # STR
+        g.write("let addr = rb + (offset << 2);")
+        g.write("let val = _cpu.registers[rd as usize];")
+        g.write("_cpu.write_u32(_io, addr as usize, val);")
+    elif op == 1: # LDR
+        g.write("let addr = rb + (offset << 2);")
+        g.write("_cpu.registers[rd as usize] = _cpu.read_u32(_io, addr as usize);")
+    elif op == 2: # STRB
+        g.write("let addr = rb + offset;")
+        g.write("let val = _cpu.registers[rd as usize];")
+        g.write("_cpu.write_u8(_io, addr as usize, val as u8);")
+    elif op == 3: # LDRB
+        g.write("let addr = rb + offset;")
+        g.write("_cpu.registers[rd as usize] = _cpu.read_u8(_io, addr as usize) as u32;")
+            
 def write_f10(g, high):
-    g.write("\tlet rb = _cpu.registers[((instr >> 3) & 7) as usize];")
-    g.write("\tlet rd = instr & 7;")
-    g.write("\tlet offset = ((instr >> 6) & 0x1f) << 1;")
-    g.write("\tlet addr = rb + (offset as u32);")
+    g.write("let rb = _cpu.registers[((instr >> 3) & 7) as usize];")
+    g.write("let rd = instr & 7;")
+    g.write("let offset = ((instr >> 6) & 0x1f) << 1;")
+    g.write("let addr = rb + (offset as u32);")
     
     if high & 0x08 == 0: # STRH
-        g.write("\tlet val = _cpu.registers[rd as usize];")
-        g.write("\t_cpu.write_u16(_io, addr as usize, val as u16);")
+        g.write("let val = _cpu.registers[rd as usize];")
+        g.write("_cpu.write_u16(_io, addr as usize, val as u16);")
     else:
-        g.write("\t_cpu.registers[rd as usize] = _cpu.read_u16(_io, addr as usize) as u32;")
+        g.write("_cpu.registers[rd as usize] = _cpu.read_u16(_io, addr as usize) as u32;")
             
 def write_f11(g, high):
     load = high & 0x08 != 0
     rd = high & 0x7
-    g.write("\tlet off = ((instr & 0xFF) as usize) << 2;")
-    g.write("\tlet sp = _cpu.get_register(13) as usize;")
-    g.write("\tlet addr = off.wrapping_add(sp);")
+    g.write("let off = ((instr & 0xFF) as usize) << 2;")
+    g.write("let sp = _cpu.get_register(13) as usize;")
+    g.write("let addr = off.wrapping_add(sp);")
     
     if load:
-        g.write("\t_cpu.registers[%s] = _cpu.read_u32(_io, addr);" % rd)
+        g.write("_cpu.registers[%s] = _cpu.read_u32(_io, addr);" % rd)
     else:
-        g.write("\tlet reg = _cpu.registers[%s];" % rd)
-        g.write("\t_cpu.write_u32(_io, addr, reg)")
+        g.write("let reg = _cpu.registers[%s];" % rd)
+        g.write("_cpu.write_u32(_io, addr, reg)")
             
 def write_f13(g, high):
-    g.write("\tlet off = ((instr & 0x7f) as u32) << 2;")
-    g.write("\tlet sp = _cpu.get_register(13);")
-    g.write("\tif instr & 0x80 == 0 {")
-    g.write("\t\t_cpu.set_register(13, sp + off);")
-    g.write("\t} else {")
-    g.write("\t\t_cpu.set_register(13, sp - off);")
-    g.write("\t}")
+    g.write("let off = ((instr & 0x7f) as u32) << 2;")
+    g.write("let sp = _cpu.get_register(13);")
+    g.write("if instr & 0x80 == 0 {")
+    g.write("_cpu.set_register(13, sp + off);", indent = 2)
+    g.write("} else {")
+    g.write("_cpu.set_register(13, sp - off);", indent = 2)
+    g.write("}")
             
 def write_f14(g, high):
     pop = high & 0x08 != 0
 
     if pop:
-        g.write("\tlet mut sp = _cpu.get_register(13) as usize;")
+        g.write("let mut sp = _cpu.get_register(13) as usize;")
     else:
-        g.write("\tlet count = (instr & 0x1FF).count_ones();")
-        g.write("\tlet mut sp = (_cpu.get_register(13) - (count << 2)) as usize;")
-        g.write("\t_cpu.set_register(13, sp as u32);")
+        g.write("let count = (instr & 0x1FF).count_ones();")
+        g.write("let mut sp = (_cpu.get_register(13) - (count << 2)) as usize;")
+        g.write("_cpu.set_register(13, sp as u32);")
     
     for i in range(9):
-        g.write("\tif instr & (1 << %s) != 0 {" % i)
+        g.write("if instr & (1 << %s) != 0 {" % i)
         
         if i == 8:
             i = 15 if pop else 14
         
         if pop:
             if i == 15:
-                g.write("\t\t_cpu.registers[15] = _cpu.read_u32(_io, sp) & 0xFFFFFFFE;")
-                g.write("\t\t_cpu.advance_pipeline(_io);")
+                g.write("_cpu.registers[15] = _cpu.read_u32(_io, sp) & 0xFFFFFFFE;", indent = 2)
+                g.write("_cpu.advance_pipeline(_io);", indent = 2)
             else:
-                g.write("\t\t_cpu.registers[%s] = _cpu.read_u32(_io, sp);" % i)
+                g.write("_cpu.registers[%s] = _cpu.read_u32(_io, sp);" % i, indent = 2)
         else:
             if i == 14:
-                g.write("\t\tlet reg = _cpu.get_register(14);")
+                g.write("let reg = _cpu.get_register(14);", indent = 2)
             else:
-                g.write("\t\tlet reg = _cpu.registers[%s];" % i)
-            g.write("\t\t_cpu.write_u32(_io, sp, reg);")
+                g.write("let reg = _cpu.registers[%s];" % i, indent = 2)
+            g.write("_cpu.write_u32(_io, sp, reg);", indent = 2)
 
-        g.write("\t\tsp += 4;")
-        g.write("\t}")
+        g.write("sp += 4;", indent = 2)
+        g.write("}")
         
     if pop:
-        g.write("\t_cpu.set_register(13, sp as u32);")
+        g.write("_cpu.set_register(13, sp as u32);")
         
             
 def write_f16(g, high):
@@ -253,29 +276,29 @@ def write_f16(g, high):
         "true", "false"
     ]
     
-    g.write("\tlet off = (((instr & 0xFF) as i8) as i32) << 1;")
-    g.write("\tif %s {" % conditions[high & 0xF])
-    g.write("\t\t_cpu.registers[15] = (_cpu.registers[15] as i32).wrapping_add(off) as u32;")
-    g.write("\t\t_cpu.advance_pipeline(_io);")
-    g.write("\t}")
+    g.write("let off = (((instr & 0xFF) as i8) as i32) << 1;")
+    g.write("if %s {" % conditions[high & 0xF])
+    g.write("_cpu.registers[15] = (_cpu.registers[15] as i32).wrapping_add(off) as u32;", indent = 2)
+    g.write("_cpu.advance_pipeline(_io);", indent = 2)
+    g.write("}")
 
 def write_f18(g, high):
-    g.write("\tlet offset = (((instr << 5) as i16) >> 4) as i32;")
-    g.write("\t_cpu.registers[15] = ((_cpu.registers[15] as i32) + offset) as u32;")
-    g.write("\t_cpu.advance_pipeline(_io);")
+    g.write("let offset = (((instr << 5) as i16) >> 4) as i32;")
+    g.write("_cpu.registers[15] = ((_cpu.registers[15] as i32) + offset) as u32;")
+    g.write("_cpu.advance_pipeline(_io);")
     
 def write_f19(g, high):
     stage = (high & 0x08) >> 3
 
     if stage == 0:
-        g.write("\tlet pc = _cpu.registers[15] as i32;")
-        g.write("\tlet new_lr = pc + (((((instr & 0x7FF) as u32) << 21) as i32) >> 9);")
-        g.write("\t_cpu.set_register(14, new_lr as u32);")
+        g.write("let pc = _cpu.registers[15] as i32;")
+        g.write("let new_lr = pc + (((((instr & 0x7FF) as u32) << 21) as i32) >> 9);")
+        g.write("_cpu.set_register(14, new_lr as u32);")
     else:
-        g.write("\tlet tmp = (_cpu.registers[15] - 2) | 1;")
-        g.write("\t_cpu.registers[15] = _cpu.get_register(14) + (((instr & 0x7FF) as u32) << 1);")
-        g.write("\t_cpu.set_register(14, tmp);")
-        g.write("\t_cpu.advance_pipeline(_io);")
+        g.write("let tmp = (_cpu.registers[15] - 2) | 1;")
+        g.write("_cpu.registers[15] = _cpu.get_register(14) + (((instr & 0x7FF) as u32) << 1);")
+        g.write("_cpu.set_register(14, tmp);")
+        g.write("_cpu.advance_pipeline(_io);")
     
 def write_instruction(g, high):
     g.set_current(high)
@@ -294,6 +317,8 @@ def write_instruction(g, high):
         write_f6(g, high)
     elif high & 0xF2 == 0x50:
         write_f7(g, high)
+    elif high & 0xE0 == 0x60:
+        write_f9(g, high)
     elif high & 0xF0 == 0x80:
         write_f10(g, high)
     elif high & 0xF0 == 0x90:
@@ -309,7 +334,7 @@ def write_instruction(g, high):
     elif high & 0xF0 == 0xF0:
         write_f19(g, high)
     else:
-        g.write("\tunimplemented!(\"{:04x}\", instr);")
+        g.write("unimplemented!(\"{:04x}\", instr);")
 
 def write_alu(op):
     print("#[allow(unreachable_code, unused_variables, unused_assignments)]")

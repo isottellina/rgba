@@ -3,10 +3,11 @@
 // Filename: arm.rs
 // Author: Louise <louise>
 // Created: Sat Jan 13 11:44:36 2018 (+0100)
-// Last-Updated: Wed Jan 17 11:25:33 2018 (+0100)
+// Last-Updated: Sun Jan 21 16:39:23 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
+use cpu::CpuMode;
 use cpu::CpuState;
 use io::Interconnect;
 

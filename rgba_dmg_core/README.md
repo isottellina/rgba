@@ -3,7 +3,7 @@
 ;; Filename: README.md
 ;; Author: Louise <louise>
 ;; Created: Tue Dec 26 11:53:56 2017 (+0100)
-;; Last-Updated: Fri Jan 19 12:45:18 2018 (+0100)
+;; Last-Updated: Sun Jan 21 14:44:18 2018 (+0100)
 ;;           By: Louise <louise>
  -->
  
@@ -33,4 +33,5 @@ The dmg core is the first core to have been written. It's currently in its 1.1 v
 
  - RTC support for MBC3
  - Booting without bootrom
+ - Using DMG palette when using DMG software with CGB bootrom
  - Optimisations in general (in the OAM code for example)

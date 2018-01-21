@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sat Jan 20 18:44:24 2018 (+0100)
+// Last-Updated: Sun Jan 21 14:44:48 2018 (+0100)
 //           By: Louise <louise>
 // 
 use rgba_common::Platform;
@@ -429,7 +429,7 @@ impl Interconnect {
             IF   => self.set_if(value),
             IE   => self.set_ie(value),
             
-            _ => warn!("Unmapped write to {:04x} (value = {:02x})", address, value),
+            _ => warn!("Unmapped write to {:04x} (value={:02x})", address, value),
         }
     }
 

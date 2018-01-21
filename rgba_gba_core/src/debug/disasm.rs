@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Fri Jan 19 23:14:29 2018 (+0100)
+// Last-Updated: Sun Jan 21 00:51:50 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -44,8 +44,8 @@ const ARM_INSTRS: [(u32, u32, &str); 29] = [
     (0x0C100000, 0x04000000, "str%b%t%c %r3, %a"),
     (0x0C100000, 0x04100000, "ldr%b%t%c %r3, %a"),
     // STM/LDM
-    (0x0E100000, 0x08000000, "stm%m%c %r4, %l"),
-    (0x0E100000, 0x08100000, "ldm%m%c %r4, %l"),
+    (0x0E100000, 0x08000000, "stm%m%c %r4%!, %l"),
+    (0x0E100000, 0x08100000, "ldm%m%c %r4%!, %l"),
     // ALU
     (0x0DE00000, 0x00000000, "and%s%c %r3, %r4, %i"),
     (0x0DE00000, 0x00200000, "eor%s%c %r3, %r4, %i"),
@@ -78,6 +78,8 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                     match it.next() {
                         Some('c') =>
                             dis.push_str(CONDITIONS[(instr >> 28) as usize]),
+                        Some('!') =>
+                            if instr & 0x00200000 != 0 { dis.push('!'); },
                         Some('b') =>
                             if instr & 0x00400000 != 0 { dis.push('b'); },
                         Some('t') =>

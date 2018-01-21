@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Sun Jan 21 16:08:41 2018 (+0100)
+# Last-Updated: Sun Jan 21 17:37:10 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -25,7 +25,7 @@ class Generator:
                     if i == el: self.array[n2] = n1
     def print_function(self, fn):
         if type(self.array[fn]) == str:
-            print("#[allow(unreachable_code, unused_variables)]")
+            print("#[allow(unreachable_code, unused_variables, unused_assignments)]")
             print("fn arm_%03x(_cpu: &mut ARM7TDMI, _io: &mut Interconnect, instr: u32) {" % fn)
             print(self.array[fn], end = "")
             print("}\n")
@@ -289,7 +289,63 @@ def write_bdt(g, high, low):
     wb = high & 0x02 != 0
     load = high & 0x01 != 0
 
-    g.write('unimplemented!("Block Data Transfer not implemented");')
+    g.write('let rn = (instr >> 16) & 0xF;')
+    g.write('let list = instr & 0xFFFF;')
+
+    if wb: # Determine WB behavior
+        g.write('let wbmode = if list & (1 << rn) != 0 {')
+        g.write("if list & ((1 << rn) - 1) == 0 { 2 } else { 0 }", indent = 2)
+        g.write("} else {")
+        g.write("1", indent = 2)
+        g.write("};")
+        g.write("let oldrn = _cpu.get_register(rn as usize);")
+
+    if not up:
+        g.write("let mut addr = (_cpu.get_register(rn as usize) - (list.count_ones() << 2)) as usize;")
+        if wb: g.write("let lowestrn = addr as u32;")
+        pre = not pre
+    else:
+        g.write("let mut addr = _cpu.get_register(rn as usize) as usize;")
+
+    if psr:
+        if load:
+            g.write("let userbnk = (instr & 0x8000) == 0;")
+        else:
+            g.write("let userbnk = true;")
+        g.write("let oldmode = _cpu.mode;")
+        g.write("if userbnk { _cpu.mode = CpuMode::User; }")
+
+    for i in range(16):
+        g.write("if list & 0x%04x != 0 {" % (1 << i))
+        if pre: g.write("addr += 4;", indent = 2)
+
+        if load:
+            g.write("let val = _cpu.read_u32(_io, addr);", indent = 2)
+            g.write("_cpu.set_register(%d, val);" % i, indent = 2)
+            if i == 15:
+                if psr:
+                    g.write("let spsr = _cpu.spsr();", indent = 2)
+                    g.write("_cpu.set_cpsr(spsr);", indent = 2)
+                g.write("_cpu.advance_pipeline(_io);", indent = 2)
+        else:
+            g.write("let val = _cpu.get_register(%d);" % i, indent = 2)
+            g.write("_cpu.write_u32(_io, addr, val);", indent = 2)
+        
+        if not pre: g.write("addr += 4;", indent = 2)
+        g.write("}")
+
+    if wb:
+        g.write("if wbmode == 1 {")
+        if up:
+            g.write("_cpu.set_register(rn as usize, addr as u32);", indent = 2)
+        else:
+            g.write("_cpu.set_register(rn as usize, lowestrn);", indent = 2)
+        g.write("} else if wbmode == 2 {")
+        g.write("_cpu.set_register(rn as usize, oldrn);", indent = 2)
+        g.write("}")
+
+    if psr:
+        g.write("if userbnk { _cpu.mode = oldmode; }")
         
 def write_instruction(g, high, low):
     g.set_current(high * 16 + low)

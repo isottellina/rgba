@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Sun Jan 21 20:40:29 2018 (+0100)
+# Last-Updated: Sun Jan 21 21:33:12 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -296,7 +296,7 @@ def write_f19(g, high):
         g.write("_cpu.set_register(14, new_lr as u32);")
     else:
         g.write("let tmp = (_cpu.registers[15] - 2) | 1;")
-        g.write("_cpu.registers[15] = _cpu.get_register(14) + (((instr & 0x7FF) as u32) << 1);")
+        g.write("_cpu.registers[15] = _cpu.get_register(14).wrapping_add(((instr & 0x7FF) as u32) << 1);")
         g.write("_cpu.set_register(14, tmp);")
         g.write("_cpu.advance_pipeline(_io);")
     

@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Sun Jan 21 11:06:33 2018 (+0100)
+# Last-Updated: Sun Jan 21 11:07:19 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -314,6 +314,3 @@ for high in range(0x0, 0x100):
 g.optimize()
 g.print_functions()
 g.print_array()
-        
-# g.write("")
-# g.write("[" + ", ".join(["arm_%03x" % i for i in range(0x0, 0x1000)]) + "];")

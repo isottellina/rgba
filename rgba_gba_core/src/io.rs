@@ -3,10 +3,11 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Sun Jan 21 20:54:36 2018 (+0100)
+// Last-Updated: Sun Jan 21 22:35:11 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
+use apu::APU;
 
 use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;
@@ -18,6 +19,7 @@ pub struct Interconnect {
     eram: [u8; 0x40000],
 
     gpu: GPU,
+    apu: APU,
 
     cycles_to_spend: u32,
     waitstates: [[[u32; 2]; 3]; 16],
@@ -33,6 +35,7 @@ impl Interconnect {
             iram: [0; 0x8000],
             eram: [0; 0x40000],
             gpu: GPU::new(),
+            apu: APU::new(),
 
             cycles_to_spend: 0,
             waitstates: [
@@ -85,6 +88,7 @@ impl Interconnect {
                 LittleEndian::read_u16(&self.bios[address..]),
             0x03000000 =>
                 LittleEndian::read_u16(&self.iram[(address & 0x7fff)..]),
+            0x04000000 => self.io_read_u16(address),
             _ => { warn!("Unmapped read_u16 at {:08x}", address); 0 },
         }
     }
@@ -98,6 +102,13 @@ impl Interconnect {
         }
     }
 
+    fn io_read_u16(&self, address: usize) -> u16 {
+        match address {
+            0x04000060...0x040000A8 => self.apu.io_read_u16(address),
+            _ => { warn!("Unmapped io_read_u16 at {:08x}", address); 0 }
+        }
+    }
+    
     fn io_read_u8(&self, address: usize) -> u8 {
         match address {
             IME => self.ime as u8,
@@ -145,6 +156,7 @@ impl Interconnect {
     fn io_write_u16(&mut self, address: usize, value: u16) {
         match address {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
+            0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
             _ => warn!("Unmapped io_write_u16 at {:08x} (value={:04x})", address, value),
         }
     }

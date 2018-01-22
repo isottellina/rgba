@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Sun Jan 21 20:55:16 2018 (+0100)
+// Last-Updated: Mon Jan 22 15:51:58 2018 (+0100)
 //           By: Louise <louise>
 // 
 use byteorder::{ByteOrder, LittleEndian};
@@ -90,7 +90,7 @@ impl GPU {
     pub fn io_write_u16(&mut self, address: usize, value: u16) {
         match address {
             DISPCNT => self.dispcnt = value,
-            _ => warn!("Unmapped io_write_u16 at {:08x} (GPU, value={:04x})", address, value),
+            _ => warn!("Unmapped write_u16 to {:08x} (GPU, value={:04x})", address, value),
         }
     }
 

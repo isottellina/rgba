@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Sun Jan 21 21:33:12 2018 (+0100)
+# Last-Updated: Mon Jan 22 14:22:48 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -262,7 +262,36 @@ def write_f14(g, high):
         
     if pop:
         g.write("_cpu.set_register(13, sp as u32);")
+
+def write_f15(g, high):
+    pop = high & 0x08 != 0
+
+    g.write("let rb = (instr >> 8) & 7;")
+
+    # Empty list
+    g.write('if instr & 0xFF == 0 { unimplemented!("Empty list in LDM/STM"); }')
+    
+    if pop:
+        g.write("let mut sp = _cpu.get_register(rb as usize) as usize;")
+    else:
+        g.write("let count = (instr & 0x1FF).count_ones();")
+        g.write("let mut sp = (_cpu.get_register(rb as usize) - (count << 2)) as usize;")
+        g.write("_cpu.set_register(rb as usize, sp as u32);")
+    
+    for i in range(8):
+        g.write("if instr & (1 << %s) != 0 {" % i)
         
+        if pop:
+            g.write("_cpu.registers[%s] = _cpu.read_u32(_io, sp);" % i, indent = 2)
+        else:
+            g.write("let reg = _cpu.registers[%s];" % i, indent = 2)
+            g.write("_cpu.write_u32(_io, sp, reg);", indent = 2)
+
+        g.write("sp += 4;", indent = 2)
+        g.write("}")
+        
+    if pop:
+        g.write("_cpu.registers[rb as usize] = sp as u32;")
             
 def write_f16(g, high):
     conditions = [
@@ -327,6 +356,8 @@ def write_instruction(g, high):
         write_f13(g, high)
     elif high & 0xF6 == 0xB4:
         write_f14(g, high)
+    elif high & 0xF0 == 0xC0:
+        write_f15(g, high)
     elif high & 0xF0 == 0xD0 and high & 0xF != 0xF:
         write_f16(g, high)
     elif high & 0xF8 == 0xE0:

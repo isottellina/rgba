@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Mon Jan 22 14:48:22 2018 (+0100)
+# Last-Updated: Mon Jan 22 15:50:53 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -172,6 +172,27 @@ def write_f7(g, high):
         else:
             g.write("_cpu.write_u32(_io, addr as usize, _cpu.registers[rd as usize]);")
 
+def write_f8(g, high):
+    op = (high >> 2) & 3
+
+    g.write("let rb = _cpu.registers[((instr >> 3) & 7) as usize];")
+    g.write("let ro = _cpu.registers[((instr >> 6) & 7) as usize];")
+    g.write("let addr = rb.wrapping_add(ro) as usize;")
+    g.write("let rd = instr & 7;")
+
+    if op == 0: # STRH
+        g.write("let val = _cpu.registers[rd as usize] as u16;")
+        g.write("_cpu.write_u16(_io, addr, val);")
+    elif op == 1: # LDSB
+        g.write("let val = (_cpu.read_u8(_io, addr) as i8) as i32;")
+        g.write("_cpu.registers[rd as usize] = val as u32;")
+    elif op == 2: # LDRH
+        g.write("let val = _cpu.read_u16(_io, addr) as u32;")
+        g.write("_cpu.registers[rd as usize] = val;")
+    elif op == 3: # LDSH
+        g.write("let val = (_cpu.read_u16(_io, addr) as i16) as i32;")
+        g.write("_cpu.registers[rd as usize] = val as u32;")
+            
 def write_f9(g, high):
     op = (high >> 3) & 3
 
@@ -349,6 +370,8 @@ def write_instruction(g, high):
         write_f6(g, high)
     elif high & 0xF2 == 0x50:
         write_f7(g, high)
+    elif high & 0xF2 == 0x52:
+        write_f8(g, high)
     elif high & 0xE0 == 0x60:
         write_f9(g, high)
     elif high & 0xF0 == 0x80:

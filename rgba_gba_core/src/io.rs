@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan 22 13:14:21 2018 (+0100)
+// Last-Updated: Mon Jan 22 15:53:33 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -82,7 +82,7 @@ impl Interconnect {
                 LittleEndian::read_u32(&self.bios[address..]),
             0x03000000 =>
                 LittleEndian::read_u32(&self.iram[(address & 0x7fff)..]),
-            _ => { warn!("Unmapped read_u32 at {:08x}", address); 0 },
+            _ => { warn!("Unmapped read_u32 from {:08x}", address); 0 },
         }
     }
 
@@ -93,7 +93,7 @@ impl Interconnect {
             0x03000000 =>
                 LittleEndian::read_u16(&self.iram[(address & 0x7fff)..]),
             0x04000000 => self.io_read_u16(address),
-            _ => { warn!("Unmapped read_u16 at {:08x}", address); 0 },
+            _ => { warn!("Unmapped read_u16 from {:08x}", address); 0 },
         }
     }
 
@@ -102,14 +102,14 @@ impl Interconnect {
             0x00000000 if address < 0x4000 => self.bios[address],
             0x03000000 => self.iram[address & 0x7fff],
             0x04000000 => self.io_read_u8(address),
-            _ => { warn!("Unmapped read_u8 at {:08x}", address); 0 },
+            _ => { warn!("Unmapped read_u8 from {:08x}", address); 0 },
         }
     }
 
     fn io_read_u16(&self, address: usize) -> u16 {
         match address {
             0x04000060...0x040000A8 => self.apu.io_read_u16(address),
-            _ => { warn!("Unmapped read_u16 at {:08x} (IO)", address); 0 }
+            _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
         }
     }
     
@@ -117,7 +117,7 @@ impl Interconnect {
         match address {
             IME => self.ime as u8,
             POSTFLG => self.postflg,
-            _ => { warn!("Unmapped read_u8 at {:08x} (IO)", address); 0 }
+            _ => { warn!("Unmapped read_u8 from {:08x} (IO)", address); 0 }
         }
     }
 
@@ -134,7 +134,7 @@ impl Interconnect {
             0x05000000 => self.gpu.pram_write_u32(address, value),
             0x06000000 => self.gpu.vram_write_u32(address, value),
             0x07000000 => self.gpu.oam_write_u32(address, value),
-            _ => warn!("Unmapped write_u32 at {:08x} (value={:08x})", address, value)
+            _ => warn!("Unmapped write_u32 to {:08x} (value={:08x})", address, value)
         }
     }
 
@@ -145,7 +145,7 @@ impl Interconnect {
                 &mut self.iram[(address & 0x7fff)..], value
             ),
             0x04000000 => self.io_write_u16(address, value),
-            _ => warn!("Unmapped write_u16 at {:08x} (value={:04x})", address, value),
+            _ => warn!("Unmapped write_u16 to {:08x} (value={:04x})", address, value),
         }
     }
     
@@ -154,7 +154,7 @@ impl Interconnect {
             0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
             0x03000000 => self.iram[address & 0x7fff] = value,
             0x04000000 => self.io_write_u8(address, value),
-            _ => warn!("Unmapped write_u8 at {:08x} (value={:02x})", address, value),
+            _ => warn!("Unmapped write_u8 to {:08x} (value={:02x})", address, value),
         }
     }
 
@@ -171,7 +171,7 @@ impl Interconnect {
         match address {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
-            _ => warn!("Unmapped write_u16 at {:08x} (IO, value={:04x})", address, value),
+            _ => warn!("Unmapped write_u16 to {:08x} (IO, value={:04x})", address, value),
         }
     }
     
@@ -180,7 +180,7 @@ impl Interconnect {
             IME => self.ime = value != 0,
             POSTFLG => self.postflg = value,
             HALTCNT => {info!("Halting!"); self.halt = true }, 
-            _ => warn!("Unmapped write_u8 at {:08x} (IO, value={:02x})", address, value),
+            _ => warn!("Unmapped write_u8 to {:08x} (IO, value={:02x})", address, value),
         }
     }
 

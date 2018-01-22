@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Mon Jan 22 17:05:04 2018 (+0100)
+# Last-Updated: Mon Jan 22 17:52:58 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -238,10 +238,11 @@ def write_psr(g, high, low):
         
 def write_sdt(g, high, low):
     pre = high & 0x10 != 0
+    wb = high & 0x02 != 0
     
     g.write("let rd = (instr >> 12) & 0xF;")
     g.write("if rd == 15 { unimplemented!(\"Writing to r15\"); }")
-    g.write("let rn = _cpu.get_register(((instr >> 16) & 0xF) as usize);")
+    g.write("let rn = (instr >> 16) & 0xF;")
     
     if high & 0x20 == 0:
         g.write("let off = instr & 0xFFF;")
@@ -251,11 +252,11 @@ def write_sdt(g, high, low):
 
     if pre:
         if high & 0x08 != 0:
-            g.write("let addr = rn.wrapping_add(off);")
+            g.write("let addr = _cpu.get_register(rn as usize).wrapping_add(off);")
         else:
-            g.write("let addr = rn.wrapping_sub(off);")
+            g.write("let addr = _cpu.get_register(rn as usize).wrapping_sub(off);")
     else:
-        g.write("let addr = rn;")
+        g.write("let addr = _cpu.get_register(rn as usize);")
         
     if high & 0x01 == 0:
         g.write("let val = _cpu.get_register(rd as usize);")
@@ -278,9 +279,19 @@ def write_sdt(g, high, low):
         g.write("_cpu.set_register(rd as usize, res);")
 
     if not pre:
-        g.write('unimplemented!("Post instruction not implemented ({:08x})", instr);')
-    if high & 0x02 != 0:
-        g.write('unimplemented!("Write-back not implemented ({:08x})", instr);')
+        if high & 0x08 != 0:
+            g.write("let wb = addr.wrapping_add(off);")
+        else:
+            g.write("let wb = addr.wrapping_sub(off);")
+        if wb:
+            g.write('unimplemented!("User-mode transfer ({:08x})", instr);')
+            return
+        wb = True
+    elif wb:
+        g.write("let wb = addr;")
+
+    if wb:
+        g.write("_cpu.set_register(rn as usize, wb);")
 
 def write_bdt(g, high, low):
     pre = high & 0x10 != 0

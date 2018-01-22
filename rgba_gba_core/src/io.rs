@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan 22 11:16:59 2018 (+0100)
+// Last-Updated: Mon Jan 22 13:14:21 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -26,6 +26,8 @@ pub struct Interconnect {
 
     postflg: u8,
     ime: bool,
+    halt: bool,
+    i_e: u16,
 }
 
 impl Interconnect {
@@ -59,6 +61,8 @@ impl Interconnect {
 
             postflg: 0,
             ime: false,
+            halt: false,
+            i_e: 0,
         }
     }
 
@@ -174,8 +178,21 @@ impl Interconnect {
     fn io_write_u8(&mut self, address: usize, value: u8) {
         match address {
             IME => self.ime = value != 0,
+            POSTFLG => self.postflg = value,
+            HALTCNT => {info!("Halting!"); self.halt = true }, 
             _ => warn!("Unmapped write_u8 at {:08x} (IO, value={:02x})", address, value),
         }
+    }
+
+    // IRQ
+    #[inline]
+    pub fn halt(&self) -> bool { self.halt }
+    
+    fn i_e(&self) -> u16 { self.i_e }
+    fn set_i_e(&mut self, value: u16) { self.i_e = value; }
+
+    fn set_i_f(&mut self, value: u16) {
+        
     }
     
     pub fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
@@ -199,5 +216,6 @@ impl Interconnect {
     }
 }
 
-const POSTFLG: usize = 0x04000300;
 const IME: usize = 0x04000208;
+const POSTFLG: usize = 0x04000300;
+const HALTCNT: usize = 0x04000301;

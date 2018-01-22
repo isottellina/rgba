@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan 22 16:08:11 2018 (+0100)
+// Last-Updated: Mon Jan 22 17:02:29 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -13,8 +13,11 @@ use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;
 use std::io::Read;
 
+#[macro_use] mod macros;
+
 pub struct Interconnect {
     bios: Vec<u8>,
+    rom:  Vec<u8>,
     iram: [u8; 0x8000],
     eram: [u8; 0x40000],
 
@@ -22,6 +25,7 @@ pub struct Interconnect {
     apu: APU,
 
     cycles_to_spend: u32,
+    rom_len: usize,
     waitstates: [[[u32; 2]; 3]; 16],
 
     postflg: u8,
@@ -34,12 +38,14 @@ impl Interconnect {
     pub fn new() -> Interconnect {
         Interconnect {
             bios: vec![],
+            rom:  vec![],
             iram: [0; 0x8000],
             eram: [0; 0x40000],
             gpu: GPU::new(),
             apu: APU::new(),
 
             cycles_to_spend: 0,
+            rom_len: 0,
             waitstates: [
                 [[1, 1], [1, 1], [1, 1]], // BIOS
                 [[1, 1], [1, 1], [1, 1]],
@@ -82,6 +88,16 @@ impl Interconnect {
                 LittleEndian::read_u32(&self.bios[address..]),
             0x03000000 =>
                 LittleEndian::read_u32(&self.iram[(address & 0x7fff)..]),
+            0x08000000 |
+            0x09000000 |
+            0x0A000000 |
+            0x0B000000 |
+            0x0C000000 |
+            0x0D000000 => if (address & 0x01FFFFFF) < self.rom_len {
+                LittleEndian::read_u32(&self.rom[(address & 0x01FFFFFF)..])
+            } else {
+                unused_pattern!(address, 32) as u32
+            },
             _ => { warn!("Unmapped read_u32 from {:08x}", address); 0 },
         }
     }
@@ -93,6 +109,16 @@ impl Interconnect {
             0x03000000 =>
                 LittleEndian::read_u16(&self.iram[(address & 0x7fff)..]),
             0x04000000 => self.io_read_u16(address),
+            0x08000000 |
+            0x09000000 |
+            0x0A000000 |
+            0x0B000000 |
+            0x0C000000 |
+            0x0D000000 => if (address & 0x01FFFFFF) < self.rom_len {
+                LittleEndian::read_u16(&self.rom[(address & 0x01FFFFFF)..])
+            } else {
+                unused_pattern!(address, 16) as u16
+            },
             _ => { warn!("Unmapped read_u16 from {:08x}", address); 0 },
         }
     }
@@ -102,6 +128,16 @@ impl Interconnect {
             0x00000000 if address < 0x4000 => self.bios[address],
             0x03000000 => self.iram[address & 0x7fff],
             0x04000000 => self.io_read_u8(address),
+            0x08000000 |
+            0x09000000 |
+            0x0A000000 |
+            0x0B000000 |
+            0x0C000000 |
+            0x0D000000 => if (address & 0x01FFFFFF) < self.rom_len {
+                self.rom[address & 0x01FFFFFF]
+            } else {
+                unused_pattern!(address, 8) as u8
+            }
             _ => { warn!("Unmapped read_u8 from {:08x}", address); 0 },
         }
     }
@@ -209,6 +245,26 @@ impl Interconnect {
             Err(e) => {
                 error!("Couldn't load BIOS : {}", e);
                 Err("Error opening BIOS file")
+            }
+        }
+    }
+
+    pub fn load_rom(&mut self, filename: &str) -> bool {
+        match File::open(filename) {
+            Ok(mut file) => {
+                info!("ROM file opened");
+
+                if let Err(e) = file.read_to_end(&mut self.rom) {
+                    error!("Error reading ROM file : {}", e);
+                    false
+                } else {
+                    self.rom_len = self.rom.len();
+                    true
+                }
+            }
+            Err(e) => {
+                error!("Couldn't open ROM file : {}", e);
+                false
             }
         }
     }

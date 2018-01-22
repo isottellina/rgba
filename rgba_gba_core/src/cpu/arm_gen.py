@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Sun Jan 21 17:50:15 2018 (+0100)
+# Last-Updated: Mon Jan 22 17:05:04 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -278,9 +278,9 @@ def write_sdt(g, high, low):
         g.write("_cpu.set_register(rd as usize, res);")
 
     if not pre:
-        g.write('unimplemented!("Post instruction not implemented");')
+        g.write('unimplemented!("Post instruction not implemented ({:08x})", instr);')
     if high & 0x02 != 0:
-        g.write('unimplemented!("Write-back not implemented");')
+        g.write('unimplemented!("Write-back not implemented ({:08x})", instr);')
 
 def write_bdt(g, high, low):
     pre = high & 0x10 != 0

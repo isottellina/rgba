@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Mon Jan 22 13:10:08 2018 (+0100)
+// Last-Updated: Mon Jan 22 16:10:20 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -93,7 +93,7 @@ impl Core for GBA {
     }
     
     fn load_rom(&mut self, filename: &str) -> bool {
-        false
+        self.io.load_rom(filename)
     }
 
     fn get_platform_parameters() -> (u32, u32) {

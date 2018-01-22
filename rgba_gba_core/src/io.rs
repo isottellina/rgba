@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan 22 15:53:33 2018 (+0100)
+// Last-Updated: Mon Jan 22 16:08:11 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -108,6 +108,7 @@ impl Interconnect {
 
     fn io_read_u16(&self, address: usize) -> u16 {
         match address {
+            IE => self.i_e(),
             0x04000060...0x040000A8 => self.apu.io_read_u16(address),
             _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
         }
@@ -171,6 +172,7 @@ impl Interconnect {
         match address {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
+            IE => self.set_i_e(value),
             _ => warn!("Unmapped write_u16 to {:08x} (IO, value={:04x})", address, value),
         }
     }
@@ -190,10 +192,6 @@ impl Interconnect {
     
     fn i_e(&self) -> u16 { self.i_e }
     fn set_i_e(&mut self, value: u16) { self.i_e = value; }
-
-    fn set_i_f(&mut self, value: u16) {
-        
-    }
     
     pub fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
         match File::open(filename) {
@@ -216,6 +214,7 @@ impl Interconnect {
     }
 }
 
-const IME: usize = 0x04000208;
+const IE:      usize = 0x04000200;
+const IME:     usize = 0x04000208;
 const POSTFLG: usize = 0x04000300;
 const HALTCNT: usize = 0x04000301;

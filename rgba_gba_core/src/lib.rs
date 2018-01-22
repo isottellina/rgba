@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Sun Jan 21 22:27:51 2018 (+0100)
+// Last-Updated: Mon Jan 22 13:10:08 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -51,9 +51,12 @@ impl Core for GBA {
         self.cpu.reset(&mut self.io);
         
         while self.state {
-            debugger.handle(self, platform);
+            if !self.io.halt() {
+                debugger.handle(self, platform);
+                
+                self.cpu.next_instruction(&mut self.io);
+            }
             
-            self.cpu.next_instruction(&mut self.io);
             self.io.spend();
         }
     }

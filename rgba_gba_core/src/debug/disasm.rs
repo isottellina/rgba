@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Sun Jan 21 18:09:39 2018 (+0100)
+// Last-Updated: Mon Jan 22 14:24:25 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -243,7 +243,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
     }
 }
 
-const THUMB_INSTRS: [(u16, u16, &str); 51] = [
+const THUMB_INSTRS: [(u16, u16, &str); 53] = [
     // Format 1 (move shifted register)
     (0xF800, 0x0000, "lsl %r0, %r3, %s"),
     (0xF800, 0x0800, "lsr %r0, %r3, %s"),
@@ -302,6 +302,9 @@ const THUMB_INSTRS: [(u16, u16, &str); 51] = [
     (0xFFFF, 0xBD00, "pop {pc}"),
     (0xFF00, 0xBD00, "pop {%l,pc}"),
     (0xFF00, 0xBC00, "pop {%l}"),
+    // Format 15
+    (0xF800, 0xC000, "stmia %r8!, {%l}"),
+    (0xF800, 0xC800, "ldmia %r8!, {%l}"),
     // Format 17 (SWI)
     (0xFF00, 0xDF00, "swi %w"),
     // Format 16 (Conditionnal branch)

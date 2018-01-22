@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Sun Jan 21 22:35:11 2018 (+0100)
+// Last-Updated: Mon Jan 22 11:16:59 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -105,7 +105,7 @@ impl Interconnect {
     fn io_read_u16(&self, address: usize) -> u16 {
         match address {
             0x04000060...0x040000A8 => self.apu.io_read_u16(address),
-            _ => { warn!("Unmapped io_read_u16 at {:08x}", address); 0 }
+            _ => { warn!("Unmapped read_u16 at {:08x} (IO)", address); 0 }
         }
     }
     
@@ -113,7 +113,7 @@ impl Interconnect {
         match address {
             IME => self.ime as u8,
             POSTFLG => self.postflg,
-            _ => { warn!("Unmapped io_read_u8 at {:08x}", address); 0 }
+            _ => { warn!("Unmapped read_u8 at {:08x} (IO)", address); 0 }
         }
     }
 
@@ -126,6 +126,7 @@ impl Interconnect {
             0x03000000 => LittleEndian::write_u32(
                 &mut self.iram[(address & 0x7fff)..], value
             ),
+            0x04000000 => self.io_write_u32(address, value),
             0x05000000 => self.gpu.pram_write_u32(address, value),
             0x06000000 => self.gpu.vram_write_u32(address, value),
             0x07000000 => self.gpu.oam_write_u32(address, value),
@@ -153,18 +154,27 @@ impl Interconnect {
         }
     }
 
+    fn io_write_u32(&mut self, address: usize, value: u32) {
+        match address {
+            _ => {
+                self.io_write_u16(address, value as u16);
+                self.io_write_u16(address | 2, (value >> 16) as u16);
+            }
+        }
+    }
+    
     fn io_write_u16(&mut self, address: usize, value: u16) {
         match address {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
-            _ => warn!("Unmapped io_write_u16 at {:08x} (value={:04x})", address, value),
+            _ => warn!("Unmapped write_u16 at {:08x} (IO, value={:04x})", address, value),
         }
     }
     
     fn io_write_u8(&mut self, address: usize, value: u8) {
         match address {
             IME => self.ime = value != 0,
-            _ => warn!("Unmapped io_write_u8 at {:08x} (value={:02x})", address, value),
+            _ => warn!("Unmapped write_u8 at {:08x} (IO, value={:02x})", address, value),
         }
     }
     

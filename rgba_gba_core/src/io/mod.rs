@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Tue Jan 23 19:05:55 2018 (+0100)
+// Last-Updated: Tue Jan 23 21:02:48 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -74,6 +74,10 @@ impl Interconnect {
 
     pub fn declare_access(&mut self, address: usize, width: usize) {
         self.cycles_to_spend += self.waitstates[address >> 24][width][0];
+    }
+
+    pub fn delay(&mut self, cycles: u32) {
+        self.cycles_to_spend += cycles;
     }
 
     pub fn spend(&mut self) {

@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Tue Jan 23 14:43:47 2018 (+0100)
+// Last-Updated: Tue Jan 23 14:54:41 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -59,6 +59,7 @@ impl Core for GBA {
 
             match platform.poll_event() {
                 Some(rgba_common::Event::Debug) => debugger.trigger(),
+                Some(rgba_common::Event::Quit) => self.state = false,
                 _ => (),
             }
             

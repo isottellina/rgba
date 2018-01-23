@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Mon Jan 22 15:51:58 2018 (+0100)
+// Last-Updated: Tue Jan 23 14:57:57 2018 (+0100)
 //           By: Louise <louise>
 // 
 use byteorder::{ByteOrder, LittleEndian};
@@ -113,6 +113,48 @@ impl GPU {
         LittleEndian::write_u32(
             &mut self.oam[(address & 0x3ff)..], value
         );
+    }
+
+    #[inline]
+    pub fn pram_write_u16(&mut self, address: usize, value: u16) {
+        LittleEndian::write_u16(
+            &mut self.pram[(address & 0x3ff)..], value
+        );
+    }
+
+    #[inline]
+    pub fn vram_write_u16(&mut self, address: usize, value: u16) {
+        LittleEndian::write_u16(
+            &mut self.vram[(address & 0x17fff)..], value
+        );
+    }
+
+    #[inline]
+    pub fn oam_write_u16(&mut self, address: usize, value: u16) {
+        LittleEndian::write_u16(
+            &mut self.oam[(address & 0x3ff)..], value
+        );
+    }
+
+    #[inline]
+    pub fn pram_read_u16(&self, address: usize) -> u16 {
+        LittleEndian::read_u16(
+            &self.pram[(address & 0x3ff)..]
+        )
+    }
+
+    #[inline]
+    pub fn vram_read_u16(&self, address: usize) -> u16{
+        LittleEndian::read_u16(
+            &self.vram[(address & 0x17fff)..]
+        )
+    }
+
+    #[inline]
+    pub fn oam_read_u16(&self, address: usize) -> u16{
+        LittleEndian::read_u16(
+            &self.oam[(address & 0x3ff)..]
+        )
     }
 }
 

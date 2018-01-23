@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Mon Jan 22 18:18:19 2018 (+0100)
+# Last-Updated: Tue Jan 23 14:50:28 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -106,28 +106,33 @@ def write_op2_reg(g, low, s):
         
     else: # By register
         g.write("let amount = _cpu.get_register(((instr >> 8) & 0xF) as usize) & 0xFF;")
+        g.write("let op2 = if amount != 0 {")
         if shift == 0:
             if s:
-                g.write("let tmp = rm << (amount - 1); _cpu.carry = (tmp >> 31) != 0;")
-                g.write("let op2 = tmp << 1;")
+                g.write("let tmp = rm << (amount - 1); _cpu.carry = (tmp >> 31) != 0;", indent = 2)
+                g.write("tmp << 1", indent = 2)
             else:
-                g.write("let op2 = rm << amount;")
+                g.write("rm << amount", indent = 2)
         elif shift == 1:
             if s:
-                g.write("let tmp = rm >> (amount - 1); _cpu.carry = (tmp & 1) != 0;")
-                g.write("let op2 = tmp >> 1 ;")
+                g.write("let tmp = rm >> (amount - 1); _cpu.carry = (tmp & 1) != 0;", indent = 2)
+                g.write("tmp >> 1", indent = 2)
             else:
-                g.write("let op2 = rm >> amount;")
+                g.write("rm >> amount", indent = 2)
         elif shift == 2:
             if s:
-                g.write("let tmp = ((rm as i32) >> (amount - 1)) as u32; _cpu.carry = tmp & 1 != 0;")
-                g.write("let op2 = ((tmp as i32) >> 1) as u32;")
+                g.write("let tmp = ((rm as i32) >> (amount - 1)) as u32; _cpu.carry = tmp & 1 != 0;",indent=2)
+                g.write("((tmp as i32) >> 1) as u32", indent = 2)
             else:
-                g.write("let op2 = ((rm as i32) >> amount) as u32;")
+                g.write("((rm as i32) >> amount) as u32", indent = 2)
         elif shift == 3:
-            g.write("let op2 = rm.rotate_right(amount);")
+            g.write("let op2 = rm.rotate_right(amount);", indent = 2)
             if s:
-                g.write("_cpu.carry = (op2 >> 31) != 0;")
+                g.write("_cpu.carry = (op2 >> 31) != 0;", indent = 2)
+            g.write("op2")
+        g.write("} else {")
+        g.write("rm", indent = 2)
+        g.write("};")
     
     
 def write_alu(g, high, low):
@@ -159,7 +164,7 @@ def write_alu(g, high, low):
     if op == 8 or op == 0: # AND, TST
         g.write("let res = rn & op2;")
     elif op == 9 or op == 1: # EOR, TEQ
-        g.write("let res = rn | op2;");
+        g.write("let res = rn ^ op2;");
     elif op == 10 or op == 2: # SUB, CMP
         g.write("let res = rn.wrapping_sub(op2);")
         if s:
@@ -357,6 +362,67 @@ def write_bdt(g, high, low):
 
     if psr:
         g.write("if userbnk { _cpu.mode = oldmode; }")
+
+def write_half(g, high, low):
+    pre = ((high >> 4) & 1) != 0
+    up  = ((high >> 3) & 1) != 0
+    imm = ((high >> 2) & 1) != 0
+    wb  = (((high >> 1) & 1) != 0) or not pre
+    load = (high & 1) != 0
+
+    op = (low >> 1) & 3
+
+    g.write("let rd = (instr >> 12) & 0xF;")
+    g.write("let rn = (instr >> 16) & 0xF;")
+    
+    if imm:
+        g.write("let off = (((instr & 0xF00) >> 4) | (instr & 0xF)) as u32;")
+    else:
+        g.write("let off = _cpu.get_register((instr & 0xF) as usize);")
+
+    if pre:
+        if up:
+            g.write("let addr = _cpu.get_register(rn as usize).wrapping_add(off) as usize;")
+        else:
+            g.write("let addr = _cpu.get_register(rn as usize).wrapping_sub(off) as usize;")
+    else:
+        g.write("let addr = _cpu.get_register(rn as usize) as usize;")
+
+    if op == 1: # LDRH/STRH
+        if load:
+            g.write("let val = if addr & 1 == 0 {")
+            g.write("_cpu.read_u16(_io, addr)", indent = 2)
+            g.write("} else {")
+            g.write("_cpu.read_u16(_io, addr).swap_bytes()", indent = 2)
+            g.write("};")
+            g.write("_cpu.set_register(rd as usize, val as u32);")
+        else:
+            g.write("let val = _cpu.get_register(rd as usize) as u16;")
+            g.write("_cpu.write_u16(_io, addr, val);")
+    elif op == 2: # LDRSB
+        if load:
+            g.write("let val = _cpu.read_u8(_io, addr) as i8;")
+            g.write("_cpu.set_register(rd as usize, (val as i32) as u32);")
+        else:
+            g.write('panic!("Tried to store signed byte");')
+    elif op == 3: # LDRSH
+        if load:
+            g.write("let val = _cpu.read_u16(_io, addr) as i16;")
+            g.write("_cpu.set_register(rd as usize, (val as i32) as u32);")
+        else:
+            g.write('panic!("Tried to store signed halfword");')
+
+    if wb:
+        if not pre:
+            if up:
+                g.write("let wb_val = addr.wrapping_add(off as usize);")
+            else:
+                g.write("let wb_val = addr.wrapping_sub(off as usize);")
+        else:
+            g.write("let wb_val = addr;")
+            
+        g.write("_cpu.set_register(rn as usize, wb_val as u32);")
+        
         
 def write_instruction(g, high, low):
     g.set_current(high * 16 + low)
@@ -369,6 +435,8 @@ def write_instruction(g, high, low):
         write_psr(g, high, low)
     elif (high & 0xC0) == 0x00 and not ((high & 0x20 == 0) and (low & 9 == 9)): # ALU
         write_alu(g, high, low)
+    elif (high & 0xE0) == 0x00 and (low & 0x9) == 0x9 and (low != 9): # Halfword
+        write_half(g, high, low)
     elif (high & 0xC0) == 0x40: # SDT
         write_sdt(g, high, low)
     elif (high & 0xE0) == 0x80: # BDT

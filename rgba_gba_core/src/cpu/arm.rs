@@ -3,7 +3,7 @@
 // Filename: arm.rs
 // Author: Louise <louise>
 // Created: Sat Jan 13 11:44:36 2018 (+0100)
-// Last-Updated: Sun Jan 21 16:39:23 2018 (+0100)
+// Last-Updated: Tue Jan 23 14:40:26 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
@@ -23,7 +23,7 @@ impl ARM7TDMI {
             0x60000000 => self.overflow,
             0x70000000 => !self.overflow,
             0x80000000 => self.carry && !self.zero,
-            0x90000000 => !self.carry && self.zero,
+            0x90000000 => !self.carry || self.zero,
             0xA0000000 => self.sign == self.overflow,
             0xB0000000 => self.sign != self.overflow,
             0xC0000000 => !self.zero && (self.sign == self.overflow),

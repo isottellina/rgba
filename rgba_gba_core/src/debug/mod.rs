@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Thu Jan 18 12:49:30 2018 (+0100)
+// Last-Updated: Tue Jan 23 14:43:03 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -29,6 +29,8 @@ impl Debugger {
         }
     }
 
+    pub fn trigger(&mut self) { self.steps = 1; }
+    
     pub fn handle<T: Platform>(&mut self, gba: &mut GBA, platform: &T) {
         let pc = match gba.cpu.state() {
             CpuState::ARM => gba.cpu.get_register(15) - 8,

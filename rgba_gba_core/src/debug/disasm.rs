@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Mon Jan 22 15:15:43 2018 (+0100)
+// Last-Updated: Tue Jan 23 11:16:16 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -26,7 +26,7 @@ const REGS: [&str; 16] = [
     "r12", "sp", "lr", "pc"
 ];
 
-const ARM_INSTRS: [(u32, u32, &str); 29] = [
+const ARM_INSTRS: [(u32, u32, &str); 32] = [
     // Branches
     (0x0F000000, 0x0A000000, "b%c %o"),
     (0x0F000000, 0x0B000000, "bl%c %o"),
@@ -46,6 +46,11 @@ const ARM_INSTRS: [(u32, u32, &str); 29] = [
     // STM/LDM
     (0x0E100000, 0x08000000, "stm%m%c %r4%!, %l"),
     (0x0E100000, 0x08100000, "ldm%m%c %r4%!, %l"),
+    // Single Data Swap
+    (0x0FB00FF0, 0x01000090, "swp%b%c %r3, %r0, [%r4]"),
+    // Halfword thingies
+    (0x0E100090, 0x00000090, "str%h%c %r3, %H"),
+    (0x0E100090, 0x00100090, "ldr%h%c %r3, %H"),
     // ALU
     (0x0DE00000, 0x00000000, "and%s%c %r3, %r4, %i"),
     (0x0DE00000, 0x00200000, "eor%s%c %r3, %r4, %i"),
@@ -134,7 +139,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                                 let dir = (instr & 0x00800000) != 0;
                                 let imm = (instr & 0x02000000) == 0;
 
-                                dis.push(if dir { '+' } else { '-' });
+                                if !dir { dis.push('-'); }
 
                                 if imm {
                                     let d = instr & 0xFFF;
@@ -223,7 +228,51 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                                          offset as i32 + off as i32 + 8
                                 )
                             )
-                        },
+                        }
+                        Some('h') => {
+                            let op = (instr >> 5) & 3;
+
+                            dis.push_str(match op {
+                                1 => "h",
+                                2 => "sb",
+                                3 => "sh",
+                                _ => unreachable!(),
+                            });
+                        }
+                        Some('H') => {
+                            fn push_op(dis: &mut String, instr: u32) {
+                                let dir = (instr & 0x00800000) != 0;
+                                let imm = (instr & 0x00400000) != 0;
+
+                                if !dir { dis.push('-'); }
+
+                                if imm {
+                                    let d = ((instr >> 4) & 0xF0) | (instr & 0xF);
+                                    dis.push_str(&format!("0x{:x}", d));
+                                } else {
+                                    let rm = instr & 0xF;
+                                    dis.push_str(REGS[rm as usize]);
+                                }
+                            }
+                            
+                            let rn = (instr >> 16) & 0xF;
+                            let pre = (instr & 0x01000000) != 0;
+                            
+                            if rn == 15 {
+                                push_op(&mut dis, instr);
+                            } else if pre {
+                                dis.push_str(&format!("[{}, ", REGS[rn as usize]));
+                                push_op(&mut dis, instr);
+                                dis.push_str(&format!("]"));
+
+                                if (instr & 0x00200000) != 0 {
+                                    dis.push('!');
+                                }
+                            } else {
+                                dis.push_str(&format!("[{}], ", REGS[rn as usize]));
+                                push_op(&mut dis, instr);
+                            }
+                        }
                         Some(e) => println!("{}", e),
                         _ => panic!()
                     }

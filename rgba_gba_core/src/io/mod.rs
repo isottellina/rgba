@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Mon Jan 22 17:02:29 2018 (+0100)
+// Last-Updated: Tue Jan 23 14:57:41 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -109,6 +109,9 @@ impl Interconnect {
             0x03000000 =>
                 LittleEndian::read_u16(&self.iram[(address & 0x7fff)..]),
             0x04000000 => self.io_read_u16(address),
+            0x05000000 => self.gpu.pram_read_u16(address),
+            0x06000000 => self.gpu.vram_read_u16(address),
+            0x07000000 => self.gpu.oam_read_u16(address),
             0x08000000 |
             0x09000000 |
             0x0A000000 |
@@ -182,6 +185,9 @@ impl Interconnect {
                 &mut self.iram[(address & 0x7fff)..], value
             ),
             0x04000000 => self.io_write_u16(address, value),
+            0x05000000 => self.gpu.pram_write_u16(address, value),
+            0x06000000 => self.gpu.vram_write_u16(address, value),
+            0x07000000 => self.gpu.oam_write_u16(address, value),
             _ => warn!("Unmapped write_u16 to {:08x} (value={:04x})", address, value),
         }
     }

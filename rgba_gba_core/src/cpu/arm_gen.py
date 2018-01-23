@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Tue Jan 23 14:50:28 2018 (+0100)
+# Last-Updated: Tue Jan 23 21:39:34 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -363,6 +363,37 @@ def write_bdt(g, high, low):
     if psr:
         g.write("if userbnk { _cpu.mode = oldmode; }")
 
+def write_mul(g, high):
+    a = ((high >> 1) & 1) != 0
+    s = (high & 1) != 0
+
+    g.write("let rd = (instr >> 16) & 0xF;")
+    g.write("let rm = _cpu.get_register((instr & 0xF) as usize);")
+    g.write("let rs = _cpu.get_register(((instr >> 8) & 0xF) as usize);")
+
+    g.write("if (rs & 0xFFFFFF00 == 0) || (!rs & 0xFFFFFF00 == 0) {")
+    g.write("_io.delay(%d);" % (2 if a else 1), indent = 2)
+    g.write("} else if (rs & 0xFFFF0000 == 0) || (!rs & 0xFFFF0000 == 0) {")
+    g.write("_io.delay(%d);" % (3 if a else 2), indent = 2)
+    g.write("} else if (rs & 0xFF000000 == 0) || (!rs & 0xFF000000 == 0) {")
+    g.write("_io.delay(%d);" % (4 if a else 3), indent = 2)
+    g.write("} else {")
+    g.write("_io.delay(%d);" % (5 if a else 4), indent = 2)
+    g.write("}")
+    
+    if a: # MLA
+        g.write("let rn = _cpu.get_register(((instr >> 12) & 0xF) as usize);")
+        g.write("let val = rm.wrapping_mul(rs).wrapping_add(rn);")
+    else:
+        g.write("let val = rm.wrapping_mul(rs);")
+
+    if s:
+        g.write("_cpu.zero = val == 0;")
+        g.write("_cpu.sign = (val as i32) < 0;")
+        g.write("_cpu.carry = true;")
+
+    g.write("_cpu.set_register(rd as usize, val);")
+        
 def write_half(g, high, low):
     pre = ((high >> 4) & 1) != 0
     up  = ((high >> 3) & 1) != 0
@@ -437,6 +468,8 @@ def write_instruction(g, high, low):
         write_alu(g, high, low)
     elif (high & 0xE0) == 0x00 and (low & 0x9) == 0x9 and (low != 9): # Halfword
         write_half(g, high, low)
+    elif (high & 0xF0) == 0x00 and (low == 9):
+        write_mul(g, high)
     elif (high & 0xC0) == 0x40: # SDT
         write_sdt(g, high, low)
     elif (high & 0xE0) == 0x80: # BDT

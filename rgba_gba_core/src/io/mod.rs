@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Tue Jan 23 14:57:41 2018 (+0100)
+// Last-Updated: Tue Jan 23 16:57:10 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -88,6 +88,9 @@ impl Interconnect {
                 LittleEndian::read_u32(&self.bios[address..]),
             0x03000000 =>
                 LittleEndian::read_u32(&self.iram[(address & 0x7fff)..]),
+            0x05000000 => self.gpu.pram_read_u32(address),
+            0x06000000 => self.gpu.vram_read_u32(address),
+            0x07000000 => self.gpu.oam_read_u32(address),
             0x08000000 |
             0x09000000 |
             0x0A000000 |
@@ -234,6 +237,11 @@ impl Interconnect {
     
     fn i_e(&self) -> u16 { self.i_e }
     fn set_i_e(&mut self, value: u16) { self.i_e = value; }
+
+    // Frame
+    #[inline]
+    pub fn is_frame(&self) -> bool { self.gpu.is_frame() }
+    pub fn ack_frame(&mut self) { self.gpu.ack_frame(); }
     
     pub fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
         match File::open(filename) {

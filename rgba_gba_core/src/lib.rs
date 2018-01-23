@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Tue Jan 23 14:54:41 2018 (+0100)
+// Last-Updated: Tue Jan 23 16:55:51 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -25,12 +25,16 @@ use debug::Debugger;
 
 use std::fs::File;
 use std::io::{Seek, SeekFrom, Read};
+use std::time::{Instant, Duration};
+
+use std::thread;
 
 pub struct GBA {
     cpu: ARM7TDMI,
     io: Interconnect,
 
     state: bool,
+    last_frame: Instant,
 }
 
 impl GBA {
@@ -40,6 +44,39 @@ impl GBA {
             io: Interconnect::new(),
 
             state: true,
+            last_frame: Instant::now(),
+        }
+    }
+    
+    fn on_frame<T: Platform>(&mut self, platform: &mut T, debugger: &mut Debugger) {
+        let elapsed = self.last_frame.elapsed();
+                
+        if elapsed < Duration::new(0, 16_600_000) {
+            let to_wait = Duration::new(0, 16_600_000) - elapsed;
+
+            if to_wait > Duration::new(0, 600_000) {
+                thread::sleep(to_wait);
+            }
+        }
+        
+        let new_elapsed = self.last_frame.elapsed();
+        let elapsed_nanos = new_elapsed.as_secs() * 1_000_000_000 +
+            u64::from(new_elapsed.subsec_nanos());
+        
+        let s = format!(
+            "rGBA [{}/60]",
+            ((1.0 / (elapsed_nanos as f64)) * 1000000000.0).round() as u32
+        );
+        
+        platform.set_title(s);
+        
+        self.last_frame = Instant::now();
+        while let Some(event) = platform.poll_event() {
+            match event {
+                rgba_common::Event::Debug => debugger.trigger(),
+                rgba_common::Event::Quit => self.state = false,
+                _ => (),
+            }
         }
     }
 }
@@ -57,10 +94,9 @@ impl Core for GBA {
                 self.cpu.next_instruction(&mut self.io);
             }
 
-            match platform.poll_event() {
-                Some(rgba_common::Event::Debug) => debugger.trigger(),
-                Some(rgba_common::Event::Quit) => self.state = false,
-                _ => (),
+            if self.io.is_frame() {
+                self.on_frame(platform, &mut debugger);
+                self.io.ack_frame();
             }
             
             self.io.spend();

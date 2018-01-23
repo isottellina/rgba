@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Mon Jan 22 15:50:53 2018 (+0100)
+# Last-Updated: Tue Jan 23 20:09:14 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -323,9 +323,9 @@ def write_f16(g, high):
         "_cpu.carry", "!_cpu.carry",
         "_cpu.sign", "!_cpu.sign",
         "_cpu.overflow", "!_cpu.overflow",
-        "_cpu.carry && !_cpu.zero", "!_cpu.carry && _cpu.zero",
+        "_cpu.carry && !_cpu.zero", "!_cpu.carry || _cpu.zero",
         "_cpu.sign == _cpu.overflow", "_cpu.sign != _cpu.overflow",
-        "_cpu.zero && (_cpu.sign == _cpu.overflow)", "!_cpu.zero || (_cpu.sign != _cpu.overflow)",
+        "!_cpu.zero && (_cpu.sign == _cpu.overflow)", "_cpu.zero || (_cpu.sign != _cpu.overflow)",
         "true", "false"
     ]
     

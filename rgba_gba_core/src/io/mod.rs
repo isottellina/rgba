@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Tue Jan 23 16:57:10 2018 (+0100)
+// Last-Updated: Tue Jan 23 19:05:55 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -151,17 +151,14 @@ impl Interconnect {
     fn io_read_u16(&self, address: usize) -> u16 {
         match address {
             IE => self.i_e(),
+            0x04000000...0x04000056 => self.gpu.io_read_u16(address),
             0x04000060...0x040000A8 => self.apu.io_read_u16(address),
             _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
         }
     }
     
     fn io_read_u8(&self, address: usize) -> u8 {
-        match address {
-            IME => self.ime as u8,
-            POSTFLG => self.postflg,
-            _ => { warn!("Unmapped read_u8 from {:08x} (IO)", address); 0 }
-        }
+        (self.io_read_u16(address & 0xFFFFFFFE) >> ((address & 0x1) << 3)) as u8
     }
 
     pub fn write_u32(&mut self, address: usize, value: u32) {

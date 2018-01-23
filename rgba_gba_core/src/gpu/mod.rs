@@ -3,10 +3,11 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Tue Jan 23 14:57:57 2018 (+0100)
+// Last-Updated: Tue Jan 23 16:47:20 2018 (+0100)
 //           By: Louise <louise>
 // 
-use byteorder::{ByteOrder, LittleEndian};
+mod memory;
+mod io;
 
 pub struct GPU {
     // Memory
@@ -16,6 +17,7 @@ pub struct GPU {
 
     // State
     render_line: Option<u16>,
+    is_frame: bool,
     vcount: u16,
     clock: u32,
     dots: u32,
@@ -32,6 +34,7 @@ impl GPU {
             oam:  [0; 0x400],
 
             render_line: None,
+            is_frame: false,
             vcount: 0,
             clock: 0,
             dots: 0,
@@ -45,6 +48,10 @@ impl GPU {
     fn increment_lines(&mut self) {
         self.vcount = (self.vcount + 1) % 228;
     }
+
+    #[inline]
+    pub fn is_frame(&self) -> bool { self.is_frame }
+    pub fn ack_frame(&mut self) { self.is_frame = false; }
     
     pub fn spend_cycles(&mut self, nb_cycles: u32) {
         let total_cycles = self.clock + nb_cycles;
@@ -79,82 +86,12 @@ impl GPU {
                     self.increment_lines();
 
                     if self.vcount == 0 {
+                        self.is_frame = true;
                         self.mode = GpuMode::Visible;
                     }
                 }
             }
         }
-    }
-
-    #[inline]
-    pub fn io_write_u16(&mut self, address: usize, value: u16) {
-        match address {
-            DISPCNT => self.dispcnt = value,
-            _ => warn!("Unmapped write_u16 to {:08x} (GPU, value={:04x})", address, value),
-        }
-    }
-
-    #[inline]
-    pub fn pram_write_u32(&mut self, address: usize, value: u32) {
-        LittleEndian::write_u32(
-            &mut self.pram[(address & 0x3ff)..], value
-        );
-    }
-
-    #[inline]
-    pub fn vram_write_u32(&mut self, address: usize, value: u32) {
-        LittleEndian::write_u32(
-            &mut self.vram[(address & 0x17fff)..], value
-        );
-    }
-
-    #[inline]
-    pub fn oam_write_u32(&mut self, address: usize, value: u32) {
-        LittleEndian::write_u32(
-            &mut self.oam[(address & 0x3ff)..], value
-        );
-    }
-
-    #[inline]
-    pub fn pram_write_u16(&mut self, address: usize, value: u16) {
-        LittleEndian::write_u16(
-            &mut self.pram[(address & 0x3ff)..], value
-        );
-    }
-
-    #[inline]
-    pub fn vram_write_u16(&mut self, address: usize, value: u16) {
-        LittleEndian::write_u16(
-            &mut self.vram[(address & 0x17fff)..], value
-        );
-    }
-
-    #[inline]
-    pub fn oam_write_u16(&mut self, address: usize, value: u16) {
-        LittleEndian::write_u16(
-            &mut self.oam[(address & 0x3ff)..], value
-        );
-    }
-
-    #[inline]
-    pub fn pram_read_u16(&self, address: usize) -> u16 {
-        LittleEndian::read_u16(
-            &self.pram[(address & 0x3ff)..]
-        )
-    }
-
-    #[inline]
-    pub fn vram_read_u16(&self, address: usize) -> u16{
-        LittleEndian::read_u16(
-            &self.vram[(address & 0x17fff)..]
-        )
-    }
-
-    #[inline]
-    pub fn oam_read_u16(&self, address: usize) -> u16{
-        LittleEndian::read_u16(
-            &self.oam[(address & 0x3ff)..]
-        )
     }
 }
 
@@ -163,5 +100,3 @@ enum GpuMode {
     HBlank,
     VBlank,
 }
-
-const DISPCNT: usize = 0x04000000;

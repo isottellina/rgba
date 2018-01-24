@@ -3,7 +3,7 @@
 // Filename: arm.rs
 // Author: Louise <louise>
 // Created: Sat Jan 13 11:44:36 2018 (+0100)
-// Last-Updated: Tue Jan 23 14:40:26 2018 (+0100)
+// Last-Updated: Wed Jan 24 12:34:19 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
@@ -37,6 +37,8 @@ impl ARM7TDMI {
         let instr_low = (instr & 0x000000F0) >> 4;
         
         let function = ARM_INSTRUCTIONS[(instr_high | instr_low) as usize];
+
+        self.registers[15] = self.pc + 4;
 
         if instr > 0xE0000000 || self.match_condition(instr) {
             function(self, io, instr);

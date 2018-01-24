@@ -3,7 +3,7 @@
 // Filename: thumb.rs
 // Author: Louise <louise>
 // Created: Tue Jan 16 20:00:15 2018 (+0100)
-// Last-Updated: Tue Jan 23 20:10:50 2018 (+0100)
+// Last-Updated: Wed Jan 24 12:19:13 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
@@ -15,6 +15,9 @@ impl ARM7TDMI {
         let instr_code = (instr & 0xFF00) >> 8;
         
         let function = THUMB_INSTRUCTIONS[instr_code as usize];
+
+        self.registers[15] = self.pc + 2;
+        
         function(self, io, instr);
     }
 }

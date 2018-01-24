@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Tue Jan 23 20:01:56 2018 (+0100)
+// Last-Updated: Wed Jan 24 12:42:29 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -17,6 +17,7 @@ pub struct ARM7TDMI {
     // Registers
     pub registers: [u32; 31],
     pub spsr: [u32; 5],
+    pub pc: u32,
 
     // CPSR
     pub sign: bool,
@@ -27,14 +28,8 @@ pub struct ARM7TDMI {
     pub irq: bool,
     pub fiq: bool,
 
-    state: CpuState,
+    pub state: CpuState,
     mode: CpuMode,
-    
-    // Pipeline
-    instr_fetched_arm: u32,
-    instr_decoded_arm: u32,
-    instr_fetched_thumb: u16,
-    instr_decoded_thumb: u16
 }
 
 impl ARM7TDMI {
@@ -87,24 +82,6 @@ impl ARM7TDMI {
         io.declare_access(address, 0);
         
         io.write_u8(address, value)
-    }
-    
-    pub fn next_u32(&mut self, io: &mut Interconnect) -> u32 {
-        let v = self.read_u32(io, self.registers[15] as usize);
-
-        self.registers[15] += 4;
-        v
-    }
-
-    pub fn next_u16(&mut self, io: &mut Interconnect) -> u16 {
-        let v = self.read_u16(io, self.registers[15] as usize);
-
-        self.registers[15] += 2;
-        v
-    }
-
-    pub fn state(&self) -> CpuState {
-        self.state
     }
     
     pub fn get_register(&self, n: usize) -> u32 {
@@ -208,12 +185,10 @@ impl ARM7TDMI {
     pub fn advance_pipeline(&mut self, io: &mut Interconnect) {
         match self.state {
             CpuState::ARM => {
-                self.instr_decoded_arm = self.instr_fetched_arm;
-                self.instr_fetched_arm = self.next_u32(io);
+                io.declare_access(self.pc as usize, 2);
             }
             CpuState::Thumb => {
-                self.instr_decoded_thumb = self.instr_fetched_thumb;
-                self.instr_fetched_thumb = self.next_u16(io);
+                io.declare_access(self.pc as usize, 1);
             }
         }
     }
@@ -221,29 +196,36 @@ impl ARM7TDMI {
     pub fn fill_pipeline(&mut self, io: &mut Interconnect) {
         match self.state {
             CpuState::ARM => {
-                self.instr_decoded_arm = self.next_u32(io);
-                self.instr_fetched_arm = self.next_u32(io);
+                io.declare_access(self.pc as usize, 2);
+                io.declare_access(self.pc as usize + 4, 2);
             }
             CpuState::Thumb => {
-                self.instr_decoded_thumb = self.next_u16(io);
-                self.instr_fetched_thumb = self.next_u16(io);
+                io.declare_access(self.pc as usize, 1);
+                io.declare_access(self.pc as usize + 2, 1);
             }
         }
     }
 
+    pub fn branch(&mut self, io: &mut Interconnect) {
+        self.pc = self.registers[15];
+        self.fill_pipeline(io);
+    }
+    
     pub fn next_instruction(&mut self, io: &mut Interconnect) {
+        self.advance_pipeline(io);
+        
         match self.state {
             CpuState::ARM => {
-                let instr = self.instr_decoded_arm;
+                let instr = io.read_u32(self.pc as usize);
+                self.pc += 4;
+                
                 self.next_instruction_arm(io, instr);
-
-                self.advance_pipeline(io);
             },
             CpuState::Thumb => {
-                let instr = self.instr_decoded_thumb;
+                let instr = io.read_u16(self.pc as usize);
+                self.pc += 2;
+                
                 self.next_instruction_thumb(io, instr);
-
-                self.advance_pipeline(io);
             }
         }
     }

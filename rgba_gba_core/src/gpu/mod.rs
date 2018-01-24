@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Tue Jan 23 16:47:20 2018 (+0100)
+// Last-Updated: Tue Jan 23 23:06:29 2018 (+0100)
 //           By: Louise <louise>
 // 
 mod memory;
@@ -24,6 +24,15 @@ pub struct GPU {
     mode: GpuMode,
 
     dispcnt: u16,
+
+    // DISPSTAT
+    irq_vblank_en: bool,
+    irq_hblank_en: bool,
+    irq_vcount_en: bool,
+    vcount_match: u16,
+    
+    // IRQ
+    irq_vblank: bool,
 }
 
 impl GPU {
@@ -40,7 +49,15 @@ impl GPU {
             dots: 0,
             mode: GpuMode::Visible,
 
+            // DISPSTAT
+            irq_vblank_en: false,
+            irq_hblank_en: false,
+            irq_vcount_en: false,
+            vcount_match: 0,
+            
             dispcnt: 0,
+            // IRQ
+            irq_vblank: false,
         }
     }
 
@@ -74,6 +91,7 @@ impl GPU {
                     self.increment_lines();
 
                     if self.vcount == 160 {
+                        self.irq_vblank = true;
                         self.mode = GpuMode::VBlank;
                     } else {
                         self.mode = GpuMode::Visible;
@@ -93,6 +111,10 @@ impl GPU {
             }
         }
     }
+
+    // IRQ
+    pub fn irq_vblank(&self) -> bool { self.irq_vblank }
+    pub fn ack_vblank(&mut self) { self.irq_vblank = false; }
 }
 
 enum GpuMode {

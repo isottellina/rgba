@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Tue Jan 23 21:39:34 2018 (+0100)
+# Last-Updated: Wed Jan 24 12:38:07 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -53,13 +53,13 @@ def write_branch(g, high, low):
 
     g.write("let new_pc = ((old_pc as i32) + offset) as u32;")
     g.write("_cpu.set_register(15, new_pc);")
-    g.write("_cpu.advance_pipeline(_io);")
+    g.write("_cpu.branch(_io);")
 
 def write_branch_exchange(g):
     g.write("let dest = _cpu.get_register((instr & 0xF) as usize);")
     g.write("if dest & 1 != 0 { _cpu.state = CpuState::Thumb; }")
     g.write("_cpu.registers[15] = dest & 0xFFFFFFFE;")
-    g.write("_cpu.advance_pipeline(_io);")
+    g.write("_cpu.branch(_io);")
     
 def write_op2_imm(g, high, low):
     s = (high & 0x01) != 0
@@ -342,7 +342,7 @@ def write_bdt(g, high, low):
                 if psr:
                     g.write("let spsr = _cpu.spsr();", indent = 2)
                     g.write("_cpu.set_cpsr(spsr);", indent = 2)
-                g.write("_cpu.advance_pipeline(_io);", indent = 2)
+                g.write("_cpu.branch(_io);", indent = 2)
         else:
             g.write("let val = _cpu.get_register(%d);" % i, indent = 2)
             g.write("_cpu.write_u32(_io, addr, val);", indent = 2)

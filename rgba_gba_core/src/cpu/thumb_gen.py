@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Tue Jan 23 20:09:14 2018 (+0100)
+# Last-Updated: Wed Jan 24 12:37:17 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -125,7 +125,7 @@ def write_f5(g, high):
         g.write("let op1 = _cpu.get_register(rd as usize);")
         g.write("let res = op1.wrapping_add(rs);")
         g.write("_cpu.set_register(rd as usize, res);")
-        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.branch(_io); }")
     elif op == 1: # CMP
         g.write("let op1 = _cpu.get_register(rd as usize);")
         g.write("let res = op1.wrapping_sub(rs);")
@@ -133,17 +133,17 @@ def write_f5(g, high):
         g.write("_cpu.zero = res == 0;")
         g.write("_cpu.carry = op1 >= res;")
         g.write("_cpu.overflow = (op1 ^ rs) & (op1 ^ res) & 0x80000000 != 0;")
-        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.branch(_io); }")
     elif op == 2: # MOV
         g.write("_cpu.set_register(rd as usize, rs);")
-        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.advance_pipeline(_io); }")
+        g.write("if rd == 15 { _cpu.registers[15] &= 0xFFFFFFFE; _cpu.branch(_io); }")
     elif op == 3: # BX
         g.write("if rs & 1 == 0 {")
         g.write("_cpu.state = CpuState::ARM; _cpu.registers[15] = rs & 0xFFFFFFFC;", indent = 2)
         g.write("} else {")
         g.write("_cpu.registers[15] = rs & 0xFFFFFFFE;", indent = 2)
         g.write("}")
-        g.write("_cpu.advance_pipeline(_io);")
+        g.write("_cpu.branch(_io);")
         
 def write_f6(g, high):
     rd = high & 7
@@ -279,7 +279,7 @@ def write_f14(g, high):
         if pop:
             if i == 15:
                 g.write("_cpu.registers[15] = _cpu.read_u32(_io, sp) & 0xFFFFFFFE;", indent = 2)
-                g.write("_cpu.advance_pipeline(_io);", indent = 2)
+                g.write("_cpu.branch(_io);", indent = 2)
             else:
                 g.write("_cpu.registers[%s] = _cpu.read_u32(_io, sp);" % i, indent = 2)
         else:
@@ -332,13 +332,13 @@ def write_f16(g, high):
     g.write("let off = (((instr & 0xFF) as i8) as i32) << 1;")
     g.write("if %s {" % conditions[high & 0xF])
     g.write("_cpu.registers[15] = (_cpu.registers[15] as i32).wrapping_add(off) as u32;", indent = 2)
-    g.write("_cpu.advance_pipeline(_io);", indent = 2)
+    g.write("_cpu.branch(_io);", indent = 2)
     g.write("}")
 
 def write_f18(g, high):
     g.write("let offset = (((instr << 5) as i16) >> 4) as i32;")
     g.write("_cpu.registers[15] = ((_cpu.registers[15] as i32) + offset) as u32;")
-    g.write("_cpu.advance_pipeline(_io);")
+    g.write("_cpu.branch(_io);")
     
 def write_f19(g, high):
     stage = (high & 0x08) >> 3
@@ -351,7 +351,7 @@ def write_f19(g, high):
         g.write("let tmp = (_cpu.registers[15] - 2) | 1;")
         g.write("_cpu.registers[15] = _cpu.get_register(14).wrapping_add(((instr & 0x7FF) as u32) << 1);")
         g.write("_cpu.set_register(14, tmp);")
-        g.write("_cpu.advance_pipeline(_io);")
+        g.write("_cpu.branch(_io);")
     
 def write_instruction(g, high):
     g.set_current(high)

@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Tue Jan 23 21:02:48 2018 (+0100)
+// Last-Updated: Wed Jan 24 12:43:45 2018 (+0100)
 //           By: Louise <louise>
 //
 use gpu::GPU;
@@ -32,6 +32,8 @@ pub struct Interconnect {
     ime: bool,
     halt: bool,
     i_e: u16,
+
+    pending_interrupt: bool,
 }
 
 impl Interconnect {
@@ -69,6 +71,7 @@ impl Interconnect {
             ime: false,
             halt: false,
             i_e: 0,
+            pending_interrupt: true,
         }
     }
 
@@ -227,7 +230,7 @@ impl Interconnect {
         match address {
             IME => self.ime = value != 0,
             POSTFLG => self.postflg = value,
-            HALTCNT => {info!("Halting!"); self.halt = true }, 
+            HALTCNT => {debug!("Halting!"); self.halt = true }, 
             _ => warn!("Unmapped write_u8 to {:08x} (IO, value={:02x})", address, value),
         }
     }
@@ -238,6 +241,10 @@ impl Interconnect {
     
     fn i_e(&self) -> u16 { self.i_e }
     fn set_i_e(&mut self, value: u16) { self.i_e = value; }
+
+    pub fn check_interrupts(&self) -> bool {
+        self.gpu.irq_vblank() && (self.i_e & 0x0001 != 0)
+    }
 
     // Frame
     #[inline]

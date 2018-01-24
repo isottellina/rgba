@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Tue Jan 23 14:43:03 2018 (+0100)
+// Last-Updated: Wed Jan 24 12:29:02 2018 (+0100)
 //           By: Louise <louise>
 //
 mod disasm;
@@ -32,16 +32,13 @@ impl Debugger {
     pub fn trigger(&mut self) { self.steps = 1; }
     
     pub fn handle<T: Platform>(&mut self, gba: &mut GBA, platform: &T) {
-        let pc = match gba.cpu.state() {
-            CpuState::ARM => gba.cpu.get_register(15) - 8,
-            CpuState::Thumb => gba.cpu.get_register(15) - 4,
-        };
+        let pc = gba.cpu.pc;
         
         if self.should_break(pc) || self.enough_steps() {
             println!("{}", gba.cpu);
             println!("{:08x}: {}",
                      pc,
-                     match gba.cpu.state() {
+                     match gba.cpu.state {
                          CpuState::ARM => disasm_arm(&gba.io, pc),
                          CpuState::Thumb => disasm_thumb(&gba.io, pc),
                      }
@@ -139,7 +136,7 @@ impl Debugger {
                             pc
                         };
 
-                        match gba.cpu.state() {
+                        match gba.cpu.state {
                             CpuState::ARM => {
                                 println!("{:08x}: {}", addr, disasm_arm(&gba.io, addr));
                             },

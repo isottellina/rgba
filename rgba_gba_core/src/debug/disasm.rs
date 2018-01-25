@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Tue Jan 23 11:16:16 2018 (+0100)
+// Last-Updated: Thu Jan 25 23:56:11 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -102,7 +102,7 @@ pub fn disasm_arm(io: &Interconnect, offset: u32) -> String {
                             dis.push_str(REGS[(shifted & 0xF) as usize])
                         }
                         Some('s') => if instr & 0x100000 != 0 { dis.push('s'); },
-                        Some('u') => if instr & 0x400000 != 0 { dis.push('u'); },
+                        Some('u') => if instr & 0x400000 == 0 { dis.push('u'); },
                         Some('i') => {
                             if instr & 0x02000000 != 0 {
                                 let imm = instr & 0xFF;

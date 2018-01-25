@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Thu Jan 25 23:52:09 2018 (+0100)
+# Last-Updated: Fri Jan 26 00:14:55 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -399,6 +399,45 @@ def write_mul(g, high):
         g.write("_cpu.carry = true;")
 
     g.write("_cpu.set_register(rd as usize, val);")
+
+def write_mull(g, high):
+    u = ((high >> 2) & 1) != 0
+    a = ((high >> 1) & 1) != 0
+    s = (high & 1) != 0
+
+    g.write("let rd_hi = ((instr >> 16) & 0xF) as usize;")
+    g.write("let rd_lo = ((instr >> 12) & 0xF) as usize;")
+
+    if u:
+        g.write("let rm = ((_cpu.get_register((instr & 0xF) as usize) as i32) as i64) as u64;")
+        g.write("let rs = ((_cpu.get_register(((instr >> 8) & 0xF) as usize) as i32) as i64) as u64;")
+    else:
+        g.write("let rm = _cpu.get_register((instr & 0xF) as usize) as u64;")
+        g.write("let rs = _cpu.get_register(((instr >> 8) & 0xF) as usize) as u64;")
+
+    g.write("if (rs & 0xFFFFFF00 == 0) || (!rs & 0xFFFFFF00 == 0) {")
+    g.write("_io.delay(%d);" % (3 if a else 2), indent = 2)
+    g.write("} else if (rs & 0xFFFF0000 == 0) || (!rs & 0xFFFF0000 == 0) {")
+    g.write("_io.delay(%d);" % (4 if a else 3), indent = 2)
+    g.write("} else if (rs & 0xFF000000 == 0) || (!rs & 0xFF000000 == 0) {")
+    g.write("_io.delay(%d);" % (5 if a else 4), indent = 2)
+    g.write("} else {")
+    g.write("_io.delay(%d);" % (6 if a else 5), indent = 2)
+    g.write("}")
+    
+    if a: # MLAL, UMLAL
+        g.write("let acc = ((_cpu.get_register(rd_hi) as u64) << 32) | (_cpu.get_register(rd_lo) as u64);")
+        g.write("let val = rm.wrapping_mul(rs).wrapping_add(acc);")
+    else: # MULL, UMULL
+        g.write("let val = rm.wrapping_mul(rs);")
+
+    if s:
+        g.write("_cpu.zero = val == 0;")
+        g.write("_cpu.sign = (val as i64) < 0;")
+        g.write("_cpu.carry = true;")
+
+    g.write("_cpu.set_register(rd_hi, (val >> 32) as u32);")
+    g.write("_cpu.set_register(rd_lo, val as u32);")
         
 def write_half(g, high, low):
     pre = ((high >> 4) & 1) != 0
@@ -476,6 +515,8 @@ def write_instruction(g, high, low):
         write_half(g, high, low)
     elif (high & 0xF8) == 0x00 and (low == 9): # Multiply
         write_mul(g, high)
+    elif (high & 0xF8) == 0x08 and (low == 9): # Multiply long
+        write_mull(g, high)
     elif (high & 0xC0) == 0x40: # SDT
         write_sdt(g, high, low)
     elif (high & 0xE0) == 0x80: # BDT

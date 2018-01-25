@@ -3,11 +3,13 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Tue Jan 23 23:06:29 2018 (+0100)
+// Last-Updated: Thu Jan 25 13:58:31 2018 (+0100)
 //           By: Louise <louise>
 // 
 mod memory;
 mod io;
+
+use irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
 
 pub struct GPU {
     // Memory
@@ -30,9 +32,6 @@ pub struct GPU {
     irq_hblank_en: bool,
     irq_vcount_en: bool,
     vcount_match: u16,
-    
-    // IRQ
-    irq_vblank: bool,
 }
 
 impl GPU {
@@ -56,8 +55,6 @@ impl GPU {
             vcount_match: 0,
             
             dispcnt: 0,
-            // IRQ
-            irq_vblank: false,
         }
     }
 
@@ -69,8 +66,8 @@ impl GPU {
     #[inline]
     pub fn is_frame(&self) -> bool { self.is_frame }
     pub fn ack_frame(&mut self) { self.is_frame = false; }
-    
-    pub fn spend_cycles(&mut self, nb_cycles: u32) {
+
+    pub fn spend_cycles(&mut self, nb_cycles: u32, irq: &mut IrqManager) {
         let total_cycles = self.clock + nb_cycles;
 
         let dots = total_cycles >> 2;
@@ -91,7 +88,10 @@ impl GPU {
                     self.increment_lines();
 
                     if self.vcount == 160 {
-                        self.irq_vblank = true;
+                        if self.irq_vblank_en {
+                            irq.raise_irq(IRQ_VBLANK);
+                        }
+                        
                         self.mode = GpuMode::VBlank;
                     } else {
                         self.mode = GpuMode::Visible;
@@ -111,10 +111,6 @@ impl GPU {
             }
         }
     }
-
-    // IRQ
-    pub fn irq_vblank(&self) -> bool { self.irq_vblank }
-    pub fn ack_vblank(&mut self) { self.irq_vblank = false; }
 }
 
 enum GpuMode {

@@ -3,11 +3,13 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Wed Jan 24 12:43:45 2018 (+0100)
+// Last-Updated: Thu Jan 25 13:59:13 2018 (+0100)
 //           By: Louise <louise>
 //
+use cpu::ARM7TDMI;
 use gpu::GPU;
 use apu::APU;
+use irq::IrqManager;
 
 use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;
@@ -29,11 +31,7 @@ pub struct Interconnect {
     waitstates: [[[u32; 2]; 3]; 16],
 
     postflg: u8,
-    ime: bool,
-    halt: bool,
-    i_e: u16,
-
-    pending_interrupt: bool,
+    irq: IrqManager,
 }
 
 impl Interconnect {
@@ -68,10 +66,7 @@ impl Interconnect {
             ],
 
             postflg: 0,
-            ime: false,
-            halt: false,
-            i_e: 0,
-            pending_interrupt: true,
+            irq: IrqManager::new(),
         }
     }
 
@@ -83,8 +78,9 @@ impl Interconnect {
         self.cycles_to_spend += cycles;
     }
 
-    pub fn spend(&mut self) {
-        self.gpu.spend_cycles(self.cycles_to_spend);
+    pub fn spend(&mut self, cpu: &mut ARM7TDMI) {
+        self.gpu.spend_cycles(self.cycles_to_spend, &mut self.irq);
+        self.irq.handle(cpu);
         
         self.cycles_to_spend = 0;
     }
@@ -157,7 +153,7 @@ impl Interconnect {
 
     fn io_read_u16(&self, address: usize) -> u16 {
         match address {
-            IE => self.i_e(),
+            IE => self.irq.i_e,
             0x04000000...0x04000056 => self.gpu.io_read_u16(address),
             0x04000060...0x040000A8 => self.apu.io_read_u16(address),
             _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
@@ -221,30 +217,23 @@ impl Interconnect {
         match address {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
-            IE => self.set_i_e(value),
+            IE => self.irq.i_e = value,
             _ => warn!("Unmapped write_u16 to {:08x} (IO, value={:04x})", address, value),
         }
     }
     
     fn io_write_u8(&mut self, address: usize, value: u8) {
         match address {
-            IME => self.ime = value != 0,
+            IME => self.irq.ime = value != 0,
             POSTFLG => self.postflg = value,
-            HALTCNT => {debug!("Halting!"); self.halt = true }, 
+            HALTCNT => {debug!("Halting!"); self.irq.halt = true }, 
             _ => warn!("Unmapped write_u8 to {:08x} (IO, value={:02x})", address, value),
         }
     }
 
     // IRQ
     #[inline]
-    pub fn halt(&self) -> bool { self.halt }
-    
-    fn i_e(&self) -> u16 { self.i_e }
-    fn set_i_e(&mut self, value: u16) { self.i_e = value; }
-
-    pub fn check_interrupts(&self) -> bool {
-        self.gpu.irq_vblank() && (self.i_e & 0x0001 != 0)
-    }
+    pub fn halt(&self) -> bool { self.irq.halt }
 
     // Frame
     #[inline]

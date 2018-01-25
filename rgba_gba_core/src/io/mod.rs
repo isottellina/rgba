@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Thu Jan 25 13:59:13 2018 (+0100)
+// Last-Updated: Thu Jan 25 22:07:24 2018 (+0100)
 //           By: Louise <louise>
 //
 use cpu::ARM7TDMI;
@@ -22,6 +22,7 @@ pub struct Interconnect {
     rom:  Vec<u8>,
     iram: [u8; 0x8000],
     eram: [u8; 0x40000],
+    io: [u16; 0x200],
 
     gpu: GPU,
     apu: APU,
@@ -41,6 +42,7 @@ impl Interconnect {
             rom:  vec![],
             iram: [0; 0x8000],
             eram: [0; 0x40000],
+            io:   [0; 0x200],
             gpu: GPU::new(),
             apu: APU::new(),
 
@@ -218,16 +220,20 @@ impl Interconnect {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
             IE => self.irq.i_e = value,
+            IME => self.irq.write_ime(value),
             _ => warn!("Unmapped write_u16 to {:08x} (IO, value={:04x})", address, value),
         }
     }
     
     fn io_write_u8(&mut self, address: usize, value: u8) {
         match address {
-            IME => self.irq.ime = value != 0,
-            POSTFLG => self.postflg = value,
-            HALTCNT => {debug!("Halting!"); self.irq.halt = true }, 
-            _ => warn!("Unmapped write_u8 to {:08x} (IO, value={:02x})", address, value),
+            HALTCNT => { debug!("Halting"); self.irq.halt = true; },
+            _ => {
+                let value16 = ((value as u16) << ((address & 1) << 3))
+                    | (self.io[(address & 0x3FF) >> 1] & !(0xFF << ((address & 1) << 3)));
+                
+                self.io_write_u16(address & 0xFFFFFFFE, value16);
+            }
         }
     }
 

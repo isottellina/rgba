@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Wed Jan 24 12:42:29 2018 (+0100)
+// Last-Updated: Thu Jan 25 14:13:19 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -30,6 +30,9 @@ pub struct ARM7TDMI {
 
     pub state: CpuState,
     mode: CpuMode,
+
+    // Lines
+    irq_line: bool,
 }
 
 impl ARM7TDMI {
@@ -45,6 +48,24 @@ impl ARM7TDMI {
         self.fiq = false;
 
         self.fill_pipeline(io);
+    }
+
+    pub fn raise_irq(&mut self) {
+        self.irq_line = true;
+
+        if !self.irq {
+            let old_cpsr = self.cpsr();
+            let old_pc = self.pc + 4;
+            
+            self.state = CpuState::ARM;
+            self.mode = CpuMode::IRQ;
+            self.irq = true;
+            self.irq_line = false;
+            self.set_register(14, old_pc);
+            self.set_spsr(old_cpsr);
+
+            self.pc = 0x18;
+        }
     }
     
     pub fn read_u32(&self, io: &mut Interconnect, address: usize) -> u32 {
@@ -123,7 +144,7 @@ impl ARM7TDMI {
 
         self.irq = (cpsr & 0x00000080) != 0;
         self.fiq = (cpsr & 0x00000040) != 0;
-        // Thumb bit cannot be set by this function
+        self.state = if cpsr & 0x20 != 0 { CpuState::Thumb } else { CpuState::ARM };
         self.mode = CpuMode::from_u32(cpsr & 0x1f);
     }
 

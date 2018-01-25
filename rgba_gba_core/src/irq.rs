@@ -3,7 +3,7 @@
 // Filename: irq.rs
 // Author: Louise <louise>
 // Created: Thu Jan 25 13:07:21 2018 (+0100)
-// Last-Updated: Thu Jan 25 13:59:57 2018 (+0100)
+// Last-Updated: Thu Jan 25 22:11:02 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
@@ -26,16 +26,29 @@ impl IrqManager {
     pub fn raise_irq(&mut self, irq: u16) {
         self.i_f |= irq;
 
-        self.halt = false;
-
-        if self.ime && (self.i_f & self.i_e != 0) {
-            self.pending = true;
+        if self.i_f & self.i_e != 0 {
+            self.halt = false;
+            
+            if self.ime {
+                self.pending = true;
+            }
         }
     }
 
     pub fn handle(&mut self, cpu: &mut ARM7TDMI) {
         if self.pending {
             cpu.raise_irq();
+
+            self.pending = false;
+        }
+    }
+
+    #[inline]
+    pub fn write_ime(&mut self, value: u16) {
+        self.ime = (value & 1) != 0;
+
+        if self.ime && (self.i_f & self.i_e != 0) {
+            self.pending = true;
         }
     }
 }

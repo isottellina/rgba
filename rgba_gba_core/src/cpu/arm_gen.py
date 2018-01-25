@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Wed Jan 24 12:38:07 2018 (+0100)
+# Last-Updated: Thu Jan 25 20:32:55 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -223,7 +223,10 @@ def write_alu(g, high, low):
         g.write("if rd != 15 { _cpu.sign = (res as i32) < 0; _cpu.zero = res == 0; }")
     if not test:
         g.write("_cpu.set_register(rd as usize, res);")
-        g.write("if rd == 15 { unimplemented!(\"Setting r15 via ALU\"); }")
+        g.write("if rd == 15 {")
+        if s: g.write("let spsr = _cpu.spsr(); _cpu.set_cpsr(spsr);", indent = 2)
+        g.write("_cpu.branch(_io);", indent = 2)
+        g.write("}")
 
 def write_psr(g, high, low):
     reg = "cpsr" if (high & 0x04 == 0) else "spsr"
@@ -246,7 +249,6 @@ def write_sdt(g, high, low):
     wb = high & 0x02 != 0
     
     g.write("let rd = (instr >> 12) & 0xF;")
-    g.write("if rd == 15 { unimplemented!(\"Writing to r15\"); }")
     g.write("let rn = (instr >> 16) & 0xF;")
     
     if high & 0x20 == 0:
@@ -271,9 +273,9 @@ def write_sdt(g, high, low):
             g.write("_cpu.write_u32(_io, addr as usize, val);")
     else:
         if high & 0x04 != 0: # Byte quantity
-            g.write("let res = _cpu.read_u8(_io, addr as usize) as u32;")
+            g.write("let mut res = _cpu.read_u8(_io, addr as usize) as u32;")
         else: # Word quantity
-            g.write("let res = if addr & 3 != 0 { ")
+            g.write("let mut res = if addr & 3 != 0 { ")
             g.write(
                 "let rot = (addr & 3) << 3; _cpu.read_u32(_io, (addr & !3) as usize).rotate_right(rot)",
                 indent = 2
@@ -282,6 +284,10 @@ def write_sdt(g, high, low):
             g.write("_cpu.read_u32(_io, addr as usize)", indent = 2)
             g.write("};")
         g.write("_cpu.set_register(rd as usize, res);")
+        g.write("if rd == 15 {")
+        g.write("if res & 1 != 0 { _cpu.state = CpuState::Thumb; res &= !1; } else { res &= !3; }",indent = 2)
+        g.write("_cpu.branch(_io);", indent = 2)
+        g.write("}")
 
     if not pre:
         if high & 0x08 != 0:

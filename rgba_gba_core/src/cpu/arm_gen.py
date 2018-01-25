@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Thu Jan 25 20:32:55 2018 (+0100)
+# Last-Updated: Thu Jan 25 23:00:02 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -468,7 +468,7 @@ def write_instruction(g, high, low):
         write_branch(g, high, low)
     elif high == 0x12 and low == 1: # BX
         write_branch_exchange(g)
-    elif (high & 0xD9) == 0x10: # PSR transfer
+    elif ((high & 0xFB) == 0x32) or ((high & 0xF9 == 0x10) and low == 0): # PSR transfer
         write_psr(g, high, low)
     elif (high & 0xC0) == 0x00 and not ((high & 0x20 == 0) and (low & 9 == 9)): # ALU
         write_alu(g, high, low)

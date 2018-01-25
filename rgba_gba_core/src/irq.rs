@@ -3,7 +3,7 @@
 // Filename: irq.rs
 // Author: Louise <louise>
 // Created: Thu Jan 25 13:07:21 2018 (+0100)
-// Last-Updated: Thu Jan 25 22:11:02 2018 (+0100)
+// Last-Updated: Thu Jan 25 22:14:41 2018 (+0100)
 //           By: Louise <louise>
 // 
 use cpu::ARM7TDMI;
@@ -43,6 +43,11 @@ impl IrqManager {
         }
     }
 
+    #[inline]
+    pub fn write_if(&mut self, i_f: u16) {
+        self.i_f &= !i_f;
+    }
+    
     #[inline]
     pub fn write_ime(&mut self, value: u16) {
         self.ime = (value & 1) != 0;

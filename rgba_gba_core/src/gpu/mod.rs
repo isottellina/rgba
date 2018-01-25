@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Thu Jan 25 22:11:46 2018 (+0100)
+// Last-Updated: Thu Jan 25 23:09:00 2018 (+0100)
 //           By: Louise <louise>
 // 
 mod memory;
@@ -59,8 +59,12 @@ impl GPU {
     }
 
     #[inline]
-    fn increment_lines(&mut self) {
+    fn increment_lines(&mut self, irq: &mut IrqManager) {
         self.vcount = (self.vcount + 1) % 228;
+
+        if self.vcount == self.vcount_match {
+            irq.raise_irq(IRQ_VCOUNT);
+        }
     }
 
     #[inline]
@@ -79,13 +83,17 @@ impl GPU {
         match self.mode {
             GpuMode::Visible => {
                 if self.dots >= 240 {
+                    if self.irq_hblank_en {
+                        irq.raise_irq(IRQ_HBLANK);
+                    }
+                    
                     self.mode = GpuMode::HBlank;
                 }
             }
             GpuMode::HBlank => {
                 while self.dots >= 308 {
                     self.dots -= 308;
-                    self.increment_lines();
+                    self.increment_lines(irq);
 
                     if self.vcount == 160 {
                         if self.irq_vblank_en {
@@ -101,7 +109,7 @@ impl GPU {
             GpuMode::VBlank => {
                 while self.dots >= 308 {
                     self.dots -= 308;
-                    self.increment_lines();
+                    self.increment_lines(irq);
 
                     if self.vcount == 0 {
                         self.is_frame = true;

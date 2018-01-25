@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Thu Jan 25 22:07:24 2018 (+0100)
+// Last-Updated: Thu Jan 25 23:07:31 2018 (+0100)
 //           By: Louise <louise>
 //
 use cpu::ARM7TDMI;
@@ -93,6 +93,7 @@ impl Interconnect {
                 LittleEndian::read_u32(&self.bios[address..]),
             0x03000000 =>
                 LittleEndian::read_u32(&self.iram[(address & 0x7fff)..]),
+            0x04000000 => self.io_read_u32(address),
             0x05000000 => self.gpu.pram_read_u32(address),
             0x06000000 => self.gpu.vram_read_u32(address),
             0x07000000 => self.gpu.oam_read_u32(address),
@@ -153,9 +154,20 @@ impl Interconnect {
         }
     }
 
+    fn io_read_u32(&self, address: usize) -> u32 {
+        match address {
+            _ => {
+                (self.io_read_u16(address & 0xFFFFFFFC) as u32)
+                    | ((self.io_read_u16((address & 0xFFFFFFFE) | 2) as u32) << 16)
+            }
+        }
+    }
+    
     fn io_read_u16(&self, address: usize) -> u16 {
         match address {
+            KEYINPUT => 0x01FFF,
             IE => self.irq.i_e,
+            IF => self.irq.i_f,
             0x04000000...0x04000056 => self.gpu.io_read_u16(address),
             0x04000060...0x040000A8 => self.apu.io_read_u16(address),
             _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
@@ -163,7 +175,10 @@ impl Interconnect {
     }
     
     fn io_read_u8(&self, address: usize) -> u8 {
-        (self.io_read_u16(address & 0xFFFFFFFE) >> ((address & 0x1) << 3)) as u8
+        match address {
+            POSTFLG => self.postflg,
+            _ => (self.io_read_u16(address & 0xFFFFFFFE) >> ((address & 0x1) << 3)) as u8,
+        }
     }
 
     pub fn write_u32(&mut self, address: usize, value: u32) {
@@ -220,6 +235,7 @@ impl Interconnect {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
             IE => self.irq.i_e = value,
+            IF => self.irq.write_if(value),
             IME => self.irq.write_ime(value),
             _ => warn!("Unmapped write_u16 to {:08x} (IO, value={:04x})", address, value),
         }
@@ -228,6 +244,7 @@ impl Interconnect {
     fn io_write_u8(&mut self, address: usize, value: u8) {
         match address {
             HALTCNT => { debug!("Halting"); self.irq.halt = true; },
+            POSTFLG => self.postflg = value,
             _ => {
                 let value16 = ((value as u16) << ((address & 1) << 3))
                     | (self.io[(address & 0x3FF) >> 1] & !(0xFF << ((address & 1) << 3)));
@@ -287,7 +304,9 @@ impl Interconnect {
     }
 }
 
-const IE:      usize = 0x04000200;
-const IME:     usize = 0x04000208;
-const POSTFLG: usize = 0x04000300;
-const HALTCNT: usize = 0x04000301;
+const KEYINPUT: usize = 0x04000130;
+const IE:       usize = 0x04000200;
+const IF:       usize = 0x04000202;
+const IME:      usize = 0x04000208;
+const POSTFLG:  usize = 0x04000300;
+const HALTCNT:  usize = 0x04000301;

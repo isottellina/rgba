@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Thu Jan 25 23:00:02 2018 (+0100)
+# Last-Updated: Thu Jan 25 23:52:09 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -474,7 +474,7 @@ def write_instruction(g, high, low):
         write_alu(g, high, low)
     elif (high & 0xE0) == 0x00 and (low & 0x9) == 0x9 and (low != 9): # Halfword
         write_half(g, high, low)
-    elif (high & 0xF0) == 0x00 and (low == 9):
+    elif (high & 0xF8) == 0x00 and (low == 9): # Multiply
         write_mul(g, high)
     elif (high & 0xC0) == 0x40: # SDT
         write_sdt(g, high, low)

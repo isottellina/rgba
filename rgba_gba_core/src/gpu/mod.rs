@@ -3,13 +3,15 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Thu Jan 25 23:09:00 2018 (+0100)
+// Last-Updated: Fri Jan 26 13:08:30 2018 (+0100)
 //           By: Louise <louise>
 // 
 mod memory;
 mod io;
 
 use irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
+
+use rgba_common::Platform;
 
 pub struct GPU {
     // Memory
@@ -68,6 +70,13 @@ impl GPU {
     }
 
     #[inline]
+    pub fn render<T: Platform>(&mut self, _: &mut T) {
+        if let Some(line) = self.render_line {
+            self.render_line = None;
+        }
+    }
+
+    #[inline]
     pub fn is_frame(&self) -> bool { self.is_frame }
     pub fn ack_frame(&mut self) { self.is_frame = false; }
 
@@ -93,6 +102,7 @@ impl GPU {
             GpuMode::HBlank => {
                 while self.dots >= 308 {
                     self.dots -= 308;
+                    self.render_line = Some(self.vcount);
                     self.increment_lines(irq);
 
                     if self.vcount == 160 {

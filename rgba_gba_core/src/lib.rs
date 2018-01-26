@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Thu Jan 25 13:16:11 2018 (+0100)
+// Last-Updated: Fri Jan 26 13:07:26 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -70,6 +70,7 @@ impl GBA {
         );
         
         platform.set_title(s);
+        platform.present();
         
         self.last_frame = Instant::now();
         while let Some(event) = platform.poll_event() {
@@ -103,6 +104,7 @@ impl Core for GBA {
             }
             
             self.io.spend(&mut self.cpu);
+            self.io.render(platform)
         }
     }
     

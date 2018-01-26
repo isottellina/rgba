@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Sun Jan 21 22:26:01 2018 (+0100)
-// Last-Updated: Mon Jan 22 15:51:10 2018 (+0100)
+// Last-Updated: Fri Jan 26 14:57:38 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -37,7 +37,9 @@ impl APU {
     pub fn io_write_u16(&mut self, address: usize, value: u16) {
         match address {
             SOUNDBIAS => self.set_soundbias(value),
-            _ => warn!("Unmapped write_u16 to {:08x} (APU, value={:04x})", address, value),
+            // We don't log unknown APU writes yet, because we don't really care for now
+            // _ => warn!("Unmapped write_u16 to {:08x} (APU, value={:04x})", address, value),
+            _ => { }
         }
     }
 }

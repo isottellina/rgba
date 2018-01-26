@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Thu Jan 25 23:07:31 2018 (+0100)
+// Last-Updated: Fri Jan 26 13:04:29 2018 (+0100)
 //           By: Louise <louise>
 //
 use cpu::ARM7TDMI;
@@ -16,6 +16,8 @@ use std::fs::File;
 use std::io::Read;
 
 #[macro_use] mod macros;
+
+use rgba_common::Platform;
 
 pub struct Interconnect {
     bios: Vec<u8>,
@@ -85,6 +87,10 @@ impl Interconnect {
         self.irq.handle(cpu);
         
         self.cycles_to_spend = 0;
+    }
+
+    pub fn render<T: Platform>(&mut self, platform: &mut T) {
+        self.gpu.render(platform);
     }
     
     pub fn read_u32(&self, address: usize) -> u32 {

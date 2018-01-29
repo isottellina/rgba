@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Fri Jan 26 13:08:30 2018 (+0100)
+// Last-Updated: Tue Jan 30 00:00:47 2018 (+0100)
 //           By: Louise <louise>
 // 
 mod memory;
@@ -34,6 +34,19 @@ pub struct GPU {
     irq_hblank_en: bool,
     irq_vcount_en: bool,
     vcount_match: u16,
+
+    // Backgrounds
+    bg: [Background; 4],
+
+    // Windows
+    win: [Window; 2],
+    winin: u16,
+    winout: u16,
+
+    // Blend effect
+    bldcnt: u16,
+    bldalpha: u16,
+    bldy: u16,
 }
 
 impl GPU {
@@ -57,6 +70,15 @@ impl GPU {
             vcount_match: 0,
             
             dispcnt: 0,
+
+            bg: Default::default(),
+            win: Default::default(),
+            winin: 0,
+            winout: 0,
+
+            bldcnt: 0,
+            bldalpha: 0,
+            bldy: 0,
         }
     }
 
@@ -135,4 +157,24 @@ enum GpuMode {
     Visible,
     HBlank,
     VBlank,
+}
+
+#[derive(Default)]
+struct Background {
+    pub cnt: u16,
+    pub h_off: u16,
+    pub v_off: u16,
+
+    pub x_ref: u32,
+    pub y_ref: u32,
+    pub par_a: u16,
+    pub par_b: u16,
+    pub par_c: u16,
+    pub par_d: u16,
+}
+
+#[derive(Default)]
+struct Window {
+    pub h_off: u16,
+    pub v_off: u16,
 }

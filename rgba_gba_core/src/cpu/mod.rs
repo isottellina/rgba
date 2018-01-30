@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Thu Jan 25 23:50:01 2018 (+0100)
+// Last-Updated: Tue Jan 30 23:56:43 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -66,6 +66,19 @@ impl ARM7TDMI {
 
             self.pc = 0x18;
         }
+    }
+
+    pub fn raise_swi(&mut self) {
+        let old_cpsr = self.cpsr();
+        let old_pc = self.pc;
+
+        self.state = CpuState::ARM;
+        self.mode = CpuMode::SVC;
+        self.irq = true;
+        self.set_register(14, old_pc);
+        self.set_spsr(old_cpsr);
+
+        self.pc = 0x08;
     }
     
     pub fn read_u32(&self, io: &mut Interconnect, address: usize) -> u32 {

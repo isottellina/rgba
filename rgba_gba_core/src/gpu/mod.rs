@@ -3,15 +3,23 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Tue Jan 30 00:00:47 2018 (+0100)
+// Last-Updated: Tue Jan 30 23:34:34 2018 (+0100)
 //           By: Louise <louise>
 // 
+// General modules
 mod memory;
 mod io;
 
+// Rendering
+mod render;
+mod tiles;
+
+// BG modes
+mod mode0;
+
 use irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
 
-use rgba_common::Platform;
+use rgba_common::Color;
 
 pub struct GPU {
     // Memory
@@ -88,13 +96,6 @@ impl GPU {
 
         if self.vcount == self.vcount_match {
             irq.raise_irq(IRQ_VCOUNT);
-        }
-    }
-
-    #[inline]
-    pub fn render<T: Platform>(&mut self, _: &mut T) {
-        if let Some(line) = self.render_line {
-            self.render_line = None;
         }
     }
 
@@ -177,4 +178,16 @@ struct Background {
 struct Window {
     pub h_off: u16,
     pub v_off: u16,
+}
+
+pub struct DisplayLine {
+    pub bg0: [u16; 240],
+    pub bg1: [u16; 240],
+    pub bg2: [u16; 240],
+    pub bg3: [u16; 240],
+
+    pub bg_enabled: [bool; 4],
+    
+    pub obj: [u16; 240],
+    pub obj_data: [u8; 240],
 }

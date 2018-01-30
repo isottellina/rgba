@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 24 12:37:17 2018 (+0100)
+# Last-Updated: Tue Jan 30 23:55:34 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -335,6 +335,9 @@ def write_f16(g, high):
     g.write("_cpu.branch(_io);", indent = 2)
     g.write("}")
 
+def write_f17(g, high):
+    g.write("_cpu.raise_swi();")
+    
 def write_f18(g, high):
     g.write("let offset = (((instr << 5) as i16) >> 4) as i32;")
     g.write("_cpu.registers[15] = ((_cpu.registers[15] as i32) + offset) as u32;")
@@ -388,6 +391,8 @@ def write_instruction(g, high):
         write_f15(g, high)
     elif high & 0xF0 == 0xD0 and high & 0xF != 0xF:
         write_f16(g, high)
+    elif high == 0xDF:
+        write_f17(g, high)
     elif high & 0xF8 == 0xE0:
         write_f18(g, high)
     elif high & 0xF0 == 0xF0:

@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Tue Jan 30 23:56:43 2018 (+0100)
+// Last-Updated: Wed Jan 31 12:42:54 2018 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -125,7 +125,7 @@ impl ARM7TDMI {
             CpuMode::SVC if (n == 13) || (n == 14) => self.registers[n + 5],
             CpuMode::UND if (n == 13) || (n == 14) => self.registers[n + 7],
             CpuMode::ABT if (n == 13) || (n == 14) => self.registers[n + 9],
-            CpuMode::FIQ if (n >= 8) || (n <= 14)  => self.registers[n + 11],
+            CpuMode::FIQ if (n >= 8) && (n <= 14)  => self.registers[n + 11],
             _ => self.registers[n]
         }
     }
@@ -137,7 +137,7 @@ impl ARM7TDMI {
             CpuMode::SVC if (n == 13) || (n == 14) => self.registers[n + 5] = value,
             CpuMode::UND if (n == 13) || (n == 14) => self.registers[n + 7] = value,
             CpuMode::ABT if (n == 13) || (n == 14) => self.registers[n + 9] = value,
-            CpuMode::FIQ if (n >= 8) || (n <= 14)  => self.registers[n + 11] = value,
+            CpuMode::FIQ if (n >= 8) && (n <= 14)  => self.registers[n + 11] = value,
             _ => self.registers[n] = value
         }
     }
@@ -241,6 +241,7 @@ impl ARM7TDMI {
     }
 
     pub fn branch(&mut self, io: &mut Interconnect) {
+        // println!("Branching from {:08x} to {:08x}", self.pc, self.registers[15]);
         self.pc = self.registers[15];
         self.fill_pipeline(io);
     }

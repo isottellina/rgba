@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Wed Jan 31 11:32:53 2018 (+0100)
+# Last-Updated: Wed Jan 31 12:39:14 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -250,6 +250,22 @@ def write_alu(g, high, low):
         g.write("_cpu.branch(_io);", indent = 2)
         g.write("}")
 
+def write_swp(g, high):
+    byte = (high & 0x04) != 0
+
+    g.write("let rn = _cpu.get_register(((instr >> 16) & 0xF) as usize);")
+    g.write("let rm = _cpu.get_register((instr & 0xF) as usize);;")
+    g.write("let rd = (instr >> 12) & 0xF;")
+
+    if byte:
+        g.write("let tmp = _cpu.read_u8(_io, rn as usize);")
+        g.write("_cpu.write_u8(_io, rn as usize, rm as u8);")
+        g.write("_cpu.set_register(rd as usize, tmp as u32);")
+    else:
+        g.write("let tmp = _cpu.read_u32(_io, (rn & 0xFFFFFFFC) as usize).rotate_right((rn & 3) << 3);")
+        g.write("_cpu.write_u32(_io, (rn & 0xFFFFFFFC) as usize, rm);")
+        g.write("_cpu.set_register(rd as usize, tmp);")
+        
 def write_psr(g, high, low):
     reg = "cpsr" if (high & 0x04 == 0) else "spsr"
     
@@ -541,12 +557,14 @@ def write_instruction(g, high, low):
         write_mul(g, high)
     elif (high & 0xF8) == 0x08 and (low == 9): # Multiply long
         write_mull(g, high)
+    elif (high & 0xFB) == 0x10 and (low == 9): # SWP
+        write_swp(g, high)
     elif (high & 0xC0) == 0x40: # SDT
         write_sdt(g, high, low)
     elif (high & 0xE0) == 0x80: # BDT
         write_bdt(g, high, low)
     else:
-        g.write("unimplemented!(\"{:08x}\", instr);")
+        g.write("unimplemented!(\"{:08x} {:08x}\", instr, _cpu.pc);")
 
 g = Generator(0x1000)
     

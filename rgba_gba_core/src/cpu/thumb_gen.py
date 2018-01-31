@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Tue Jan 30 23:55:34 2018 (+0100)
+# Last-Updated: Wed Jan 31 12:14:42 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -398,7 +398,7 @@ def write_instruction(g, high):
     elif high & 0xF0 == 0xF0:
         write_f19(g, high)
     else:
-        g.write("unimplemented!(\"{:04x}\", instr);")
+        g.write("unimplemented!(\"{:04x} {:08x}\", instr, _cpu.pc);")
 
 def write_alu(op):
     print("#[allow(unreachable_code, unused_variables, unused_assignments)]")

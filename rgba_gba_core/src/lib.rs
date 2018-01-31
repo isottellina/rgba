@@ -3,19 +3,20 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Fri Jan 26 13:07:26 2018 (+0100)
+// Last-Updated: Wed Jan 31 01:01:00 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
 extern crate byteorder;
 extern crate rgba_common;
-use rgba_common::{Console, Core, Platform};
+use rgba_common::{Console, Core, Platform, Event, Key};
 use rgba_common::fnv_hash;
 
 mod debug;
 mod cpu;
 mod io;
 mod irq;
+mod keypad;
 mod gpu;
 mod apu;
 
@@ -75,8 +76,30 @@ impl GBA {
         self.last_frame = Instant::now();
         while let Some(event) = platform.poll_event() {
             match event {
-                rgba_common::Event::Debug => debugger.trigger(),
-                rgba_common::Event::Quit => self.state = false,
+                Event::Debug => debugger.trigger(),
+                Event::Quit => self.state = false,
+
+                // Key down
+                Event::KeyDown(Key::A) => self.io.keypad.a_button = true,
+                Event::KeyDown(Key::B) => self.io.keypad.b_button = true,
+                Event::KeyDown(Key::Start) => self.io.keypad.start = true,
+                Event::KeyDown(Key::Select) => self.io.keypad.select = true,
+                
+                Event::KeyDown(Key::Left) => self.io.keypad.left = true,
+                Event::KeyDown(Key::Right) => self.io.keypad.right = true,
+                Event::KeyDown(Key::Up) => self.io.keypad.up = true,
+                Event::KeyDown(Key::Down) => self.io.keypad.down = true,
+                
+                // Key up
+                Event::KeyUp(Key::A) => self.io.keypad.a_button = false,
+                Event::KeyUp(Key::B) => self.io.keypad.b_button = false,
+                Event::KeyUp(Key::Start) => self.io.keypad.start = false,
+                Event::KeyUp(Key::Select) => self.io.keypad.select = false,
+                
+                Event::KeyUp(Key::Left) => self.io.keypad.left = false,
+                Event::KeyUp(Key::Right) => self.io.keypad.right = false,
+                Event::KeyUp(Key::Up) => self.io.keypad.up = false,
+                Event::KeyUp(Key::Down) => self.io.keypad.down = false,
                 _ => (),
             }
         }

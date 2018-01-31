@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Tue Jan 30 23:34:34 2018 (+0100)
+// Last-Updated: Wed Jan 31 00:46:31 2018 (+0100)
 //           By: Louise <louise>
 // 
 // General modules
@@ -16,6 +16,7 @@ mod tiles;
 
 // BG modes
 mod mode0;
+mod mode4;
 
 use irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
 
@@ -154,7 +155,8 @@ impl GPU {
     }
 }
 
-enum GpuMode {
+#[derive(PartialEq, Eq)]
+pub enum GpuMode {
     Visible,
     HBlank,
     VBlank,

@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Wed Jan 31 00:04:41 2018 (+0100)
+# Last-Updated: Wed Jan 31 11:32:53 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -112,22 +112,41 @@ def write_op2_reg(g, low, s):
         g.write("let op2 = if amount != 0 {")
         if shift == 0:
             if s:
-                g.write("let tmp = rm << (amount - 1); _cpu.carry = (tmp >> 31) != 0;", indent = 2)
-                g.write("tmp << 1", indent = 2)
+                g.write("if amount < 32 {", indent = 2)
+                g.write("let tmp = rm << (amount - 1); _cpu.carry = (tmp >> 31) != 0;", indent = 3)
+                g.write("tmp << 1", indent = 3)
+                g.write("} else if amount == 32 {", indent = 2)
+                g.write("_cpu.carry = rm & 1 != 0; 0", indent = 3)
+                g.write("} else {", indent = 2)
+                g.write("_cpu.carry = false; 0", indent = 3)
+                g.write("}")
             else:
-                g.write("rm << amount", indent = 2)
+                g.write("if amount < 32 { rm << amount } else { 0 }", indent = 2)
         elif shift == 1:
             if s:
-                g.write("let tmp = rm >> (amount - 1); _cpu.carry = (tmp & 1) != 0;", indent = 2)
-                g.write("tmp >> 1", indent = 2)
+                g.write("if amount < 32 {", indent = 2)
+                g.write("let tmp = rm >> (amount - 1); _cpu.carry = (tmp & 1) != 0;", indent = 3)
+                g.write("tmp >> 1", indent = 3)
+                g.write("} else if amount == 32 {", indent = 2)
+                g.write("_cpu.carry = rm & 0x80000000 != 0; 0", indent = 3)
+                g.write("} else {", indent = 2)
+                g.write("_cpu.carry = false; 0", indent = 3)
+                g.write("}", indent = 2)
             else:
-                g.write("rm >> amount", indent = 2)
+                g.write("if amount < 32 { rm >> amount } else { 0 }", indent = 2)
         elif shift == 2:
             if s:
-                g.write("let tmp = ((rm as i32) >> (amount - 1)) as u32; _cpu.carry = tmp & 1 != 0;",indent=2)
-                g.write("((tmp as i32) >> 1) as u32", indent = 2)
+                g.write("if amount < 32 {", indent = 2)
+                g.write("let tmp = ((rm as i32) >> (amount - 1)) as u32; _cpu.carry = tmp & 1 != 0;",indent=3)
+                g.write("((tmp as i32) >> 1) as u32", indent = 3)
+                g.write("} else {", indent = 2)
+                g.write("_cpu.carry = rm & 0x80000000 != 0; ((rm as i32) >> 31) as u32", indent = 3)
+                g.write("}", indent = 2)
             else:
-                g.write("((rm as i32) >> amount) as u32", indent = 2)
+                g.write(
+                    "if amount < 32 { ((rm as i32) >> amount) as u32 } else { ((rm as i32) >> 31) as u32 }",
+                    indent = 2
+                )
         elif shift == 3:
             g.write("let op2 = rm.rotate_right(amount);", indent = 2)
             if s:

@@ -3,7 +3,7 @@
 // Filename: memory.rs
 // Author: Louise <louise>
 // Created: Tue Jan 23 16:22:07 2018 (+0100)
-// Last-Updated: Tue Jan 23 16:27:54 2018 (+0100)
+// Last-Updated: Wed Jan 31 10:40:41 2018 (+0100)
 //           By: Louise <louise>
 // 
 use byteorder::{ByteOrder, LittleEndian};
@@ -20,7 +20,7 @@ impl GPU {
     #[inline]
     pub fn vram_write_u32(&mut self, address: usize, value: u32) {
         LittleEndian::write_u32(
-            &mut self.vram[(address & 0x17fff)..], value
+            &mut self.vram[(address & 0x1ffff)..], value
         );
     }
 
@@ -41,7 +41,7 @@ impl GPU {
     #[inline]
     pub fn vram_write_u16(&mut self, address: usize, value: u16) {
         LittleEndian::write_u16(
-            &mut self.vram[(address & 0x17fff)..], value
+            &mut self.vram[(address & 0x1ffff)..], value
         );
     }
 
@@ -62,7 +62,7 @@ impl GPU {
     #[inline]
     pub fn vram_read_u32(&self, address: usize) -> u32{
         LittleEndian::read_u32(
-            &self.vram[(address & 0x17fff)..]
+            &self.vram[(address & 0x1ffff)..]
         )
     }
 
@@ -83,7 +83,7 @@ impl GPU {
     #[inline]
     pub fn vram_read_u16(&self, address: usize) -> u16{
         LittleEndian::read_u16(
-            &self.vram[(address & 0x17fff)..]
+            &self.vram[(address & 0x1ffff)..]
         )
     }
 

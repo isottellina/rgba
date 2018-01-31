@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Wed Jan 31 00:58:01 2018 (+0100)
+// Last-Updated: Wed Jan 31 01:39:53 2018 (+0100)
 //           By: Louise <louise>
 //
 use cpu::ARM7TDMI;
@@ -252,8 +252,8 @@ impl Interconnect {
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
 
             // Ignore DMA writes for now
-            0x040000c6 => { }
-            0x040000d2 => { }
+            // 0x040000c6 => { }
+            // 0x040000d2 => { }
             
             IE => self.irq.i_e = value,
             IF => self.irq.write_if(value),

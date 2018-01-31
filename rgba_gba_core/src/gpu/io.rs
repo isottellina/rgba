@@ -3,16 +3,37 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Tue Jan 23 16:22:52 2018 (+0100)
-// Last-Updated: Tue Jan 30 00:02:42 2018 (+0100)
+// Last-Updated: Wed Jan 31 01:11:32 2018 (+0100)
 //           By: Louise <louise>
 // 
 use gpu::GPU;
+use gpu::GpuMode;
 
 impl GPU {
     #[inline]
     pub fn io_read_u16(&self, address: usize) -> u16 {
         match address {
+            DISPCNT => self.dispcnt,
+            DISPSTAT => {
+                ((self.mode == GpuMode::VBlank) as u16) |
+                (((self.mode == GpuMode::HBlank) as u16) << 1) |
+                (((self.vcount == self.vcount_match) as u16) << 2) |
+                ((self.irq_vblank_en as u16) << 3) |
+                ((self.irq_hblank_en as u16) << 4) |
+                ((self.irq_vcount_en as u16) << 5) |
+                (self.vcount_match << 8)
+            },
             VCOUNT => self.vcount,
+
+            // Background control
+            BG0CNT  => self.bg[0].cnt,
+            BG1CNT  => self.bg[1].cnt,
+            BG2CNT  => self.bg[2].cnt,
+            BG3CNT  => self.bg[3].cnt,
+            
+            // Unused
+            0x04000002 => 0,
+            
             _ => { warn!("Unmapped read_u16 from {:08x} (GPU)", address); 0 },
         }
     }

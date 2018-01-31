@@ -3,7 +3,7 @@
 // Filename: disasm.rs
 // Author: Louise <louise>
 // Created: Mon Jan  8 14:49:33 2018 (+0100)
-// Last-Updated: Thu Jan 25 23:56:11 2018 (+0100)
+// Last-Updated: Wed Jan 31 00:15:00 2018 (+0100)
 //           By: Louise <louise>
 // 
 use io::Interconnect;
@@ -26,11 +26,12 @@ const REGS: [&str; 16] = [
     "r12", "sp", "lr", "pc"
 ];
 
-const ARM_INSTRS: [(u32, u32, &str); 32] = [
+const ARM_INSTRS: [(u32, u32, &str); 33] = [
     // Branches
     (0x0F000000, 0x0A000000, "b%c %o"),
     (0x0F000000, 0x0B000000, "bl%c %o"),
     (0x0FFFFFF0, 0x012FFF10, "bx%c %r0"),
+    (0x0F000000, 0x0F000000, "swi %w"),
     // PSR Transfer
     (0x0FBF0FFF, 0x010F0000, "msr%c %r3, %p"),
     (0x0DB0F000, 0x0120F000, "msr%c %p, %i"),
@@ -389,6 +390,7 @@ pub fn disasm_thumb(io: &Interconnect, offset: u32) -> String {
                             
                             dis.push_str(REGS[(shifted & 0x7) as usize])
                         }
+                        Some('w') => { dis.push_str(&format!("0x{:02x}", instr & 0xFF)); }
                         Some('h') => {
                             let r = (instr >> it.next().unwrap().to_digit(10).unwrap()) & 7;
                             let h = (instr & (1 << it.next().unwrap().to_digit(10).unwrap())) != 0;

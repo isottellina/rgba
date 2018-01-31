@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Fri Jan 26 00:14:55 2018 (+0100)
+# Last-Updated: Wed Jan 31 00:04:41 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -60,6 +60,9 @@ def write_branch_exchange(g):
     g.write("if dest & 1 != 0 { _cpu.state = CpuState::Thumb; }")
     g.write("_cpu.registers[15] = dest & 0xFFFFFFFE;")
     g.write("_cpu.branch(_io);")
+
+def write_swi(g):
+    g.write("_cpu.raise_swi();")
     
 def write_op2_imm(g, high, low):
     s = (high & 0x01) != 0
@@ -507,6 +510,8 @@ def write_instruction(g, high, low):
         write_branch(g, high, low)
     elif high == 0x12 and low == 1: # BX
         write_branch_exchange(g)
+    elif high & 0xF0 == 0xF0: # SWI
+        write_swi(g)
     elif ((high & 0xFB) == 0x32) or ((high & 0xF9 == 0x10) and low == 0): # PSR transfer
         write_psr(g, high, low)
     elif (high & 0xC0) == 0x00 and not ((high & 0x20 == 0) and (low & 9 == 9)): # ALU

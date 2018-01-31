@@ -3,12 +3,13 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Tue Jan 30 00:04:33 2018 (+0100)
+// Last-Updated: Wed Jan 31 00:58:01 2018 (+0100)
 //           By: Louise <louise>
 //
 use cpu::ARM7TDMI;
 use gpu::GPU;
 use apu::APU;
+use keypad::Keypad;
 use irq::IrqManager;
 
 use byteorder::{ByteOrder, LittleEndian};
@@ -28,6 +29,7 @@ pub struct Interconnect {
 
     gpu: GPU,
     apu: APU,
+    pub keypad: Keypad,
 
     cycles_to_spend: u32,
     rom_len: usize,
@@ -47,6 +49,7 @@ impl Interconnect {
             io:   [0; 0x200],
             gpu: GPU::new(),
             apu: APU::new(),
+            keypad: Keypad::default(),
 
             cycles_to_spend: 0,
             rom_len: 0,
@@ -97,6 +100,8 @@ impl Interconnect {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 =>
                 LittleEndian::read_u32(&self.bios[address..]),
+            0x02000000 =>
+                LittleEndian::read_u32(&self.eram[(address & 0x3ffff)..]),
             0x03000000 =>
                 LittleEndian::read_u32(&self.iram[(address & 0x7fff)..]),
             0x04000000 => self.io_read_u32(address),
@@ -171,7 +176,7 @@ impl Interconnect {
     
     fn io_read_u16(&self, address: usize) -> u16 {
         match address {
-            KEYINPUT => 0x01FFF,
+            KEYINPUT => self.keypad.as_register(),
             IE => self.irq.i_e,
             IF => self.irq.i_f,
             0x04000000...0x04000056 => self.gpu.io_read_u16(address),
@@ -207,6 +212,9 @@ impl Interconnect {
     pub fn write_u16(&mut self, address: usize, value: u16) {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            0x02000000 => LittleEndian::write_u16(
+                &mut self.eram[(address & 0x3ffff)..], value
+            ),
             0x03000000 => LittleEndian::write_u16(
                 &mut self.iram[(address & 0x7fff)..], value
             ),

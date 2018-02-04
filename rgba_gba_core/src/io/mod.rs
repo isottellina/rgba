@@ -3,14 +3,23 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Wed Jan 31 01:39:53 2018 (+0100)
+// Last-Updated: Sun Feb  4 02:03:10 2018 (+0100)
 //           By: Louise <louise>
 //
+mod dma;
+
 use cpu::ARM7TDMI;
 use gpu::GPU;
 use apu::APU;
 use keypad::Keypad;
 use irq::IrqManager;
+use io::dma::DmaChannel;
+
+// Import DMA I/O ports
+use io::dma::{DMA0SAD_L, DMA0SAD_H, DMA0DAD_L, DMA0DAD_H, DMA0CNT_L, DMA0CNT_H};
+use io::dma::{DMA1SAD_L, DMA1SAD_H, DMA1DAD_L, DMA1DAD_H, DMA1CNT_L, DMA1CNT_H};
+use io::dma::{DMA2SAD_L, DMA2SAD_H, DMA2DAD_L, DMA2DAD_H, DMA2CNT_L, DMA2CNT_H};
+use io::dma::{DMA3SAD_L, DMA3SAD_H, DMA3DAD_L, DMA3DAD_H, DMA3CNT_L, DMA3CNT_H};
 
 use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;
@@ -37,6 +46,7 @@ pub struct Interconnect {
 
     postflg: u8,
     irq: IrqManager,
+    dma: [DmaChannel; 4],
 }
 
 impl Interconnect {
@@ -74,6 +84,7 @@ impl Interconnect {
 
             postflg: 0,
             irq: IrqManager::new(),
+            dma: [DmaChannel::new(0), DmaChannel::new(1), DmaChannel::new(2), DmaChannel::new(3)],
         }
     }
 
@@ -237,6 +248,23 @@ impl Interconnect {
 
     fn io_write_u32(&mut self, address: usize, value: u32) {
         match address {
+            // DMA writes are often 32bit so we handle them directly
+            DMA0SAD_L => self.dma[0].source_addr = value,
+            DMA0DAD_L => self.dma[0].dest_addr = value,
+            DMA0CNT_L => self.dma[0].write_cnt(value),
+            
+            DMA1SAD_L => self.dma[1].source_addr = value,
+            DMA1DAD_L => self.dma[1].dest_addr = value,
+            DMA1CNT_L => self.dma[1].write_cnt(value),
+            
+            DMA2SAD_L => self.dma[2].source_addr = value,
+            DMA2DAD_L => self.dma[2].dest_addr = value,
+            DMA2CNT_L => self.dma[2].write_cnt(value),
+            
+            DMA3SAD_L => self.dma[3].source_addr = value,
+            DMA3DAD_L => self.dma[3].dest_addr = value,
+            DMA3CNT_L => self.dma[3].write_cnt(value),
+            
             _ => {
                 self.io_write_u16(address, value as u16);
                 self.io_write_u16(address | 2, (value >> 16) as u16);
@@ -251,9 +279,49 @@ impl Interconnect {
             0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
 
-            // Ignore DMA writes for now
-            // 0x040000c6 => { }
-            // 0x040000d2 => { }
+            DMA0SAD_L =>
+                self.dma[0].source_addr = (self.dma[0].source_addr & 0xffff0000) | (value as u32),
+            DMA0SAD_H =>
+                self.dma[0].source_addr = (self.dma[0].source_addr & 0xffff) | ((value as u32) << 16),
+            DMA0DAD_L =>
+                self.dma[0].dest_addr = (self.dma[0].dest_addr & 0xffff0000) | (value as u32),
+            DMA0DAD_H =>
+                self.dma[0].dest_addr = (self.dma[0].dest_addr & 0xffff) | ((value as u32) << 16),
+            DMA0CNT_L => self.dma[0].word_count = value,
+            DMA0CNT_H => self.dma[0].write_cnt_h(value),
+
+            DMA1SAD_L =>
+                self.dma[1].source_addr = (self.dma[1].source_addr & 0xffff0000) | (value as u32),
+            DMA1SAD_H =>
+                self.dma[1].source_addr = (self.dma[1].source_addr & 0xffff) | ((value as u32) << 16),
+            DMA1DAD_L =>
+                self.dma[1].dest_addr = (self.dma[1].dest_addr & 0xffff0000) | (value as u32),
+            DMA1DAD_H =>
+                self.dma[1].dest_addr = (self.dma[1].dest_addr & 0xffff) | ((value as u32) << 16),
+            DMA1CNT_L => self.dma[1].word_count = value,
+            DMA1CNT_H => self.dma[1].write_cnt_h(value),
+
+            DMA2SAD_L =>
+                self.dma[2].source_addr = (self.dma[2].source_addr & 0xffff0000) | (value as u32),
+            DMA2SAD_H =>
+                self.dma[2].source_addr = (self.dma[2].source_addr & 0xffff) | ((value as u32) << 16),
+            DMA2DAD_L =>
+                self.dma[2].dest_addr = (self.dma[2].dest_addr & 0xffff0000) | (value as u32),
+            DMA2DAD_H =>
+                self.dma[2].dest_addr = (self.dma[2].dest_addr & 0xffff) | ((value as u32) << 16),
+            DMA2CNT_L => self.dma[2].word_count = value,
+            DMA2CNT_H => self.dma[2].write_cnt_h(value),
+
+            DMA3SAD_L =>
+                self.dma[3].source_addr = (self.dma[3].source_addr & 0xffff0000) | (value as u32),
+            DMA3SAD_H =>
+                self.dma[3].source_addr = (self.dma[3].source_addr & 0xffff) | ((value as u32) << 16),
+            DMA3DAD_L =>
+                self.dma[3].dest_addr = (self.dma[3].dest_addr & 0xffff0000) | (value as u32),
+            DMA3DAD_H =>
+                self.dma[3].dest_addr = (self.dma[3].dest_addr & 0xffff) | ((value as u32) << 16),
+            DMA3CNT_L => self.dma[3].word_count = value,
+            DMA3CNT_H => self.dma[3].write_cnt_h(value),
             
             IE => self.irq.i_e = value,
             IF => self.irq.write_if(value),

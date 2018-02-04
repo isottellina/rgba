@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Sun Feb  4 02:03:10 2018 (+0100)
+// Last-Updated: Sun Feb  4 03:21:35 2018 (+0100)
 //           By: Louise <louise>
 //
 mod dma;
@@ -216,6 +216,15 @@ impl Interconnect {
             0x05000000 => self.gpu.pram_write_u32(address, value),
             0x06000000 => self.gpu.vram_write_u32(address, value),
             0x07000000 => self.gpu.oam_write_u32(address, value),
+
+            // Ignore writes to GamePak
+            0x08000000 |
+            0x09000000 |
+            0x0A000000 |
+            0x0B000000 |
+            0x0C000000 |
+            0x0D000000 |
+            0x0E000000 => { }
             _ => warn!("Unmapped write_u32 to {:08x} (value={:08x})", address, value)
         }
     }

@@ -3,7 +3,7 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Wed Jan 31 01:14:40 2018 (+0100)
+// Last-Updated: Sun Feb  4 02:04:12 2018 (+0100)
 //           By: Louise <louise>
 //
 #[macro_use] extern crate log;
@@ -118,7 +118,7 @@ impl Core for GBA {
 
                 self.cpu.next_instruction(&mut self.io);
             } else {
-                self.io.delay(1);
+                self.io.delay(25);
             }
 
             if self.io.is_frame() {

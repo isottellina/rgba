@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Wed Jan 31 12:39:14 2018 (+0100)
+# Last-Updated: Sun Feb  4 03:20:23 2018 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -354,11 +354,16 @@ def write_bdt(g, high, low):
 
     if wb: # Determine WB behavior
         g.write('let wbmode = if list & (1 << rn) != 0 {')
-        g.write("if list & ((1 << rn) - 1) == 0 { 2 } else { 0 }", indent = 2)
+        if load:
+            g.write("0", indent = 2)
+        else:
+            g.write("if list & ((1 << rn) - 1) == 0 { 2 } else { 1 }", indent = 2)
         g.write("} else {")
         g.write("1", indent = 2)
         g.write("};")
-        g.write("let oldrn = _cpu.get_register(rn as usize);")
+        
+        if not load:
+            g.write("let oldrn = _cpu.get_register(rn as usize);")
 
     if not up:
         g.write("let mut addr = (_cpu.get_register(rn as usize) - (list.count_ones() << 2)) as usize;")
@@ -388,20 +393,28 @@ def write_bdt(g, high, low):
                     g.write("_cpu.set_cpsr(spsr);", indent = 2)
                 g.write("_cpu.branch(_io);", indent = 2)
         else:
-            g.write("let val = _cpu.get_register(%d);" % i, indent = 2)
-            g.write("_cpu.write_u32(_io, addr, val);", indent = 2)
+            if wb:
+                g.write("let val = if (rn == %d) && (wbmode == 1) {" % i, indent = 2)
+                if up:
+                    g.write("oldrn + (list.count_ones() << 2)", indent = 3)
+                else:
+                    g.write("lowestrn", indent = 3)
+                g.write("} else {", indent = 2)
+                g.write("_cpu.get_register(%d)" % i, indent = 3)
+                g.write("};", indent = 2)
+            else:
+                g.write("let val = _cpu.get_register(%d);" % i)
+            g.write("_cpu.write_u32(_io, addr, val);", indent = 3)
         
         if not pre: g.write("addr += 4;", indent = 2)
         g.write("}")
 
     if wb:
-        g.write("if wbmode == 1 {")
+        g.write("if wbmode != 0 {")
         if up:
             g.write("_cpu.set_register(rn as usize, addr as u32);", indent = 2)
         else:
             g.write("_cpu.set_register(rn as usize, lowestrn);", indent = 2)
-        g.write("} else if wbmode == 2 {")
-        g.write("_cpu.set_register(rn as usize, oldrn);", indent = 2)
         g.write("}")
 
     if psr:

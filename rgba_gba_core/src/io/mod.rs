@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Sun Feb  4 03:21:35 2018 (+0100)
+// Last-Updated: Wed Feb 14 14:21:18 2018 (+0100)
 //           By: Louise <louise>
 //
 mod dma;
@@ -98,6 +98,18 @@ impl Interconnect {
 
     pub fn spend(&mut self, cpu: &mut ARM7TDMI) {
         self.gpu.spend_cycles(self.cycles_to_spend, &mut self.irq);
+
+        // Handle DMA (immediately)
+        if self.dma[0].start_timing == 0 && self.dma[0].enable {
+            handle_dma!(self, self.dma[0]);
+        } else if self.dma[1].start_timing == 0 && self.dma[1].enable {
+            handle_dma!(self, self.dma[1]);
+        } else if self.dma[2].start_timing == 0 && self.dma[2].enable {
+            handle_dma!(self, self.dma[2]);
+        } else if self.dma[3].start_timing == 0 && self.dma[3].enable {
+            handle_dma!(self, self.dma[3]);
+        }
+        
         self.irq.handle(cpu);
         
         self.cycles_to_spend = 0;

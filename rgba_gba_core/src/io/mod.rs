@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Wed Feb 14 14:21:18 2018 (+0100)
+// Last-Updated: Sun Feb 25 19:29:12 2018 (+0100)
 //           By: Louise <louise>
 //
 mod dma;
@@ -149,6 +149,8 @@ impl Interconnect {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 =>
                 LittleEndian::read_u16(&self.bios[address..]),
+            0x02000000 =>
+                LittleEndian::read_u16(&self.eram[(address & 0x3ffff)..]),
             0x03000000 =>
                 LittleEndian::read_u16(&self.iram[(address & 0x7fff)..]),
             0x04000000 => self.io_read_u16(address),
@@ -172,6 +174,7 @@ impl Interconnect {
     pub fn read_u8(&self, address: usize) -> u8 {
         match address & 0x0F000000 {
             0x00000000 if address < 0x4000 => self.bios[address],
+            0x02000000 => self.eram[address & 0x3ffff],
             0x03000000 => self.iram[address & 0x7fff],
             0x04000000 => self.io_read_u8(address),
             0x08000000 |
@@ -202,6 +205,7 @@ impl Interconnect {
             KEYINPUT => self.keypad.as_register(),
             IE => self.irq.i_e,
             IF => self.irq.i_f,
+            IME => self.irq.ime as u16,
             0x04000000...0x04000056 => self.gpu.io_read_u16(address),
             0x04000060...0x040000A8 => self.apu.io_read_u16(address),
             _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
@@ -217,7 +221,7 @@ impl Interconnect {
 
     pub fn write_u32(&mut self, address: usize, value: u32) {
         match address & 0x0F000000 {
-            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS ({:08x})", address),
             0x02000000 => LittleEndian::write_u32(
                 &mut self.eram[(address & 0x3ffff)..], value
             ),
@@ -243,7 +247,7 @@ impl Interconnect {
 
     pub fn write_u16(&mut self, address: usize, value: u16) {
         match address & 0x0F000000 {
-            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS ({:08x})", address),
             0x02000000 => LittleEndian::write_u16(
                 &mut self.eram[(address & 0x3ffff)..], value
             ),
@@ -260,7 +264,8 @@ impl Interconnect {
     
     pub fn write_u8(&mut self, address: usize, value: u8) {
         match address & 0x0F000000 {
-            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS"),
+            0x00000000 if address < 0x4000 => warn!("Ignored write to BIOS ({:08x})", address),
+            0x02000000 => self.eram[address & 0x3ffff] = value,
             0x03000000 => self.iram[address & 0x7fff] = value,
             0x04000000 => self.io_write_u8(address, value),
             _ => warn!("Unmapped write_u8 to {:08x} (value={:02x})", address, value),

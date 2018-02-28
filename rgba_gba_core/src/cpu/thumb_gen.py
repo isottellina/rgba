@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Wed Jan 31 12:14:42 2018 (+0100)
+# Last-Updated: Sun Feb 25 19:02:48 2018 (+0100)
 #           By: Louise <louise>
 #
 class Generator:
@@ -416,7 +416,7 @@ def write_alu(op):
     if op == 8 or op == 0: # AND, TST
         print("\tlet res = op1 & rs;")
     elif op == 1: # EOR
-        print("\tlet res = op1 | rs;");
+        print("\tlet res = op1 ^ rs;");
     elif op == 2: # LSL
         print("\tlet shift = rs & 0xFF;")
         print("\tlet res = op1 << shift;")

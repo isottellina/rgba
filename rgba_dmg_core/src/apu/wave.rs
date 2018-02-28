@@ -3,7 +3,7 @@
 // Filename: wave.rs
 // Author: Louise <louise>
 // Created: Wed Dec 27 15:27:30 2017 (+0100)
-// Last-Updated: Fri Jan 19 00:34:18 2018 (+0100)
+// Last-Updated: Sat Feb 17 13:55:54 2018 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -92,7 +92,7 @@ impl WaveChannel {
     pub fn render(&self) -> u8 { self.out_volume }
     
     pub fn spend_cycles(&mut self, cycles: u16) {
-        self.timer += cycles;
+        self.timer = self.timer.wrapping_add(cycles);
 
         if self.timer >= self.timer_load {
             self.timer -= self.timer_load;

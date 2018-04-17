@@ -3,7 +3,7 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Sun Feb 25 19:02:48 2018 (+0100)
+# Last-Updated: Tue Apr 17 16:44:03 2018 (+0200)
 #           By: Louise <louise>
 #
 class Generator:
@@ -418,11 +418,11 @@ def write_alu(op):
     elif op == 1: # EOR
         print("\tlet res = op1 ^ rs;");
     elif op == 2: # LSL
-        print("\tlet shift = rs & 0xFF;")
+        print("\tlet shift = rs & 0x1F;")
         print("\tlet res = op1 << shift;")
         print("\tif shift != 0 { _cpu.carry = ((op1 << (shift - 1)) & 0x80000000) != 0; }")
     elif op == 3: # LSR
-        print("\tlet shift = rs & 0xFF;")
+        print("\tlet shift = rs & 0x1F;")
         print("\tlet res = op1 >> shift;")
         print("\tif shift != 0 { _cpu.carry = ((op1 >> (shift - 1)) & 1) != 0; }")
     elif op == 4: # ASR

@@ -3,7 +3,7 @@
 // Filename: tiles.rs
 // Author: Louise <louise>
 // Created: Tue Jan 30 20:58:44 2018 (+0100)
-// Last-Updated: Tue Apr 17 16:31:58 2018 (+0200)
+// Last-Updated: Tue Apr 17 19:46:30 2018 (+0200)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -15,6 +15,13 @@ const TEXT_SCREEN_SIZE: [(u32, u32); 4] = [
     (512, 256),
     (256, 512),
     (512, 512)
+];
+
+const RS_SCREEN_SIZE: [(i32, i32); 4] = [
+    (128,  128),
+    (256,  256),
+    (512,  512),
+    (1024, 1024)
 ];
 
 impl GPU {
@@ -80,6 +87,98 @@ impl GPU {
 
             column += 8;
         }
+
+        // Draw last tile
+        {
+            let screen_x = (column + (x_off as u32)) & (screen_width - 1);
+            let screen_chunk = ((screen_x >> 8) & 1) + (((screen_y >> 8) & 1) << (screen_width >> 9));
+            
+            let tile_x = (screen_x & 255) >> 3;
+            let tile_y = (screen_y & 255) >> 3;
+
+            let map_tile_addr = map_base_block + (screen_chunk << 11) + (tile_y << 6) + (tile_x << 1);
+            
+            if map_tile_addr < 0xFFFF {
+                let tile_info = LittleEndian::read_u16(&self.vram[(map_tile_addr as usize)..]);
+                let tile_mem = &self.vram[(tile_base_block as usize)..0xFFFF];
+                
+                copy_fn(tile_mem, &self.pram[0x000..0x200],
+                        &mut line[(column as usize)..((column as usize) + ((240 - column) as usize))],
+                        tile_info, 0, screen_y & 7);
+            }
+        }
+    }
+
+    // Rotation/scaling-mode tile rendering
+    pub fn render_rs_tiles(&self, cnt: u16, x_ref: u32, y_ref: u32,
+                           par_a: u16, par_b: u16, par_c: u16, par_d: u16,
+                           line_id: u16, line: &mut [u16; 240]) {
+        let mut x = self.bg[2].x_ref as i32;
+        let mut y = self.bg[2].y_ref as i32;
+
+        let dx = (par_a as i16) as i32;
+        let dmx = (par_b as i16) as i32;
+        let dy = (par_c as i16) as i32;
+        let dmy = (par_d as i16) as i32;
+
+        
+        let tile_base_block = (((cnt as u32) >> 2) & 3) << 14;
+        let map_base_block = (((cnt as u32) >> 8) & 0x1f) << 11;
+        let wraparound = ((cnt >> 13) & 0x1) == 1;
+
+        let (screen_width, screen_height) = RS_SCREEN_SIZE[((cnt >> 14) & 3) as usize];
+
+        if wraparound {
+            for r_x in 0..240 {
+		let pixel_x = (x >> 8) & (screen_width - 1);
+		let pixel_y = (y >> 8) & (screen_height - 1);
+                
+		let tile_x = pixel_x >> 3;
+		let tile_y = pixel_y >> 3;
+		let screen_data_offset = (tile_y * (screen_width >> 3)) + tile_x;
+		let tile_number = self.vram[(map_base_block as usize) + screen_data_offset as usize];
+                
+		let tx = pixel_x & 7;
+		let ty = pixel_y & 7;
+                
+		let dot_offset = (((tile_number as i32) << 6) + (ty << 3) + tx) as usize;
+		let dot = self.vram[(tile_base_block as usize) + dot_offset];
+                
+		if dot == 0 {
+		    line[r_x as usize] = 0;
+		} else {
+		    line[r_x as usize] = LittleEndian::read_u16(&self.pram[((dot as usize) << 1)..]) | 0x8000;
+		}
+                
+		x += dx;
+		y += dy;
+            }
+        } else {
+            for r_x in 0..240 {
+		let pixel_x = (x >> 8) & (screen_width - 1);
+		let pixel_y = (y >> 8) & (screen_height - 1);
+                
+		let tile_x = pixel_x >> 3;
+		let tile_y = pixel_y >> 3;
+		let screen_data_offset = (tile_y * (screen_width >> 3)) + tile_x;
+		let tile_number = self.vram[(map_base_block as usize) + screen_data_offset as usize];
+                
+		let tx = pixel_x & 7;
+		let ty = pixel_y & 7;
+                
+		let dot_offset = (((tile_number as i32) << 6) + (ty << 3) + tx) as usize;
+		let dot = self.vram[(tile_base_block as usize) + dot_offset];
+                
+		if dot == 0 {
+		    line[r_x as usize] = 0;
+		} else {
+		    line[r_x as usize] = LittleEndian::read_u16(&self.pram[((dot as usize) << 1)..]) | 0x8000;
+		}
+                
+		x += dx;
+		y += dy;
+            }
+        }
     }
 }
 
@@ -124,7 +223,7 @@ fn tile_copy_4bit(tile_data: &[u8], palette: &[u8], output: &mut [u16], tile_inf
 	offset += offset_inc;
     }
     
-    while pindex < output.len() && offset < tile_data.len() {
+    while (pindex < output.len()) && (offset < tile_data.len()) {
 	let two_dots = tile_data[offset];
 
 	let left_dot = (two_dots >> left_shift) & 0xf;
@@ -152,7 +251,7 @@ fn tile_copy_4bit(tile_data: &[u8], palette: &[u8], output: &mut [u16], tile_inf
         
 	pindex += 1;
 
-	offset += offset_inc;
+	offset = offset.wrapping_add(offset_inc);
     }
 }
 
@@ -194,6 +293,6 @@ fn tile_copy_8bit(tile_data: &[u8], palette: &[u8], output: &mut [u16], tile_inf
             output[pindex] = LittleEndian::read_u16(&palette[((dot as usize) << 1)..]);
         }
 
-        offset += offset_inc;
+        offset = offset.wrapping_add(offset_inc);
     }
 }

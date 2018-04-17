@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Wed Jan 31 00:46:31 2018 (+0100)
+// Last-Updated: Tue Apr 17 13:33:54 2018 (+0200)
 //           By: Louise <louise>
 // 
 // General modules
@@ -16,6 +16,7 @@ mod tiles;
 
 // BG modes
 mod mode0;
+mod mode2;
 mod mode4;
 
 use irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
@@ -183,11 +184,7 @@ struct Window {
 }
 
 pub struct DisplayLine {
-    pub bg0: [u16; 240],
-    pub bg1: [u16; 240],
-    pub bg2: [u16; 240],
-    pub bg3: [u16; 240],
-
+    pub bg: [[u16; 240]; 4],
     pub bg_enabled: [bool; 4],
     
     pub obj: [u16; 240],

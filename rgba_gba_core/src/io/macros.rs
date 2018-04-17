@@ -3,7 +3,7 @@
 // Filename: macros.rs
 // Author: Louise <louise>
 // Created: Mon Jan 22 16:58:00 2018 (+0100)
-// Last-Updated: Wed Feb 14 18:18:59 2018 (+0100)
+// Last-Updated: Tue Apr 17 14:56:19 2018 (+0200)
 //           By: Louise <louise>
 // 
 
@@ -25,8 +25,6 @@ macro_rules! unused_pattern {
 
 macro_rules! handle_dma {
     ($io:expr, $channel:expr) => {{
-        println!("Handling {} ({:08x} to {:08x})", stringify!($channel), $channel.source_addr, $channel.dest_addr);
-
         let mut source_addr = $channel.source_addr as usize;
         let mut dest_addr = $channel.dest_addr as usize;
         let size = if $channel.word_size { 4 } else { 2 };

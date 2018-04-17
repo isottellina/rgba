@@ -3,7 +3,7 @@
 // Filename: tiles.rs
 // Author: Louise <louise>
 // Created: Tue Jan 30 20:58:44 2018 (+0100)
-// Last-Updated: Tue Jan 30 23:48:47 2018 (+0100)
+// Last-Updated: Tue Apr 17 16:31:58 2018 (+0200)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -117,7 +117,7 @@ fn tile_copy_4bit(tile_data: &[u8], palette: &[u8], output: &mut [u16], tile_inf
 	} else {
 	    output[pindex] = LittleEndian::read_u16(
                 &palette[((palette_nb << 5) + ((right_dot << 1) as u16)) as usize..]
-            );
+            ) | 0x8000;
 	}
         
 	pindex += 1;
@@ -133,7 +133,7 @@ fn tile_copy_4bit(tile_data: &[u8], palette: &[u8], output: &mut [u16], tile_inf
 	} else {
 	    output[pindex] = LittleEndian::read_u16(
                 &palette[((palette_nb << 5) + ((left_dot << 1) as u16)) as usize..]
-            );
+            ) | 0x8000;
 	}
         
 	pindex += 1;
@@ -147,7 +147,7 @@ fn tile_copy_4bit(tile_data: &[u8], palette: &[u8], output: &mut [u16], tile_inf
 	} else {
 	    output[pindex] = LittleEndian::read_u16(
                 &palette[((palette_nb << 5) + ((right_dot << 1) as u16)) as usize..]
-            );
+            ) | 0x8000;
 	}
         
 	pindex += 1;

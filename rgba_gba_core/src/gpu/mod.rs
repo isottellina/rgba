@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Tue Apr 17 13:33:54 2018 (+0200)
+// Last-Updated: Tue Apr 17 16:54:21 2018 (+0200)
 //           By: Louise <louise>
 // 
 // General modules
@@ -16,6 +16,7 @@ mod tiles;
 
 // BG modes
 mod mode0;
+mod mode1;
 mod mode2;
 mod mode4;
 

@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Tue Jan 23 16:22:52 2018 (+0100)
-// Last-Updated: Wed Jan 31 01:11:32 2018 (+0100)
+// Last-Updated: Tue Apr 17 19:45:47 2018 (+0200)
 //           By: Louise <louise>
 // 
 use gpu::GPU;
@@ -69,18 +69,22 @@ impl GPU {
 
             // Background rotation
             BG2X_L   => self.bg[2].x_ref = (self.bg[2].x_ref & 0x0FFF0000) | (value as u32),
-            BG2X_H   => self.bg[2].x_ref = (self.bg[2].x_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16),
+            BG2X_H   => self.bg[2].x_ref =
+                (((((self.bg[2].x_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16)) << 4) as i32) >> 4) as u32,
             BG2Y_L   => self.bg[2].y_ref = (self.bg[2].y_ref & 0x0FFF0000) | (value as u32),
-            BG2Y_H   => self.bg[2].y_ref = (self.bg[2].y_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16),
+            BG2Y_H   => self.bg[2].y_ref =
+                (((((self.bg[2].y_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16)) << 4) as i32) >> 4) as u32,
             BG2PA    => self.bg[2].par_a = value,
             BG2PB    => self.bg[2].par_b = value,
             BG2PC    => self.bg[2].par_c = value,
             BG2PD    => self.bg[2].par_d = value,
 
             BG3X_L   => self.bg[3].x_ref = (self.bg[3].x_ref & 0x0FFF0000) | (value as u32),
-            BG3X_H   => self.bg[3].x_ref = (self.bg[3].x_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16),
+            BG3X_H   => self.bg[3].x_ref =
+                (((((self.bg[3].x_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16)) << 4) as i32) >> 4) as u32,
             BG3Y_L   => self.bg[3].y_ref = (self.bg[3].y_ref & 0x0FFF0000) | (value as u32),
-            BG3Y_H   => self.bg[3].y_ref = (self.bg[3].y_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16),
+            BG3Y_H   => self.bg[3].y_ref = 
+                (((((self.bg[3].y_ref & 0xFFFF) | (((value as u32) & 0x0FFF0000) << 16)) << 4) as i32) >> 4) as u32,
             BG3PA    => self.bg[3].par_a = value,
             BG3PB    => self.bg[3].par_b = value,
             BG3PC    => self.bg[3].par_c = value,

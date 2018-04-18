@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Tue Apr 17 16:54:21 2018 (+0200)
+// Last-Updated: Wed Apr 18 13:37:28 2018 (+0200)
 //           By: Louise <louise>
 // 
 // General modules
@@ -21,8 +21,6 @@ mod mode2;
 mod mode4;
 
 use irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
-
-use rgba_common::Color;
 
 pub struct GPU {
     // Memory
@@ -164,8 +162,8 @@ pub enum GpuMode {
     VBlank,
 }
 
-#[derive(Default)]
-struct Background {
+#[derive(Copy, Clone, Default)]
+pub struct Background {
     pub cnt: u16,
     pub h_off: u16,
     pub v_off: u16,

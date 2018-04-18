@@ -3,7 +3,7 @@
 // Filename: mode1.rs
 // Author: Louise <louise>
 // Created: Tue Apr 17 16:52:42 2018 (+0200)
-// Last-Updated: Tue Apr 17 18:49:59 2018 (+0200)
+// Last-Updated: Wed Apr 18 13:29:08 2018 (+0200)
 //           By: Louise <louise>
 // 
 use gpu::{GPU, DisplayLine};
@@ -29,10 +29,10 @@ impl GPU {
 
         // BG2
         if (self.dispcnt & 0x400) != 0 {
-            self.render_rs_tiles(self.bg[2].cnt, self.bg[2].x_ref, self.bg[2].y_ref,
-                                 self.bg[2].par_a, self.bg[2].par_b,
-                                 self.bg[2].par_c, self.bg[2].par_d,
-                                 line_id, &mut line.bg[2]);
+            let mut bg = self.bg[2].to_owned();
+            self.render_rs_tiles(&mut bg, &mut line.bg[2]);
+
+            self.bg[2] = bg;
         }
     }
 }

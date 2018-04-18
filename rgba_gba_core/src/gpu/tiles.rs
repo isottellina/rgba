@@ -3,11 +3,11 @@
 // Filename: tiles.rs
 // Author: Louise <louise>
 // Created: Tue Jan 30 20:58:44 2018 (+0100)
-// Last-Updated: Tue Apr 17 19:46:30 2018 (+0200)
+// Last-Updated: Wed Apr 18 14:17:55 2018 (+0200)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
-use gpu::GPU;
+use gpu::{GPU, Background};
 use rgba_common::Color;
 
 const TEXT_SCREEN_SIZE: [(u32, u32); 4] = [
@@ -17,7 +17,7 @@ const TEXT_SCREEN_SIZE: [(u32, u32); 4] = [
     (512, 512)
 ];
 
-const RS_SCREEN_SIZE: [(i32, i32); 4] = [
+const RS_SCREEN_SIZE: [(u32, u32); 4] = [
     (128,  128),
     (256,  256),
     (512,  512),
@@ -110,23 +110,20 @@ impl GPU {
     }
 
     // Rotation/scaling-mode tile rendering
-    pub fn render_rs_tiles(&self, cnt: u16, x_ref: u32, y_ref: u32,
-                           par_a: u16, par_b: u16, par_c: u16, par_d: u16,
-                           line_id: u16, line: &mut [u16; 240]) {
-        let mut x = self.bg[2].x_ref as i32;
-        let mut y = self.bg[2].y_ref as i32;
+    pub fn render_rs_tiles(&mut self, back: &mut Background, line: &mut [u16; 240]) {
+        let mut x = back.x_ref;
+        let mut y = back.y_ref;
 
-        let dx = (par_a as i16) as i32;
-        let dmx = (par_b as i16) as i32;
-        let dy = (par_c as i16) as i32;
-        let dmy = (par_d as i16) as i32;
+        let dx = ((back.par_a as i16) as i32) as u32;
+        let dy = ((back.par_c as i16) as i32) as u32;
+        let dmx = ((back.par_b as i16) as i32) as u32;
+        let dmy = ((back.par_d as i16) as i32) as u32;
 
-        
-        let tile_base_block = (((cnt as u32) >> 2) & 3) << 14;
-        let map_base_block = (((cnt as u32) >> 8) & 0x1f) << 11;
-        let wraparound = ((cnt >> 13) & 0x1) == 1;
+        let tile_base_block = (((back.cnt as u32) >> 2) & 3) << 14;
+        let map_base_block = (((back.cnt as u32) >> 8) & 0x1f) << 11;
+        let wraparound = ((back.cnt >> 13) & 0x1) == 1;
 
-        let (screen_width, screen_height) = RS_SCREEN_SIZE[((cnt >> 14) & 3) as usize];
+        let (screen_width, screen_height) = RS_SCREEN_SIZE[((back.cnt >> 14) & 3) as usize];
 
         if wraparound {
             for r_x in 0..240 {
@@ -141,7 +138,7 @@ impl GPU {
 		let tx = pixel_x & 7;
 		let ty = pixel_y & 7;
                 
-		let dot_offset = (((tile_number as i32) << 6) + (ty << 3) + tx) as usize;
+		let dot_offset = (((tile_number as u32) << 6) + (ty << 3) + tx) as usize;
 		let dot = self.vram[(tile_base_block as usize) + dot_offset];
                 
 		if dot == 0 {
@@ -154,31 +151,42 @@ impl GPU {
 		y += dy;
             }
         } else {
-            for r_x in 0..240 {
-		let pixel_x = (x >> 8) & (screen_width - 1);
-		let pixel_y = (y >> 8) & (screen_height - 1);
+            let mut r_x = 0;
+            
+            while r_x < 240 {
+		let pixel_x = x >> 8;
+		let pixel_y = y >> 8;
+
+                if (pixel_x > 0) && (pixel_y > 0) && (pixel_x < screen_width) && (pixel_y < screen_height) {
+		    let tile_x = pixel_x >> 3;
+		    let tile_y = pixel_y >> 3;
+		    let screen_data_offset = (tile_y * (screen_width >> 3)) + tile_x;
+		    let tile_number = self.vram[(map_base_block as usize) + screen_data_offset as usize];
+                    
+		    let tx = pixel_x & 7;
+		    let ty = pixel_y & 7;
+                    
+		    let dot_offset = (((tile_number as u32) << 6) + (ty << 3) + tx) as usize;
+		    let dot = self.vram[(tile_base_block as usize) + dot_offset];
+                    
+		    if dot == 0 {
+		        line[r_x as usize] = 0;
+		    } else {
+		        line[r_x as usize] = LittleEndian::read_u16(&self.pram[((dot as usize) << 1)..]) | 0x8000;
+		    }
+                } else {
+                    line[r_x as usize] = 0;
+                }
                 
-		let tile_x = pixel_x >> 3;
-		let tile_y = pixel_y >> 3;
-		let screen_data_offset = (tile_y * (screen_width >> 3)) + tile_x;
-		let tile_number = self.vram[(map_base_block as usize) + screen_data_offset as usize];
-                
-		let tx = pixel_x & 7;
-		let ty = pixel_y & 7;
-                
-		let dot_offset = (((tile_number as i32) << 6) + (ty << 3) + tx) as usize;
-		let dot = self.vram[(tile_base_block as usize) + dot_offset];
-                
-		if dot == 0 {
-		    line[r_x as usize] = 0;
-		} else {
-		    line[r_x as usize] = LittleEndian::read_u16(&self.pram[((dot as usize) << 1)..]) | 0x8000;
-		}
-                
-		x += dx;
-		y += dy;
+		x = x.wrapping_add(dx);
+		y = y.wrapping_add(dy);
+
+                r_x += 1;
             }
         }
+
+        back.x_ref = back.x_ref.wrapping_add(dmx);
+        back.y_ref = back.y_ref.wrapping_add(dmy);
     }
 }
 

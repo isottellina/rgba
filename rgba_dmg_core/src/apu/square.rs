@@ -3,8 +3,8 @@
 // Filename: square.rs
 // Author: Louise <louise>
 // Created: Sat Dec 23 01:16:18 2017 (+0100)
-// Last-Updated: Fri Jan 19 00:35:16 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Tue Jul 10 00:55:12 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 
 const DUTY_TABLE: [[bool; 8]; 4] = [
@@ -238,6 +238,7 @@ impl SquareChannel {
         }
     }
 
+    #[inline]
     pub fn render(&self) -> u8 {
         self.out_volume
     }

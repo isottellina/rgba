@@ -3,8 +3,8 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Fri Jan 19 01:44:29 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Wed Jul 11 19:44:39 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 mod square;
 mod wave;
@@ -23,15 +23,8 @@ pub struct APU {
     channel2: SquareChannel,
     channel3: WaveChannel,
     channel4: NoiseChannel,
-  
-    ch1_so1: bool,
-    ch2_so1: bool,
-    ch3_so1: bool,
-    ch4_so1: bool,
-    ch1_so2: bool,
-    ch2_so2: bool,
-    ch3_so2: bool,
-    ch4_so2: bool,
+
+    nr51: u8,
 
     frame_cycles: u32,
     frame_sequencer: u8,
@@ -53,14 +46,7 @@ impl APU {
             channel3: WaveChannel::new(),
             channel4: NoiseChannel::new(),
 
-            ch1_so1: false,
-            ch2_so1: false,
-            ch3_so1: false,
-            ch4_so1: false,
-            ch1_so2: false,
-            ch2_so2: false,
-            ch3_so2: false,
-            ch4_so2: false,
+            nr51: 0,
 
             frame_cycles: 8192,
             frame_sequencer: 0,
@@ -140,27 +126,8 @@ impl APU {
         }
     }
     
-    pub fn nr51(&self) -> u8 {
-        ((self.ch4_so2 as u8) << 7) |
-        ((self.ch3_so2 as u8) << 6) |
-        ((self.ch2_so2 as u8) << 5) |
-        ((self.ch1_so2 as u8) << 4) |
-        ((self.ch4_so1 as u8) << 3) |
-        ((self.ch3_so1 as u8) << 2) |
-        ((self.ch2_so1 as u8) << 1) |
-        (self.ch1_so1 as u8)
-    }
-    
-    pub fn set_nr51(&mut self, nr51: u8) {
-        self.ch1_so1 = (nr51 & 0x01) != 0;
-        self.ch2_so1 = (nr51 & 0x02) != 0;
-        self.ch3_so1 = (nr51 & 0x04) != 0;
-        self.ch4_so1 = (nr51 & 0x08) != 0;
-        self.ch1_so2 = (nr51 & 0x10) != 0;
-        self.ch2_so2 = (nr51 & 0x20) != 0;
-        self.ch3_so2 = (nr51 & 0x40) != 0;
-        self.ch4_so2 = (nr51 & 0x80) != 0;
-    }
+    pub fn nr51(&self) -> u8 { self.nr51 }
+    pub fn set_nr51(&mut self, nr51: u8) { self.nr51 = nr51; }
     
     pub fn nr52(&self) -> u8 {
         ((self.enabled as u8) << 7) |
@@ -190,19 +157,19 @@ impl APU {
     fn get_so1(&self) -> u8 {
         let mut so1 = 0;
 
-        if self.ch1_so1 {
+        if self.nr51 & 0x01 != 0 {
             so1 += self.channel1.render();
         }
 
-        if self.ch2_so1 {
+        if self.nr51 & 0x02 != 0 {
             so1 += self.channel2.render();
         }
         
-        if self.ch3_so1 {
+        if self.nr51 & 0x04 != 0 {
             so1 += self.channel3.render();
         }
 
-        if self.ch4_so1 {
+        if self.nr51 & 0x08 != 0 {
             so1 += self.channel4.render();
         }
         
@@ -212,19 +179,19 @@ impl APU {
     fn get_so2(&self) -> u8 {
         let mut so2 = 0;
 
-        if self.ch1_so2 {
+        if self.nr51 & 0x10 != 0 {
             so2 += self.channel1.render();
         }
 
-        if self.ch2_so2 {
+        if self.nr51 & 0x20 != 0 {
             so2 += self.channel2.render();
         }
         
-        if self.ch3_so2 {
+        if self.nr51 & 0x40 != 0 {
             so2 += self.channel3.render();
         }
 
-        if self.ch4_so2 {
+        if self.nr51 & 0x80 != 0 {
             so2 += self.channel4.render();
         }
         
@@ -280,22 +247,44 @@ impl APU {
             self.channel4.spend_cycles(cycles_16);
         }
 
-        self.downsample_count = self.downsample_count + cycles;
-
-        if self.downsample_count >= 88 {
+        self.downsample_count += cycles;
+        
+        while self.downsample_count >= 88 {
             self.downsample_count -= 88;
             
             let so1 = self.get_so1() as u16;
             let so2 = self.get_so2() as u16;
-
-            let mix = (so1 + so2) << 7;
             
+            let mix = (so1 + so2) << 7;
+                
             self.samples[self.samples_index] = mix as i16;
             self.samples_index = (self.samples_index + 1) & 0x3ff;
-
+                
             if self.samples_index == 0 {
                 self.buffer_complete = true;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+    
+    #[bench]
+    fn spend_cycles_same(b: &mut Bencher) {
+        let mut apu = APU::new();
+        
+        b.iter(|| apu.spend_cycles(500))
+    }
+
+    #[bench]
+    fn spend_cycles_new(b: &mut Bencher) {
+        b.iter(|| {
+            let mut apu = APU::new();
+
+            apu.spend_cycles(500);
+        })
     }
 }

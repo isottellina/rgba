@@ -3,12 +3,11 @@
 // Filename: tiles.rs
 // Author: Louise <louise>
 // Created: Tue Jan 30 20:58:44 2018 (+0100)
-// Last-Updated: Wed Apr 18 14:17:55 2018 (+0200)
-//           By: Louise <louise>
+// Last-Updated: Thu Jul 12 20:45:48 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 use byteorder::{ByteOrder, LittleEndian};
 use gpu::{GPU, Background};
-use rgba_common::Color;
 
 const TEXT_SCREEN_SIZE: [(u32, u32); 4] = [
     (256, 256),
@@ -151,9 +150,7 @@ impl GPU {
 		y += dy;
             }
         } else {
-            let mut r_x = 0;
-            
-            while r_x < 240 {
+            for r_x in 0..240 {
 		let pixel_x = x >> 8;
 		let pixel_y = y >> 8;
 
@@ -180,8 +177,6 @@ impl GPU {
                 
 		x = x.wrapping_add(dx);
 		y = y.wrapping_add(dy);
-
-                r_x += 1;
             }
         }
 

@@ -3,10 +3,12 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Fri Jan 19 01:41:47 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Wed Jul 11 19:43:34 2018 (+0200)
+//           By: Louise <ludwigette>
 //
+#![feature(test)]
 #[macro_use] extern crate log;
+extern crate test;
 extern crate rgba_common;
 
 mod cpu;

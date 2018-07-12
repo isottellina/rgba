@@ -3,8 +3,8 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Tue Jan  9 13:06:01 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Tue Jul 10 00:51:20 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 use ::Interconnect;
 use std::fmt;
@@ -321,8 +321,8 @@ impl LR35902 {
     fn add_u8(&mut self, value: u8) {
         let a = self.a as u32;
         let v = value as u32;
-        
-        let res = a + v;
+       
+	let res = a + v;
 
         self.zero = (res & 0xff) == 0;
         self.sub = false;
@@ -870,7 +870,7 @@ impl LR35902 {
                 self.write_u8(io, address as usize, self.a);
             },
             0xE1 => { let hl = self.pop(io); self.set_hl(hl); },
-            0xE2 => { self.write_u8(io, (0xFF00 + self.c as usize), self.a) }
+            0xE2 => { self.write_u8(io, 0xFF00 + self.c as usize, self.a) }
             0xE5 => { let hl = self.hl(); io.delay(1); self.push(io, hl); }
             0xE6 => { let v = self.next_u8(io); self.and_u8(v) }
             0xE7 => { self.rst(io, 0x20) }
@@ -901,7 +901,7 @@ impl LR35902 {
                 self.a = self.read_u8(io, 0xff00 + v);
             },
             0xF1 => { let af = self.pop(io); self.set_af(af); }
-            0xF2 => { self.a = self.read_u8(io, (0xFF00 + self.c as usize)) }
+            0xF2 => { self.a = self.read_u8(io, 0xFF00 + self.c as usize) }
             0xF3 => { self.ime = false }
             0xF5 => { let af = self.af(); io.delay(1); self.push(io, af); }
             0xF6 => { let v = self.next_u8(io); self.or_u8(v) }

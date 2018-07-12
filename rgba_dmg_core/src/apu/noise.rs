@@ -3,8 +3,8 @@
 // Filename: noise.rs
 // Author: Louise <louise>
 // Created: Thu Dec 28 00:06:44 2017 (+0100)
-// Last-Updated: Fri Jan 19 00:43:37 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Tue Jul 10 00:55:06 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 
 const DIVISORS: [u16; 8] = [8, 16, 32, 48, 64, 80, 96, 112];
@@ -141,6 +141,7 @@ impl NoiseChannel {
         }
     }
 
+    #[inline]
     pub fn render(&self) -> u8 {
         self.out_volume
     }

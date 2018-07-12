@@ -3,8 +3,8 @@
 # Filename: thumb_gen.py
 # Author: Louise <louise>
 # Created: Tue Jan 16 19:57:01 2018 (+0100)
-# Last-Updated: Tue Apr 17 16:44:03 2018 (+0200)
-#           By: Louise <louise>
+# Last-Updated: Thu Jul 12 07:08:33 2018 (+0200)
+#           By: Louise <ludwigette>
 #
 class Generator:
     def __init__(self, size):
@@ -77,7 +77,7 @@ def write_f2(g, high):
     if op: # SUB
         g.write("let res = op1.wrapping_sub(op2);")
         g.write("_cpu.carry = op1 >= op2;")
-        g.write("_cpu.overflow = (op1 ^ op2) & (op1 ^ op2) & 0x80000000 != 0;")
+        g.write("_cpu.overflow = (op1 ^ op2) & (op1 ^ res) & 0x80000000 != 0;")
     else: # ADD
         g.write("let res = op1.wrapping_add(op2);")
         g.write("_cpu.carry = res < op1;")
@@ -443,7 +443,7 @@ def write_alu(op):
         print("\tif shift != 0 { _cpu.carry = (res & 0x80000000) != 0; }")
     elif op == 9: # NEG
         print("\tlet res = 0_u32.wrapping_sub(rs);")
-        print("\t_cpu.carry = 0 >= res;")
+        print("\t_cpu.carry = (res & 0x80000000) != 0;")
         print("\t_cpu.overflow = (rs & res & 0x80000000) != 0;")
     elif op == 10: # CMP
         print("\tlet res = op1.wrapping_sub(rs);")

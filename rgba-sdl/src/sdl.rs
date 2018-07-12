@@ -3,8 +3,8 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Tue Jan  9 12:51:46 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Wed Jul 11 21:53:20 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 use rgba_common;
 use rgba_common::{Color, Platform, Key};
@@ -73,11 +73,13 @@ impl Platform for SDLPlatform {
 
     fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         let width = self.width;
-        let i = ((y * width + x) << 2) as usize;
-        
-        self.video_data[i + 2] = color.0;
-        self.video_data[i + 1] = color.1;
-        self.video_data[i] = color.2;
+        let i = (y * width + x) as usize;
+        let color32: u32 = ((color.0 as u32) << 16) | ((color.1 as u32) << 8) | color.2 as u32;
+
+        unsafe {
+            let ptr = (self.video_data.as_ptr() as *mut u32).add(i);
+            ptr.write_volatile(color32);
+        }
     }
 
     fn present(&mut self) {

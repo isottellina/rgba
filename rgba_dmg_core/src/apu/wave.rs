@@ -3,8 +3,8 @@
 // Filename: wave.rs
 // Author: Louise <louise>
 // Created: Wed Dec 27 15:27:30 2017 (+0100)
-// Last-Updated: Sat Feb 17 13:55:54 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Tue Jul 10 00:55:19 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 
 #[derive(Debug, Default)]
@@ -89,6 +89,7 @@ impl WaveChannel {
         }
     }
 
+    #[inline]
     pub fn render(&self) -> u8 { self.out_volume }
     
     pub fn spend_cycles(&mut self, cycles: u16) {

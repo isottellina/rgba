@@ -3,8 +3,8 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Fri Jan 19 00:05:12 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Thu Jul 12 17:53:16 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 use rgba_common::Platform;
 
@@ -63,8 +63,10 @@ impl GPU {
             offset as usize
         };
 
-        let data1 = self.vram[offset as usize];
-        let data2 = self.vram[offset as usize + 1];
+        let (data1, data2) = unsafe {
+            (self.vram.get_unchecked(offset as usize),
+             self.vram.get_unchecked(offset as usize + 1))
+        };
         
         ((data1 >> (7 - x)) & 1) | (((data2 >> (7 - x)) & 1) << 1)
     }
@@ -87,7 +89,7 @@ impl GPU {
         self.tile_get(self.tile_data, tile, tile_x, tile_y)
     }
     
-    fn get_background(&self, x: u8, y: u8) -> u8 {
+    pub fn get_background(&self, x: u8, y: u8) -> u8 {
         let actual_x = self.scx.wrapping_add(x) as u16;
         let actual_y = self.scy.wrapping_add(y) as u16;
         
@@ -108,8 +110,8 @@ impl GPU {
     fn get_sprite(&self, x: u8, y: u8, bg_color: u8) -> Option<DmgColor> {
         let sprites = self.line_cache[y as usize];
         
-        for opt_sprite in sprites.iter() {
-            if let &Some(nb_sprite) = opt_sprite {
+        for opt_sprite in &sprites {
+            if let Some(nb_sprite) = *opt_sprite {
                 let sprite = self.oam[nb_sprite as usize];
 
                 let sprite_x = sprite.x.wrapping_sub(8);

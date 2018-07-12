@@ -3,7 +3,7 @@
 // Filename: timer.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 01:49:50 2017 (+0100)
-// Last-Updated: Sun Dec 31 15:12:17 2017 (+0100)
+// Last-Updated: Wed Jun 13 12:45:57 2018 (+0200)
 //           By: Louise <louise>
 // 
 
@@ -14,7 +14,7 @@ pub struct Timer {
     tma: u8,
 
     tima_running: bool,
-    speed: u8,
+    speed: u16,
 
     it_timer: bool,
 }
@@ -44,10 +44,8 @@ impl Timer {
     pub fn handle(&mut self) {
         self.div = self.div.wrapping_add(1);
         
-        if self.tima_running {
-            let mask = (1 << self.speed) - 1;
-            
-            if (self.div & mask) == 0 {
+        if self.tima_running {  
+            if (self.div & self.speed) == 0 {
                 self.tima = self.tima.wrapping_add(1);
 
                 if self.tima == 0 {
@@ -71,10 +69,10 @@ impl Timer {
     
     pub fn tac(&self) -> u8 {
         let speed = match self.speed {
-            4 => 1,
-            6 => 2,
-            8 => 3,
-            10 => 0,
+            15 => 1,
+            63 => 2,
+            255 => 3,
+            1023 => 0,
             _ => unreachable!(),
         };
         
@@ -83,10 +81,10 @@ impl Timer {
 
     pub fn set_tac(&mut self, value: u8) {
         self.speed = match value & 0x3 {
-            0 => 10,
-            1 => 4,
-            2 => 6,
-            3 => 8,
+            0 => 1023,
+            1 => 15,
+            2 => 63,
+            3 => 255,
             _ => unreachable!(),
         };
 

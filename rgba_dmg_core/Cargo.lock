@@ -17,7 +17,7 @@ version = "1.0.0"
 
 [[package]]
 name = "rgba_dmg_core"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgba_common 1.0.0",

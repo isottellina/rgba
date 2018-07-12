@@ -3,8 +3,8 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Sat Jan 20 23:14:52 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Thu Jul 12 07:09:38 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 extern crate rgba_common;
 extern crate rgba_builder;
@@ -67,7 +67,7 @@ fn main() {
         _ => unreachable!(),
     };
 
-    let _ = simplelog::TermLogger::init(log_level, simplelog::Config::default()).unwrap();
+    simplelog::TermLogger::init(log_level, simplelog::Config::default()).unwrap();
     
     let console = ConsoleBuilder::default()
         .load_bios(bios_name)

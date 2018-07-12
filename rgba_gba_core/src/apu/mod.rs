@@ -3,11 +3,11 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Sun Jan 21 22:26:01 2018 (+0100)
-// Last-Updated: Fri Jan 26 14:57:38 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Thu Jul 12 16:59:10 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 
-#[derive(Default, Debug, Copy, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct APU {
     soundbias: u16,
 }

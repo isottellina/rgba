@@ -3,8 +3,8 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Sun Jan 21 14:44:48 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Wed Jul 11 19:42:14 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 use rgba_common::Platform;
 use rgba_common::Event;
@@ -153,7 +153,7 @@ impl Interconnect {
             wram_bank: 1,
             
             dma_src: 0,
-            dma_dest: 0,
+            dma_dest: 0xFEA0,
             dma_ongoing: false,
 
             hdma_src: 0,
@@ -592,7 +592,7 @@ impl Interconnect {
     }
 
     pub fn spend_cycles(&mut self) {
-        let mut cycles = self.cycles_to_spend << 2;
+        let cycles = self.cycles_to_spend << 2;
         self.cycles_to_spend = 0;
 
         if self.gpu.has_hblank() {
@@ -604,14 +604,12 @@ impl Interconnect {
         self.gpu.spend_cycles(cycles);
         self.apu.spend_cycles(cycles);
         
-        while cycles != 0 {
+        for _ in 0..cycles {
             if self.dma_ongoing {
                 self.handle_dma();
             }
             
             self.timer.handle();
-
-            cycles -= 1;
         }
     }
     

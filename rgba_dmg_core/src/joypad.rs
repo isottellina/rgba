@@ -3,8 +3,8 @@
 // Filename: joypad.rs
 // Author: Louise <louise>
 // Created: Thu Dec 14 23:45:40 2017 (+0100)
-// Last-Updated: Mon Dec 25 19:22:42 2017 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Thu Jul 12 17:54:10 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 use rgba_common::{Event, Key};
 
@@ -27,22 +27,18 @@ pub struct Joypad {
 
 impl Joypad {
     pub fn read(&self) -> u8 {
-        match self.mode {
-            true => {
-                0xDF &
-                    !((self.start as u8) << 3) &
-                    !((self.select as u8) << 2) &
-                    !((self.b as u8) << 1) &
-                    !(self.a as u8)
-            },
-
-            false => {
-                0xEF &
-                    !((self.down as u8) << 3) &
-                    !((self.up as u8) << 2) &
-                    !((self.left as u8) << 1) &
-                    !(self.right as u8)
-            }
+        if self.mode {
+            0xDF &
+                !((self.start as u8) << 3) &
+                !((self.select as u8) << 2) &
+                !((self.b as u8) << 1) &
+                !(self.a as u8)
+        } else {
+            0xEF &
+                !((self.down as u8) << 3) &
+                !((self.up as u8) << 2) &
+                !((self.left as u8) << 1) &
+                !(self.right as u8)
         }
     }
 

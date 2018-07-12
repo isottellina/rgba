@@ -3,8 +3,8 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Fri Jan 19 01:04:22 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Thu Jul 12 17:52:12 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 use rgba_common;
 use std::cmp::Ordering;
@@ -483,6 +483,7 @@ impl Default for DmgColor {
 }
 
 impl DmgColor {
+    #[inline]
     fn as_real(self) -> rgba_common::Color {
         match self {
             DmgColor::White => rgba_common::Color(224, 248, 208),
@@ -513,7 +514,7 @@ struct CgbColor {
 }
 
 impl CgbColor {
-    pub fn read(&self, address: usize) -> u8 {
+    pub fn read(self, address: usize) -> u8 {
         match address & 1 {
             0 => self.r | ((self.g & 0x7) << 5),
             1 => (self.g >> 3) | (self.b << 2),
@@ -535,7 +536,8 @@ impl CgbColor {
         }
     }
 
-    pub fn as_real(&self) -> rgba_common::Color {
+    #[inline]
+    pub fn as_real(self) -> rgba_common::Color {
         rgba_common::Color(
             self.r << 3,
             self.g << 3,
@@ -562,5 +564,33 @@ impl PaletteRegister for [DmgColor; 4] {
         self[1] = DmgColor::from((value & 0b0000_1100) >> 2);
         self[2] = DmgColor::from((value & 0b0011_0000) >> 4);
         self[3] = DmgColor::from((value & 0b1100_0000) >> 6);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+    
+    #[bench]
+    fn get_background_dmg(b: &mut Bencher) {
+        let mut gpu = GPU::new();
+        
+        b.iter(|| {
+            for x in 0..160 {
+                gpu.get_background(x, 0);
+            }
+        })
+    }
+
+    #[bench]
+    fn get_background_cgb(b: &mut Bencher) {
+        let mut gpu = GPU::new();
+        
+        b.iter(|| {
+            for x in 0..160 {
+                gpu.get_background_cgb(x, 0);
+            }
+        })
     }
 }

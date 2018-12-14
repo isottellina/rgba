@@ -3,7 +3,7 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Thu Jul 12 07:09:38 2018 (+0200)
+// Last-Updated: Fri Aug  3 13:11:03 2018 (+0200)
 //           By: Louise <ludwigette>
 //
 extern crate rgba_common;
@@ -22,7 +22,7 @@ use clap::{App, Arg};
 
 use sdl::SDLPlatform;
 
-use rgba_common::Platform;
+use rgba_common::{Console, Platform};
 use rgba_builder::ConsoleBuilder;
 
 fn main() {
@@ -52,10 +52,19 @@ fn main() {
              .possible_value("error")
              .default_value("warn")
              .help("Set the log level"))
+        .arg(Arg::with_name("console")
+             .short("c")
+             .long("console")
+             .takes_value(true)
+             .possible_value("gb")
+             .possible_value("gba")
+             .possible_value("nes")
+             .possible_value("nds")
+             .required(false))
         .get_matches();
 
     let rom_name = matches.value_of("ROM").unwrap();
-    let bios_name = matches.value_of("bios").unwrap();
+    let bios_name = matches.value_of("bios");
     let debug = matches.is_present("debug");
     let log = matches.value_of("log").unwrap();
 
@@ -71,12 +80,19 @@ fn main() {
     
     let console = ConsoleBuilder::default()
         .load_bios(bios_name)
-        .load_rom(rom_name)
-        .build();
+        .load_rom(rom_name);
+
+    let console = match matches.value_of("console") {
+        Some("gb") => console.set_console(Console::Gameboy),
+        Some("gba") => console.set_console(Console::GBA),
+        Some("nes") => console.set_console(Console::NES),
+        Some("nds") => console.set_console(Console::NDS),
+        None => console,
+        _ => unreachable!(),
+    }.build();
 
     if console.is_determined() {
         let parameters = console.get_platform_parameters().unwrap();
-
         let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
         
         let _ = console.run(&mut platform, debug);

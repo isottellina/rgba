@@ -3,8 +3,8 @@
 // Filename: core.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:34:12 2017 (+0100)
-// Last-Updated: Tue Jan  9 20:47:00 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Fri Jul 13 11:58:35 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 
 // Enums
@@ -12,6 +12,7 @@
 #[derive(Debug, Clone, Copy)]
 pub enum Console {
     Gameboy,
+    NES,
     GBA,
     NDS,
     None
@@ -49,7 +50,7 @@ pub struct Color(pub u8, pub u8, pub u8);
 pub trait Core {
     fn run<T: Platform>(&mut self, &mut T, bool);
     fn is_file(&str) -> bool;
-    fn load_bios(&mut self, &str) -> Result<(), &'static str>;
+    fn load_bios<T: ToString>(&mut self, Option<T>) -> Result<(), &'static str>;
     fn load_rom(&mut self, &str) -> bool;
 
     fn get_platform_parameters() -> (u32, u32);

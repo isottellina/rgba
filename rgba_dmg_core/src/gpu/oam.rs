@@ -3,8 +3,8 @@
 // Filename: oam.rs
 // Author: Louise <louise>
 // Created: Mon Dec 18 14:45:17 2017 (+0100)
-// Last-Updated: Sun Dec 31 20:06:52 2017 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Sat Sep  1 00:54:14 2018 (+0200)
+//           By: Louise <ludwigette>
 // 
 use gpu::GPU;
 
@@ -22,18 +22,18 @@ impl GPU {
             i[8] = None;
             i[9] = None;
         }
-        
+
+        let height = if self.obj_size { 16 } else { 8 };
         for (nb_sprite, sprite) in self.oam.iter().enumerate() {
-            let height = if self.obj_size { 16 } else { 8 };
             let begin = sprite.y.wrapping_sub(16) as usize;
             let end = begin.wrapping_add(height) as usize;
 
             for y in begin..end {
                 if y >= 144 { break; }
-                if self.line_cache[y][9] != None { break; }
+                if self.line_cache[y][9].is_some() { break; }
 
                 for i in 0..10 {
-                    if self.line_cache[y][i] == None {
+                    if self.line_cache[y][i].is_none() {
                         self.line_cache[y][i] = Some(nb_sprite as u8);
 
                         break;

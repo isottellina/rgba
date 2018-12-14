@@ -3,7 +3,7 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Tue Jul 10 00:51:20 2018 (+0200)
+// Last-Updated: Fri Jul 13 13:34:28 2018 (+0200)
 //           By: Louise <ludwigette>
 // 
 use ::Interconnect;
@@ -63,7 +63,7 @@ impl LR35902 {
         self.halt = false;
     }
 
-    #[inline(always)]
+    #[inline]
     /// Returns the Program Counter
     pub fn pc(&self) -> usize { self.pc as usize }
 

@@ -3,17 +3,19 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Tue Dec 26 11:12:56 2017 (+0100)
-// Last-Updated: Wed Jan  3 15:26:46 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Fri Aug  3 13:38:15 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 #[macro_use] extern crate log;
 
 extern crate rgba_common;
 extern crate rgba_dmg_core;
+extern crate rgba_nes_core;
 extern crate rgba_gba_core;
 
 use rgba_common::{Console, Core, Platform};
 use rgba_dmg_core::Gameboy;
+use rgba_nes_core::NES;
 use rgba_gba_core::GBA;
 
 #[derive(Debug, Default)]
@@ -26,8 +28,8 @@ pub struct ConsoleBuilder {
 }
 
 impl ConsoleBuilder {
-    pub fn load_bios(mut self, bios: &str) -> ConsoleBuilder {
-        self.bios = Some(bios.to_string());
+    pub fn load_bios(mut self, bios: Option<&str>) -> ConsoleBuilder {
+        self.bios = bios.map(|s| s.to_owned());
 
         self
     }
@@ -38,14 +40,24 @@ impl ConsoleBuilder {
         self
     }
 
+    pub fn set_console(mut self, console: Console) -> ConsoleBuilder {
+        self.console = Some(console);
+
+        self
+    }
+
     pub fn build(mut self) -> ConsoleBuilder {
-        if let Some(ref rom_name) = self.rom {
-            if Gameboy::is_file(rom_name) {
-                self.console = Some(Console::Gameboy);
-            } else if GBA::is_file(rom_name) {
-                self.console = Some(Console::GBA);
-            } else {
-                error!("Couldn't guess what console this ROM is for.")
+        if self.console.is_none() {
+            if let Some(ref rom_name) = self.rom {
+                if Gameboy::is_file(rom_name) {
+                    self.console = Some(Console::Gameboy);
+                } else if NES::is_file(rom_name) {
+                    self.console = Some(Console::NES)
+                } else if GBA::is_file(rom_name) {
+                    self.console = Some(Console::GBA);
+                } else {
+                    error!("Couldn't guess what console this ROM is for.")
+                }
             }
         }
 
@@ -58,6 +70,7 @@ impl ConsoleBuilder {
         if let Some(ref console) = self.console {
             match *console {
                 Console::Gameboy => Some(Gameboy::get_platform_parameters()),
+                Console::NES => Some(NES::get_platform_parameters()),
                 Console::GBA => Some(GBA::get_platform_parameters()),
                 _ => None
             }
@@ -67,14 +80,12 @@ impl ConsoleBuilder {
     }
 
     pub fn run<T: Platform>(&self, platform: &mut T, debug: bool) -> Result<(), String> {
-        if let Some(ref console) = self.console {
-            match *console {
+        if let Some(console) = self.console {
+            match console {
                 Console::Gameboy => {
                     let mut gb = Gameboy::new();
 
-                    if let Some(ref bios_name) = self.bios {
-                        gb.load_bios(bios_name)?
-                    }
+                    gb.load_bios(self.bios.clone())?;
 
                     if let Some(ref rom_name) = self.rom {
                         gb.load_rom(rom_name);
@@ -87,15 +98,24 @@ impl ConsoleBuilder {
                 Console::GBA => {
                     let mut gba = GBA::new();
 
-                    if let Some(ref bios_name) = self.bios {
-                        gba.load_bios(bios_name)?
-                    }
+                    gba.load_bios(self.bios.clone())?;
 
                     if let Some(ref rom_name) = self.rom {
                         gba.load_rom(rom_name);
                     }
 
                     gba.run(platform, debug);
+                    Ok(())
+                }
+
+                Console::NES => {
+                    let mut nes = NES::new();
+
+                    if let Some(ref rom_name) = self.rom {
+                        nes.load_rom(rom_name);
+                    }
+
+                    nes.run(platform, debug);
                     Ok(())
                 }
                 

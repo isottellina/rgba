@@ -1,0 +1,8 @@
+[package]
+name = "rgba_nes_core"
+version = "0.1.0"
+authors = ["Louise <louise@zanier.org>"]
+
+[dependencies]
+log = "~0.4.0"
+rgba_common = { path = '../rgba_common' }

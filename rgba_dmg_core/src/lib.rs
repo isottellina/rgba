@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Wed Jul 11 19:43:34 2018 (+0200)
+// Last-Updated: Fri Jul 13 13:34:18 2018 (+0200)
 //           By: Louise <ludwigette>
 //
 #![feature(test)]
@@ -139,8 +139,11 @@ impl Core for Gameboy {
         }
     }
     
-    fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
-        self.io.load_bios(filename)
+    fn load_bios<T: ToString>(&mut self, filename: Option<T>) -> Result<(), &'static str> {
+        match filename {
+            Some(f) => self.io.load_bios(&f.to_string()),
+            None => panic!("A bootrom is mandatory for GB games.")
+        }
     }
 
     fn load_rom(&mut self, filename: &str) -> bool {

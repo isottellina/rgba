@@ -3,8 +3,8 @@
 // Filename: lib.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 12:26:37 2018 (+0100)
-// Last-Updated: Sun Feb  4 02:04:12 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Fri Jul 13 12:00:53 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 #[macro_use] extern crate log;
 extern crate byteorder;
@@ -158,8 +158,11 @@ impl Core for GBA {
         }
     }
     
-    fn load_bios(&mut self, filename: &str) -> Result<(), &'static str> {
-        self.io.load_bios(filename)
+    fn load_bios<T: ToString>(&mut self, filename: Option<T>) -> Result<(), &'static str> {
+        match filename {
+            Some(f) => self.io.load_bios(&f.to_string()),
+            None => panic!("A BIOS is mandatory to run GBA games."),
+        }
     }
     
     fn load_rom(&mut self, filename: &str) -> bool {

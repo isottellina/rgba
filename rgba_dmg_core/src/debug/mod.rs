@@ -3,8 +3,8 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Tue Jan  9 12:58:05 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Sun Aug 26 14:14:57 2018 (+0200)
+//           By: Louise <ludwigette>
 //
 mod disasm;
 
@@ -163,7 +163,7 @@ impl Debugger {
         }
     }
     
-    fn should_break(&mut self, pc: usize) -> bool {
+    fn should_break(&self, pc: usize) -> bool {
         if self.breakpoints.is_empty() {
             false
         } else {

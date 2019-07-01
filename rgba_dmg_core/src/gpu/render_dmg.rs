@@ -8,8 +8,8 @@
 //
 use rgba_common::Platform;
 
-use gpu::GPU;
-use gpu::DmgColor;
+use crate::gpu::GPU;
+use crate::gpu::DmgColor;
 
 impl GPU {   
     pub fn render_dmg<T: Platform>(&mut self, platform: &mut T) {

@@ -20,7 +20,7 @@ mod mode1;
 mod mode2;
 mod mode4;
 
-use irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
+use crate::irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
 
 pub struct GPU {
     // Memory

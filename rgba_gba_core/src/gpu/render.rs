@@ -8,8 +8,8 @@
 //
 use byteorder::{ByteOrder, LittleEndian};
 
-use gpu::GPU;
-use gpu::DisplayLine;
+use crate::gpu::GPU;
+use crate::gpu::DisplayLine;
 
 use rgba_common::{Platform, Color};
 

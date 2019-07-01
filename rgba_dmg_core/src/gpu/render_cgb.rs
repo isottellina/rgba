@@ -8,8 +8,8 @@
 //
 use rgba_common::Platform;
 
-use gpu::GPU;
-use gpu::CgbColor;
+use crate::gpu::GPU;
+use crate::gpu::CgbColor;
 
 impl GPU {   
     pub fn render_cgb<T: Platform>(&mut self, platform: &mut T) {

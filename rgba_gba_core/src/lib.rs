@@ -20,10 +20,10 @@ mod keypad;
 mod gpu;
 mod apu;
 
-use cpu::ARM7TDMI;
-use io::Interconnect;
+use crate::cpu::ARM7TDMI;
+use crate::io::Interconnect;
 
-use debug::Debugger;
+use crate::debug::Debugger;
 
 use std::fs::File;
 use std::io::{Seek, SeekFrom, Read};

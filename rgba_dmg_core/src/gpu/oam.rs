@@ -6,7 +6,7 @@
 // Last-Updated: Sat Sep  1 00:54:14 2018 (+0200)
 //           By: Louise <ludwigette>
 // 
-use gpu::GPU;
+use crate::gpu::GPU;
 
 impl GPU {
     pub fn rebuild_cache(&mut self) {

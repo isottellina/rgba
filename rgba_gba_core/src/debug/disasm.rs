@@ -6,7 +6,7 @@
 // Last-Updated: Wed Jan 31 00:15:00 2018 (+0100)
 //           By: Louise <louise>
 // 
-use io::Interconnect;
+use crate::io::Interconnect;
 
 const CONDITIONS: [&str; 16] = [
     "eq", "ne", "cs", "cc",

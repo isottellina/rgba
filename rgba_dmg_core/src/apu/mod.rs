@@ -10,9 +10,9 @@ mod square;
 mod wave;
 mod noise;
 
-use apu::square::SquareChannel;
-use apu::wave::WaveChannel;
-use apu::noise::NoiseChannel;
+use crate::apu::square::SquareChannel;
+use crate::apu::wave::WaveChannel;
+use crate::apu::noise::NoiseChannel;
 
 use rgba_common::Platform;
 

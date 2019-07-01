@@ -10,9 +10,9 @@ mod disasm;
 
 use std::collections::{BTreeSet, VecDeque};
 
-use ::Gameboy;
-use io::Interconnect;
-use debug::disasm::disasm;
+use crate::Gameboy;
+use crate::io::Interconnect;
+use crate::debug::disasm::disasm;
 
 use rgba_common::Platform;
 

@@ -6,7 +6,7 @@
 // Last-Updated: Mon Jul  1 13:14:48 2019 (+0200)
 //           By: Louise <ludwigette>
 // 
-use ::Interconnect;
+use crate::Interconnect;
 use std::fmt;
 
 #[derive(Debug)]

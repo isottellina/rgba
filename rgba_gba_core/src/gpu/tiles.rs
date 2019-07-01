@@ -7,7 +7,7 @@
 //           By: Louise <ludwigette>
 //
 use byteorder::{ByteOrder, LittleEndian};
-use gpu::{GPU, Background};
+use crate::gpu::{GPU, Background};
 
 const TEXT_SCREEN_SIZE: [(u32, u32); 4] = [
     (256, 256),

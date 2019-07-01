@@ -6,9 +6,9 @@
 // Last-Updated: Wed Jan 24 12:19:13 2018 (+0100)
 //           By: Louise <louise>
 // 
-use cpu::ARM7TDMI;
-use cpu::CpuState;
-use io::Interconnect;
+use crate::cpu::ARM7TDMI;
+use crate::cpu::CpuState;
+use crate::io::Interconnect;
 
 impl ARM7TDMI {
     pub fn next_instruction_thumb(&mut self, io: &mut Interconnect, instr: u16) {

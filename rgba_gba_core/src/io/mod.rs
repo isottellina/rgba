@@ -206,8 +206,8 @@ impl Interconnect {
             IE => self.irq.i_e,
             IF => self.irq.i_f,
             IME => self.irq.ime as u16,
-            0x04000000...0x04000056 => self.gpu.io_read_u16(address),
-            0x04000060...0x040000A8 => self.apu.io_read_u16(address),
+            0x04000000..=0x04000056 => self.gpu.io_read_u16(address),
+            0x04000060..=0x040000A8 => self.apu.io_read_u16(address),
             _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
         }
     }
@@ -302,8 +302,8 @@ impl Interconnect {
         self.io[(address & 0x3FF) >> 1] = value;
         
         match address {
-            0x04000000...0x04000056 => self.gpu.io_write_u16(address, value),
-            0x04000060...0x040000A8 => self.apu.io_write_u16(address, value),
+            0x04000000..=0x04000056 => self.gpu.io_write_u16(address, value),
+            0x04000060..=0x040000A8 => self.apu.io_write_u16(address, value),
 
             DMA0SAD_L =>
                 self.dma[0].source_addr = (self.dma[0].source_addr & 0xffff0000) | (value as u32),

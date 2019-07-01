@@ -256,20 +256,20 @@ impl Interconnect {
     
     pub fn read_u8(&self, address: usize) -> u8 {
         match address {
-            0x0000...0x00FF if self.bios_inplace =>
+            0x0000..=0x00FF if self.bios_inplace =>
                 self.bios[address],
-            0x0200...0x08FF if self.bios_inplace && self.cgb =>
+            0x0200..=0x08FF if self.bios_inplace && self.cgb =>
                 self.bios[address],
-            0x0000...0x7FFF => self.cart.read_rom(address),
-            0x8000...0x9FFF => self.gpu.read_vram_u8(address),
-            0xA000...0xBFFF => self.cart.read_ram(address),
-            0xC000...0xCFFF => self.wram[address & 0xFFF],
-            0xD000...0xDFFF => self.wram[(self.wram_bank << 12) + (address & 0xFFF)],
-            0xE000...0xEFFF => self.wram[address & 0xFFF],
-            0xF000...0xFDFF => self.wram[(self.wram_bank << 12) + (address & 0xFFF)],
-            0xFE00...0xFE9F => self.gpu.read_oam_u8(address),
-            0xFEA0...0xFEFF => 0xFF,
-            0xFF80...0xFFFE => self.hram[address & 0x7F],
+            0x0000..=0x7FFF => self.cart.read_rom(address),
+            0x8000..=0x9FFF => self.gpu.read_vram_u8(address),
+            0xA000..=0xBFFF => self.cart.read_ram(address),
+            0xC000..=0xCFFF => self.wram[address & 0xFFF],
+            0xD000..=0xDFFF => self.wram[(self.wram_bank << 12) + (address & 0xFFF)],
+            0xE000..=0xEFFF => self.wram[address & 0xFFF],
+            0xF000..=0xFDFF => self.wram[(self.wram_bank << 12) + (address & 0xFFF)],
+            0xFE00..=0xFE9F => self.gpu.read_oam_u8(address),
+            0xFEA0..=0xFEFF => 0xFF,
+            0xFF80..=0xFFFE => self.hram[address & 0x7F],
 
             // IO
             JOYP => self.joypad.read(),
@@ -325,7 +325,7 @@ impl Interconnect {
             NR50 => self.apu.nr50(),
             NR51 => self.apu.nr51(),
             NR52 => self.apu.nr52(),
-            NR3_WAVE_START...NR3_WAVE_END =>
+            NR3_WAVE_START..=NR3_WAVE_END =>
                 self.apu.nr3_wave(address),
 
             IF => self.it_f(),
@@ -345,16 +345,16 @@ impl Interconnect {
         }
         
         match address {
-            0x0000...0x7FFF => { self.cart.write_rom(address, value) }
-            0x8000...0x9FFF => { self.gpu.write_vram_u8(address, value) }
-            0xA000...0xBFFF => { self.cart.write_ram(address, value) }
-            0xC000...0xCFFF => { self.wram[address & 0xFFF] = value }
-            0xD000...0xDFFF => { self.wram[(self.wram_bank << 12) + (address & 0xFFF)] = value }
-            0xE000...0xEFFF => { self.wram[address & 0xFFF] = value }
-            0xF000...0xFDFF => { self.wram[(self.wram_bank << 12) + (address & 0xFFF)] = value }
-            0xFE00...0xFE9F => { self.gpu.write_oam_u8(address, value); self.gpu.rebuild_cache(); }
-            0xFEA0...0xFEFF => { },
-            0xFF80...0xFFFE => { self.hram[address & 0x7F] = value }
+            0x0000..=0x7FFF => { self.cart.write_rom(address, value) }
+            0x8000..=0x9FFF => { self.gpu.write_vram_u8(address, value) }
+            0xA000..=0xBFFF => { self.cart.write_ram(address, value) }
+            0xC000..=0xCFFF => { self.wram[address & 0xFFF] = value }
+            0xD000..=0xDFFF => { self.wram[(self.wram_bank << 12) + (address & 0xFFF)] = value }
+            0xE000..=0xEFFF => { self.wram[address & 0xFFF] = value }
+            0xF000..=0xFDFF => { self.wram[(self.wram_bank << 12) + (address & 0xFFF)] = value }
+            0xFE00..=0xFE9F => { self.gpu.write_oam_u8(address, value); self.gpu.rebuild_cache(); }
+            0xFEA0..=0xFEFF => { },
+            0xFF80..=0xFFFE => { self.hram[address & 0x7F] = value }
 
             // IO
             JOYP => self.joypad.write(value),
@@ -415,7 +415,7 @@ impl Interconnect {
             NR50 => self.apu.set_nr50(value),
             NR51 => self.apu.set_nr51(value),
             NR52 => self.apu.set_nr52(value),
-            NR3_WAVE_START...NR3_WAVE_END =>
+            NR3_WAVE_START..=NR3_WAVE_END =>
                 self.apu.set_nr3_wave(address, value),
 
             DMA  => self.begin_dma(value),

@@ -3,7 +3,7 @@
 // Filename: cpu.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:46:30 2017 (+0100)
-// Last-Updated: Fri Jul 13 13:34:28 2018 (+0200)
+// Last-Updated: Mon Jul  1 13:14:48 2019 (+0200)
 //           By: Louise <ludwigette>
 // 
 use ::Interconnect;
@@ -931,7 +931,7 @@ impl LR35902 {
                 
             _ => {
                 println!("{}", self);
-                unimplemented!("Opcode 0x{:02X} ({:04x}) is not yet implemented.",
+                unimplemented!("Opcode 0x{:02X} ({:04x}) does not exist.",
                                opcode, self.pc - 1);
             }
         }
@@ -1244,7 +1244,6 @@ impl LR35902 {
             0xFD => { self.l |= 0x80 }
             0xFE => { let hl = self.read_hl(io) | 0x80; self.write_hl(io, hl) }
             0xFF => { self.a |= 0x80 }
-            _ => unreachable!()
         }
     }
 }

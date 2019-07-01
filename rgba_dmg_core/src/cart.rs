@@ -64,7 +64,7 @@ impl Cartridge {
                 Cartridge::RomOnly(rom)
             },
 
-            0x01...0x03 => {
+            0x01..=0x03 => {
                 let save_filename = format!("{}.sav", filename);
                 let mut ram: Box<[u8; 0x8000]> = Box::new([0; 0x8000]);
 
@@ -88,7 +88,7 @@ impl Cartridge {
                 }
             },
 
-            0x0F...0x13 => {
+            0x0F..=0x13 => {
                 let save_filename = format!("{}.sav", filename);
                 let mut ram: Box<[u8; 0x8000]> = Box::new([0; 0x8000]);
 
@@ -112,7 +112,7 @@ impl Cartridge {
                 }
             },
 
-            0x19...0x1E => {
+            0x19..=0x1E => {
                 let save_filename = format!("{}.sav", filename);
                 let mut ram: Box<[u8; 0x20_000]> = Box::new([0; 0x20_000]);
                 
@@ -151,16 +151,16 @@ impl Cartridge {
             Cartridge::MBC1 { rom: ref v, rom_bank: b, .. } |
             Cartridge::MBC3 { rom: ref v, rom_bank: b, .. } => {
                 match address {
-                    0x0000...0x3FFF => v[address],
-                    0x4000...0x7FFF => 
+                    0x0000..=0x3FFF => v[address],
+                    0x4000..=0x7FFF => 
                         v[((b as usize) << 14) + (address & 0x3FFF)],
                     _ => unreachable!(),
                 }
             }
             Cartridge::MBC5 { rom: ref v, rom_bank: b, .. } => {
                 match address {
-                    0x0000...0x3FFF => v[address],
-                    0x4000...0x7FFF => 
+                    0x0000..=0x3FFF => v[address],
+                    0x4000..=0x7FFF => 
                         v[(b << 14) + (address & 0x3FFF)],
                     _ => unreachable!(),
                 }
@@ -181,15 +181,15 @@ impl Cartridge {
                 ref rom_banks, ..
             } => {
                 match address {
-                    0x0000...0x1FFF => {
+                    0x0000..=0x1FFF => {
                         *ram_enable = (value & 0xF) == 0xA;
                     },
-                    0x2000...0x3FFF => {
+                    0x2000..=0x3FFF => {
                         *rom_bank &= 0xe0;
                         *rom_bank |= if value == 0 { 1 } else { value & 0x1f };
                         *rom_bank %= rom_banks;
                     }
-                    0x4000...0x5FFF => {
+                    0x4000..=0x5FFF => {
                         if *mode {
                             *ram_bank = value & 0x3;
                         } else {
@@ -198,7 +198,7 @@ impl Cartridge {
                             *rom_bank %= rom_banks;
                         }
                     }
-                    0x6000...0x7FFF => *mode = value != 0,
+                    0x6000..=0x7FFF => *mode = value != 0,
                     _ => unreachable!(),
                 }
             }
@@ -209,10 +209,10 @@ impl Cartridge {
                 ref rom_banks, ..
             } => {
                 match address {
-                    0x0000...0x1FFF => {
+                    0x0000..=0x1FFF => {
                         *ram_enable = (value & 0xF) == 0xA;
                     },
-                    0x2000...0x3FFF => {
+                    0x2000..=0x3FFF => {
                         *rom_bank = if value == 0 {
                             1
                         } else {
@@ -221,14 +221,14 @@ impl Cartridge {
 
                         *rom_bank %= rom_banks;
                     }
-                    0x4000...0x5FFF => {
+                    0x4000..=0x5FFF => {
                         if value < 4 {
                             *ram_bank = value;
                         } else {
                             // RTC here
                         }
                     }
-                    0x6000...0x7FFF => { },
+                    0x6000..=0x7FFF => { },
                     _ => unreachable!(),
                 }
             }
@@ -239,18 +239,18 @@ impl Cartridge {
                 ref rom_banks, ..
             } => {
                 match address {
-                    0x0000...0x1FFF => {
+                    0x0000..=0x1FFF => {
                         *ram_enable = (value & 0xF) == 0xA;
                     },
-                    0x2000...0x2FFF => {
+                    0x2000..=0x2FFF => {
                         *rom_bank = (*rom_bank & 0x100) | value as usize;
                         *rom_bank %= *rom_banks as usize;
                     }
-                    0x3000...0x3FFF => {
+                    0x3000..=0x3FFF => {
                         *rom_bank = (*rom_bank & 0xFF) | (((value as usize) & 0x01) << 8);
                         *rom_bank %= *rom_banks as usize;
                     }
-                    0x4000...0x5FFF => {
+                    0x4000..=0x5FFF => {
                             *ram_bank = value & 0xF;
                     }
                     _ => warn!("Unmapped write to {:04x} (Cart ROM, value={:02x})", address, value),

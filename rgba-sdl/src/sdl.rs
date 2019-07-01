@@ -3,7 +3,7 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Wed Jul 11 21:53:20 2018 (+0200)
+// Last-Updated: Mon Jul  1 12:46:25 2019 (+0200)
 //           By: Louise <ludwigette>
 //
 use rgba_common;
@@ -18,7 +18,8 @@ use sdl2::keyboard::Scancode;
 use sdl2::video::Window;
 use sdl2::audio::{AudioSpecDesired, AudioQueue};
 
-use readline::{readline, add_history};
+use rustyline::Editor;
+use log::{warn, error};
 
 pub struct SDLPlatform {
     height: u32,
@@ -31,6 +32,7 @@ pub struct SDLPlatform {
     audio_device: AudioQueue<i16>,
     
     event_pump: EventPump,
+    rl: Editor::<()>,
 }
 
 impl Platform for SDLPlatform {
@@ -58,6 +60,8 @@ impl Platform for SDLPlatform {
         ).unwrap();
 
         audio_device.resume();
+
+        let rl = Editor::<()>::new();
         
         SDLPlatform {
             width,
@@ -68,6 +72,7 @@ impl Platform for SDLPlatform {
             video_data,
             audio_device,
             event_pump,
+            rl,
         }
     }
 
@@ -168,12 +173,9 @@ impl Platform for SDLPlatform {
         }
     }
 
-    fn read_line(&self, prompt: &str) -> Option<String> {
-        if let Ok(s) = readline(prompt) {
-            if add_history(&s).is_err() {
-                warn!("Couldn't add to history");
-            }
-
+    fn read_line(&mut self, prompt: &str) -> Option<String> {
+        if let Ok(s) = self.rl.readline(prompt) {
+            self.rl.add_history_entry(&s);
             Some(s)
         } else {
             None

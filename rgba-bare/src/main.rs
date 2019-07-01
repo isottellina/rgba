@@ -3,14 +3,21 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Mon Jul  1 12:45:33 2019 (+0200)
+// Last-Updated: Wed Jun 12 14:31:34 2019 (+0200)
 //           By: Louise <ludwigette>
 //
-mod sdl;
+extern crate rgba_common;
+extern crate rgba_builder;
+
+extern crate clap;
+#[macro_use] extern crate log;
+extern crate simplelog;
+
+mod platform;
 
 use clap::{App, Arg};
 
-use sdl::SDLPlatform;
+use platform::BarePlatform;
 
 use rgba_common::{Console, Platform};
 use rgba_builder::ConsoleBuilder;
@@ -59,17 +66,14 @@ fn main() {
     let log = matches.value_of("log").unwrap();
 
     let log_level = match log {
-        "debug" => simplelog::LevelFilter::Debug,
-        "info" => simplelog::LevelFilter::Info,
-        "warn" => simplelog::LevelFilter::Warn,
-        "error" => simplelog::LevelFilter::Error,
+        "debug" => simplelog::LogLevelFilter::Debug,
+        "info" => simplelog::LogLevelFilter::Info,
+        "warn" => simplelog::LogLevelFilter::Warn,
+        "error" => simplelog::LogLevelFilter::Error,
         _ => unreachable!(),
     };
 
-    simplelog::TermLogger::init(log_level,
-                                simplelog::Config::default(),
-                                simplelog::TerminalMode::Stderr
-    ).unwrap();
+    simplelog::TermLogger::init(log_level, simplelog::Config::default()).unwrap();
     
     let console = ConsoleBuilder::default()
         .load_bios(bios_name)
@@ -86,7 +90,7 @@ fn main() {
 
     if console.is_determined() {
         let parameters = console.get_platform_parameters().unwrap();
-        let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
+        let mut platform = BarePlatform::new(parameters.0, parameters.1, 2);
         
         let _ = console.run(&mut platform, debug);
     } else {

@@ -3,8 +3,8 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan  4 00:29:52 2018 (+0100)
-// Last-Updated: Wed Jan 31 10:46:54 2018 (+0100)
-//           By: Louise <louise>
+// Last-Updated: Mon Jul  1 12:33:53 2019 (+0200)
+//           By: Louise <ludwigette>
 //
 mod disasm;
 
@@ -31,7 +31,7 @@ impl Debugger {
 
     pub fn trigger(&mut self) { self.steps = 1; }
     
-    pub fn handle<T: Platform>(&mut self, gba: &mut GBA, platform: &T) {
+    pub fn handle<T: Platform>(&mut self, gba: &mut GBA, platform: &mut T) {
         let pc = gba.cpu.pc;
         
         if self.should_break(pc) || self.enough_steps() {

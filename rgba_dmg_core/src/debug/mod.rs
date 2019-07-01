@@ -3,7 +3,7 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Sun Aug 26 14:14:57 2018 (+0200)
+// Last-Updated: Mon Jul  1 12:33:37 2019 (+0200)
 //           By: Louise <ludwigette>
 //
 mod disasm;
@@ -35,7 +35,7 @@ impl Debugger {
         self.steps = 1;
     }
     
-    pub fn handle<T: Platform>(&mut self, gb: &mut Gameboy, platform: &T) {
+    pub fn handle<T: Platform>(&mut self, gb: &mut Gameboy, platform: &mut T) {
         if self.should_break(gb.cpu.pc()) || self.enough_steps() ||
             self.hit_watchpoint(&mut gb.io) {
                 println!("{}", gb.cpu);

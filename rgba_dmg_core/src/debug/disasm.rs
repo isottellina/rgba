@@ -58,7 +58,7 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             (0, 1, 0) => format!("LD {}, SP", address(io, addr + 1)),
             (0, 2, 0) => "STOP".to_owned(),
             (0, 3, 0) => format!("JR {}", rel_address(io, addr + 1)),
-            (0, 4...7, 0) => format!("JR {}, {}",
+            (0, 4..=7, 0) => format!("JR {}, {}",
                                      CONDITIONS[(y - 4) as usize],
                                      rel_address(io, addr + 1)
             ),
@@ -113,7 +113,7 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             (2, _, _) => format!("{} {}", ALU[y as usize], R[z as usize]),
 
             // X = 3 and Z = 0
-            (3, 0...3, 0) => format!("RET {}", CONDITIONS[y as usize]),
+            (3, 0..=3, 0) => format!("RET {}", CONDITIONS[y as usize]),
             (3, 4, 0) => format!("LD (0xFF{:02X}), A", io.read_u8(addr + 1)),
             (3, 5, 0) => format!("ADD SP, {:02X}", s8(io, addr + 1)),
             (3, 6, 0) => format!("LD A, (0xFF{:02X})", io.read_u8(addr + 1)),
@@ -130,7 +130,7 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             },
 
             // X = 3 and Z = 2
-            (3, 0...3, 2) => format!("JP {}, {}",
+            (3, 0..=3, 2) => format!("JP {}, {}",
                                      CONDITIONS[y as usize],
                                      address(io, addr + 1)),
             (3, 4, 2) => "LD (C), A".to_owned(),
@@ -144,7 +144,7 @@ pub fn disasm(io: &Interconnect, addr: usize) -> String {
             (3, 7, 3) => "EI".to_owned(),
 
             // X = 3 and Z = 4
-            (3, 0...3, 4) => format!("CALL {}, {}",
+            (3, 0..=3, 4) => format!("CALL {}, {}",
                                      CONDITIONS[y as usize],
                                      address(io, addr + 1)),
 

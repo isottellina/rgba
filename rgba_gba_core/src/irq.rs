@@ -6,7 +6,7 @@
 // Last-Updated: Thu Jan 25 22:14:41 2018 (+0100)
 //           By: Louise <louise>
 // 
-use cpu::ARM7TDMI;
+use crate::cpu::ARM7TDMI;
 
 #[derive(Debug, Default)]
 pub struct IrqManager {

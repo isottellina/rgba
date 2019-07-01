@@ -6,10 +6,10 @@
 // Last-Updated: Thu Jan 25 23:38:52 2018 (+0100)
 //           By: Louise <louise>
 // 
-use cpu::ARM7TDMI;
-use cpu::CpuMode;
-use cpu::CpuState;
-use io::Interconnect;
+use crate::cpu::ARM7TDMI;
+use crate::cpu::CpuMode;
+use crate::cpu::CpuState;
+use crate::io::Interconnect;
 
 impl ARM7TDMI {
     fn match_condition(&self, instr: u32) -> bool {

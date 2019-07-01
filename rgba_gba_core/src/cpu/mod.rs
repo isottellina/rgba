@@ -7,7 +7,7 @@
 //           By: Louise <louise>
 // 
 use std::fmt;
-use io::Interconnect;
+use crate::io::Interconnect;
 
 mod arm;
 mod thumb;

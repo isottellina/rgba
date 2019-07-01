@@ -13,11 +13,11 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
 
-use cart::Cartridge;
-use gpu::GPU;
-use apu::APU;
-use timer::Timer;
-use joypad::Joypad;
+use crate::cart::Cartridge;
+use crate::gpu::GPU;
+use crate::apu::APU;
+use crate::timer::Timer;
+use crate::joypad::Joypad;
 
 const JOYP: usize = 0xFF00;
 

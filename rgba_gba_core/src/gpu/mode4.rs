@@ -7,8 +7,8 @@
 //           By: Louise <louise>
 // 
 use byteorder::{ByteOrder, LittleEndian};
-use gpu::GPU;
-use gpu::DisplayLine;
+use crate::gpu::GPU;
+use crate::gpu::DisplayLine;
 
 impl GPU {
     pub fn render_mode4(&mut self, line_id: u16, line: &mut DisplayLine) {

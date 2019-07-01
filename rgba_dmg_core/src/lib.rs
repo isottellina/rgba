@@ -22,9 +22,9 @@ mod debug;
 
 use rgba_common::{Core, Platform, Event, Console};
 use rgba_common::fnv_hash;
-use cpu::LR35902;
-use io::Interconnect;
-use debug::Debugger;
+use crate::cpu::LR35902;
+use crate::io::Interconnect;
+use crate::debug::Debugger;
 
 use std::thread;
 use std::fs::File;

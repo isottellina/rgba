@@ -6,7 +6,7 @@
 // Last-Updated: Wed Apr 18 14:18:08 2018 (+0200)
 //           By: Louise <louise>
 // 
-use gpu::{GPU, DisplayLine};
+use crate::gpu::{GPU, DisplayLine};
 
 impl GPU {
     pub fn render_mode2(&mut self, _line_id: u16, line: &mut DisplayLine) {

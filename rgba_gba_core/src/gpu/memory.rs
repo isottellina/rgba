@@ -7,7 +7,7 @@
 //           By: Louise <louise>
 // 
 use byteorder::{ByteOrder, LittleEndian};
-use gpu::GPU;
+use crate::gpu::GPU;
 
 impl GPU {
     #[inline]

@@ -6,8 +6,8 @@
 // Last-Updated: Tue Apr 17 19:45:47 2018 (+0200)
 //           By: Louise <louise>
 // 
-use gpu::GPU;
-use gpu::GpuMode;
+use crate::gpu::GPU;
+use crate::gpu::GpuMode;
 
 impl GPU {
     #[inline]

@@ -6,7 +6,7 @@
 // Last-Updated: Tue Jan  9 12:56:11 2018 (+0100)
 //           By: Louise <louise>
 // 
-use io::Interconnect;
+use crate::io::Interconnect;
 
 static CONDITIONS: [&str; 4] = ["NZ", "Z", "NC", "C"];
 static ALU: [&str; 8] = ["ADD A,", "ADC A,", "SUB", "SBC",

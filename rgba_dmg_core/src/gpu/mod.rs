@@ -548,7 +548,7 @@ impl CgbColor {
 
 trait PaletteRegister {
     fn get_register(&self) -> u8;
-    fn set_register(&mut self, u8);
+    fn set_register(&mut self, _: u8);
 }
 
 impl PaletteRegister for [DmgColor; 4] {
@@ -574,7 +574,7 @@ mod tests {
     
     #[bench]
     fn get_background_dmg(b: &mut Bencher) {
-        let mut gpu = GPU::new();
+        let gpu = GPU::new();
         
         b.iter(|| {
             for x in 0..160 {
@@ -585,7 +585,7 @@ mod tests {
 
     #[bench]
     fn get_background_cgb(b: &mut Bencher) {
-        let mut gpu = GPU::new();
+        let gpu = GPU::new();
         
         b.iter(|| {
             for x in 0..160 {

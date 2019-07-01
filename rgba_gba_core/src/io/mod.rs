@@ -8,18 +8,18 @@
 //
 mod dma;
 
-use cpu::ARM7TDMI;
-use gpu::GPU;
-use apu::APU;
-use keypad::Keypad;
-use irq::IrqManager;
-use io::dma::DmaChannel;
+use crate::cpu::ARM7TDMI;
+use crate::gpu::GPU;
+use crate::apu::APU;
+use crate::keypad::Keypad;
+use crate::irq::IrqManager;
+use crate::io::dma::DmaChannel;
 
 // Import DMA I/O ports
-use io::dma::{DMA0SAD_L, DMA0SAD_H, DMA0DAD_L, DMA0DAD_H, DMA0CNT_L, DMA0CNT_H};
-use io::dma::{DMA1SAD_L, DMA1SAD_H, DMA1DAD_L, DMA1DAD_H, DMA1CNT_L, DMA1CNT_H};
-use io::dma::{DMA2SAD_L, DMA2SAD_H, DMA2DAD_L, DMA2DAD_H, DMA2CNT_L, DMA2CNT_H};
-use io::dma::{DMA3SAD_L, DMA3SAD_H, DMA3DAD_L, DMA3DAD_H, DMA3CNT_L, DMA3CNT_H};
+use crate::io::dma::{DMA0SAD_L, DMA0SAD_H, DMA0DAD_L, DMA0DAD_H, DMA0CNT_L, DMA0CNT_H};
+use crate::io::dma::{DMA1SAD_L, DMA1SAD_H, DMA1DAD_L, DMA1DAD_H, DMA1CNT_L, DMA1CNT_H};
+use crate::io::dma::{DMA2SAD_L, DMA2SAD_H, DMA2DAD_L, DMA2DAD_H, DMA2CNT_L, DMA2CNT_H};
+use crate::io::dma::{DMA3SAD_L, DMA3SAD_H, DMA3DAD_L, DMA3DAD_H, DMA3CNT_L, DMA3CNT_H};
 
 use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;

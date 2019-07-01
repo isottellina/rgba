@@ -8,9 +8,9 @@
 //
 mod disasm;
 
-use ::GBA;
-use cpu::CpuState;
-use debug::disasm::{disasm_arm, disasm_thumb};
+use crate::GBA;
+use crate::cpu::CpuState;
+use crate::debug::disasm::{disasm_arm, disasm_thumb};
 use rgba_common::Platform;
 
 use std::collections::VecDeque;

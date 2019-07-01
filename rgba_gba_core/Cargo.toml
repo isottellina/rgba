@@ -1,6 +1,7 @@
 [package]
 name = "rgba_gba_core"
 version = "0.1.0"
+edition = "2018"
 authors = ["Louise"]
 
 [profile.dev]

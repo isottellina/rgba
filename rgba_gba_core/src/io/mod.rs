@@ -7,6 +7,7 @@
 //           By: Louise <louise>
 //
 mod dma;
+mod timer;
 
 use crate::cpu::ARM7TDMI;
 use crate::gpu::GPU;
@@ -14,6 +15,7 @@ use crate::apu::APU;
 use crate::keypad::Keypad;
 use crate::irq::IrqManager;
 use crate::io::dma::DmaChannel;
+use crate::io::timer::Timer;
 
 // Import DMA I/O ports
 use crate::io::dma::{DMA0SAD_L, DMA0SAD_H, DMA0DAD_L, DMA0DAD_H, DMA0CNT_L, DMA0CNT_H};
@@ -21,9 +23,15 @@ use crate::io::dma::{DMA1SAD_L, DMA1SAD_H, DMA1DAD_L, DMA1DAD_H, DMA1CNT_L, DMA1
 use crate::io::dma::{DMA2SAD_L, DMA2SAD_H, DMA2DAD_L, DMA2DAD_H, DMA2CNT_L, DMA2CNT_H};
 use crate::io::dma::{DMA3SAD_L, DMA3SAD_H, DMA3DAD_L, DMA3DAD_H, DMA3CNT_L, DMA3CNT_H};
 
+// Import Timer I/O ports
+use crate::io::timer::{TM0CNT_L, TM1CNT_L, TM2CNT_L, TM3CNT_L,
+                       TM0CNT_H, TM1CNT_H, TM2CNT_H, TM3CNT_H};
+
 use byteorder::{ByteOrder, LittleEndian};
 use std::fs::File;
 use std::io::Read;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 #[macro_use] mod macros;
 
@@ -47,10 +55,25 @@ pub struct Interconnect {
     postflg: u8,
     irq: IrqManager,
     dma: [DmaChannel; 4],
+    timer: [Rc<RefCell<Timer>>; 4],
 }
 
 impl Interconnect {
     pub fn new() -> Interconnect {
+        let timer1: Rc<RefCell<Timer>> = Default::default();
+        let timer2: Rc<RefCell<Timer>> = Default::default();
+        let timer3: Rc<RefCell<Timer>> = Default::default();
+        let timer4: Rc<RefCell<Timer>> = Default::default();
+
+        timer1.borrow_mut().set_id(1 << 3);
+        timer2.borrow_mut().set_id(1 << 4);
+        timer3.borrow_mut().set_id(1 << 5);
+        timer4.borrow_mut().set_id(1 << 6);
+        
+        timer1.borrow_mut().set_next(timer2.clone());
+        timer2.borrow_mut().set_next(timer3.clone());
+        timer3.borrow_mut().set_next(timer4.clone());
+            
         Interconnect {
             bios: vec![],
             rom:  vec![],
@@ -85,6 +108,7 @@ impl Interconnect {
             postflg: 0,
             irq: IrqManager::new(),
             dma: [DmaChannel::new(0), DmaChannel::new(1), DmaChannel::new(2), DmaChannel::new(3)],
+            timer: [timer1, timer2, timer3, timer4],
         }
     }
 
@@ -109,9 +133,12 @@ impl Interconnect {
         } else if self.dma[3].start_timing == 0 && self.dma[3].enable {
             handle_dma!(self, self.dma[3]);
         }
+
+        for timer_ref in &self.timer {
+            timer_ref.borrow_mut().spend_cycles(self.cycles_to_spend, &mut self.irq);
+        }
         
         self.irq.handle(cpu);
-        
         self.cycles_to_spend = 0;
     }
 
@@ -208,7 +235,45 @@ impl Interconnect {
             IME => self.irq.ime as u16,
             0x04000000..=0x04000056 => self.gpu.io_read_u16(address),
             0x04000060..=0x040000A8 => self.apu.io_read_u16(address),
-            _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
+
+            TM0CNT_L => self.timer[0].borrow().read_cnt_l(),
+            TM0CNT_H => self.timer[0].borrow().read_cnt_h(),
+            TM1CNT_L => self.timer[1].borrow().read_cnt_l(),
+            TM1CNT_H => self.timer[1].borrow().read_cnt_h(),
+            TM2CNT_L => self.timer[2].borrow().read_cnt_l(),
+            TM2CNT_H => self.timer[2].borrow().read_cnt_h(),
+            TM3CNT_L => self.timer[3].borrow().read_cnt_l(),
+            TM3CNT_H => self.timer[3].borrow().read_cnt_h(),
+
+            DMA0SAD_L => (self.dma[0].source_addr & 0xffff) as u16,
+            DMA0SAD_H => (self.dma[0].source_addr >> 16) as u16,
+            DMA0DAD_L => (self.dma[0].dest_addr & 0xffff) as u16,
+            DMA0DAD_H => (self.dma[0].dest_addr >> 16) as u16,
+            DMA0CNT_L => self.dma[0].word_count,
+            DMA0CNT_H => self.dma[0].read_cnt_h(),
+            
+            DMA1SAD_L => (self.dma[1].source_addr & 0xffff) as u16,
+            DMA1SAD_H => (self.dma[1].source_addr >> 16) as u16,
+            DMA1DAD_L => (self.dma[1].dest_addr & 0xffff) as u16,
+            DMA1DAD_H => (self.dma[1].dest_addr >> 16) as u16,
+            DMA1CNT_L => self.dma[1].word_count,
+            DMA1CNT_H => self.dma[1].read_cnt_h(),
+            
+            DMA2SAD_L => (self.dma[2].source_addr & 0xffff) as u16,
+            DMA2SAD_H => (self.dma[2].source_addr >> 16) as u16,
+            DMA2DAD_L => (self.dma[2].dest_addr & 0xffff) as u16,
+            DMA2DAD_H => (self.dma[2].dest_addr >> 16) as u16,
+            DMA2CNT_L => self.dma[2].word_count,
+            DMA2CNT_H => self.dma[2].read_cnt_h(),
+            
+            DMA3SAD_L => (self.dma[0].source_addr & 0xffff) as u16,
+            DMA3SAD_H => (self.dma[3].source_addr >> 16) as u16,
+            DMA3DAD_L => (self.dma[3].dest_addr & 0xffff) as u16,
+            DMA3DAD_H => (self.dma[3].dest_addr >> 16) as u16,
+            DMA3CNT_L => self.dma[3].word_count,
+            DMA3CNT_H => self.dma[3].read_cnt_h(),
+            
+            _ => { warn!("Unmapped read_u16 from {:38x} (IO)", address); 3 }
         }
     }
     
@@ -305,6 +370,15 @@ impl Interconnect {
             0x04000000..=0x04000056 => self.gpu.io_write_u16(address, value),
             0x04000060..=0x040000A8 => self.apu.io_write_u16(address, value),
 
+            TM0CNT_L => self.timer[0].borrow_mut().write_cnt_l(value),
+            TM0CNT_H => self.timer[0].borrow_mut().write_cnt_h(value),
+            TM1CNT_L => self.timer[1].borrow_mut().write_cnt_l(value),
+            TM1CNT_H => self.timer[1].borrow_mut().write_cnt_h(value),
+            TM2CNT_L => self.timer[2].borrow_mut().write_cnt_l(value),
+            TM2CNT_H => self.timer[2].borrow_mut().write_cnt_h(value),
+            TM3CNT_L => self.timer[3].borrow_mut().write_cnt_l(value),
+            TM3CNT_H => self.timer[3].borrow_mut().write_cnt_h(value),
+            
             DMA0SAD_L =>
                 self.dma[0].source_addr = (self.dma[0].source_addr & 0xffff0000) | (value as u32),
             DMA0SAD_H =>

@@ -3,12 +3,10 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 14:33:34 2017 (+0100)
-// Last-Updated: Fri Jul 13 13:34:18 2018 (+0200)
+// Last-Updated: Tue Jul  9 14:17:14 2019 (+0200)
 //           By: Louise <ludwigette>
 //
-#![feature(test)]
 #[macro_use] extern crate log;
-extern crate test;
 extern crate rgba_common;
 
 mod cpu;
@@ -55,7 +53,8 @@ impl Gameboy {
         self.io.reset();
     }
     
-    fn on_frame<T: Platform>(&mut self, debugger: &mut Debugger,
+    fn on_frame<T: Platform>(&mut self,
+                             debugger: &mut Debugger,
                              platform: &mut T) {
         let elapsed = self.last_frame.elapsed();
                 

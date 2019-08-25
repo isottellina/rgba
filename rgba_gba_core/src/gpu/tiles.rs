@@ -223,7 +223,7 @@ fn tile_copy_4bit(tile_data: &[u8], palette: &[u8], output: &mut [u16], tile_inf
 	}
         
 	pindex += 1;
-	offset += offset_inc;
+	offset = offset.wrapping_add(offset_inc);
     }
     
     while (pindex < output.len()) && (offset < tile_data.len()) {

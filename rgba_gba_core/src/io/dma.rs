@@ -32,6 +32,18 @@ impl DmaChannel {
 
         dma
     }
+
+    #[inline]
+    pub fn read_cnt_h(&self) -> u16 {
+        return (self.dest_mode << 5)
+            | (self.source_mode << 7)
+            | ((self.repeat as u16) << 9)
+            | ((self.word_size as u16) << 10)
+            | ((self.drq as u16) << 11)
+            | (self.start_timing << 12)
+            | ((self.irq_en as u16) << 14)
+            | ((self.enable as u16) << 15);
+    }
     
     #[inline]
     pub fn write_cnt(&mut self, cnt: u32) {

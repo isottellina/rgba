@@ -254,7 +254,7 @@ def write_swp(g, high):
     byte = (high & 0x04) != 0
 
     g.write("let rn = _cpu.get_register(((instr >> 16) & 0xF) as usize);")
-    g.write("let rm = _cpu.get_register((instr & 0xF) as usize);;")
+    g.write("let rm = _cpu.get_register((instr & 0xF) as usize);")
     g.write("let rd = (instr >> 12) & 0xF;")
 
     if byte:

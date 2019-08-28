@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Thu Jan 18 14:14:22 2018 (+0100)
-// Last-Updated: Wed Apr 18 13:37:28 2018 (+0200)
+// Last-Updated: Sun Aug 25 21:00:14 2019 (+0200)
 //           By: Louise <louise>
 // 
 // General modules
@@ -18,6 +18,7 @@ mod tiles;
 mod mode0;
 mod mode1;
 mod mode2;
+mod mode3;
 mod mode4;
 
 use crate::irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};

@@ -58,14 +58,14 @@ impl GPU {
             BG3CNT  => self.bg[3].cnt = value,
 
             // Background offsets
-            BG0HOFS  => self.bg[0].h_off = value,
-            BG0VOFS  => self.bg[0].v_off = value,
-            BG1HOFS  => self.bg[1].h_off = value,
-            BG1VOFS  => self.bg[1].v_off = value,
-            BG2HOFS  => self.bg[2].h_off = value,
-            BG2VOFS  => self.bg[2].v_off = value,
-            BG3HOFS  => self.bg[3].h_off = value,
-            BG3VOFS  => self.bg[3].v_off = value,
+            BG0HOFS  => self.bg[0].h_off = value & 0x1ff,
+            BG0VOFS  => self.bg[0].v_off = value & 0x1ff,
+            BG1HOFS  => self.bg[1].h_off = value & 0x1ff,
+            BG1VOFS  => self.bg[1].v_off = value & 0x1ff,
+            BG2HOFS  => self.bg[2].h_off = value & 0x1ff,
+            BG2VOFS  => self.bg[2].v_off = value & 0x1ff,
+            BG3HOFS  => self.bg[3].h_off = value & 0x1ff,
+            BG3VOFS  => self.bg[3].v_off = value & 0x1ff,
 
             // Background rotation
             BG2X_L   => self.bg[2].x_ref = (self.bg[2].x_ref & 0x0FFF0000) | (value as u32),

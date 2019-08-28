@@ -3,7 +3,7 @@
 // Filename: render.rs
 // Author: Louise <louise>
 // Created: Tue Jan 30 11:50:54 2018 (+0100)
-// Last-Updated: Mon May 14 10:44:43 2018 (+0200)
+// Last-Updated: Mon Aug 26 00:11:53 2019 (+0200)
 //           By: Louise <louise>
 //
 use byteorder::{ByteOrder, LittleEndian};
@@ -30,6 +30,7 @@ impl GPU {
                 0 => self.render_mode0(line, &mut display_line),
                 1 => self.render_mode1(line, &mut display_line),
                 2 => self.render_mode2(line, &mut display_line),
+                3 => self.render_mode3(line, &mut display_line),
                 4 => self.render_mode4(line, &mut display_line),
                 mode => debug!("Rendering unimplemented mode {}", mode),
             }

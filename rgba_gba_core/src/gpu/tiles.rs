@@ -62,7 +62,7 @@ impl GPU {
                         tile_info, screen_x & 7, screen_y & 7);
             }
 
-            column += screen_x & 7;
+            column += 8 - (screen_x & 7);
         }
 
         // Draw the other tiles

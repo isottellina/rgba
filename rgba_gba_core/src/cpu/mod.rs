@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Sun Feb 25 19:24:52 2018 (+0100)
+// Last-Updated: Thu Sep 26 04:31:03 2019 (+0200)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -83,39 +83,31 @@ impl ARM7TDMI {
     
     pub fn read_u32(&self, io: &mut Interconnect, address: usize) -> u32 {
         io.declare_access(address, 2);
-        
         io.read_u32(address)
     }
 
     pub fn read_u16(&self, io: &mut Interconnect, address: usize) -> u16 {
         io.declare_access(address, 1);
-
-        
         io.read_u16(address)
     }
 
     pub fn read_u8(&self, io: &mut Interconnect, address: usize) -> u8 {
         io.declare_access(address, 0);
-        
         io.read_u8(address)
     }
 
     pub fn write_u32(&self, io: &mut Interconnect, address: usize, value: u32) {
         io.declare_access(address, 2);
-        
         io.write_u32(address, value)
     }
 
     pub fn write_u16(&self, io: &mut Interconnect, address: usize, value: u16) {
         io.declare_access(address, 1);
-
-        
         io.write_u16(address, value)
     }
 
     pub fn write_u8(&self, io: &mut Interconnect, address: usize, value: u8) {
         io.declare_access(address, 0);
-        
         io.write_u8(address, value)
     }
     

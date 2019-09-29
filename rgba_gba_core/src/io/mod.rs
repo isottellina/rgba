@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Sun Feb 25 19:29:12 2018 (+0100)
+// Last-Updated: Thu Sep 26 04:31:29 2019 (+0200)
 //           By: Louise <louise>
 //
 mod dma;
@@ -113,7 +113,7 @@ impl Interconnect {
     }
 
     pub fn declare_access(&mut self, address: usize, width: usize) {
-        self.cycles_to_spend += self.waitstates[address >> 24][width][0];
+        self.cycles_to_spend += self.waitstates[(address >> 24) & 0xF][width][0];
     }
 
     pub fn delay(&mut self, cycles: u32) {

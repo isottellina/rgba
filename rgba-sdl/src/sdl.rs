@@ -3,11 +3,12 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Fri Oct  4 01:59:39 2019 (+0200)
+// Last-Updated: Fri Oct  4 14:17:13 2019 (+0200)
 //           By: Louise <louise>
 //
 use rgba_common;
 use rgba_common::{Pixel, Key};
+use rgba_common::declare_present_frame;
 
 use sdl2;
 use sdl2::EventPump;
@@ -168,21 +169,4 @@ impl SDLPlatform {
     }
 }
 
-impl Drop for SDLPlatform {
-    fn drop(&mut self) {
-	panic!("C");
-    }
-}
-
-pub extern "C" fn present_frame(frame_len: usize, frame_ptr: *const Pixel, frontend: *const RefCell<SDLPlatform>) {
-    let frontend_cell = unsafe { Weak::from_raw(frontend) };
-    let frame: &[Pixel] = unsafe { std::slice::from_raw_parts(frame_ptr, frame_len) };
-
-    {
-	let frontend_rc = frontend_cell.upgrade().unwrap();
-	let mut frontend = frontend_rc.borrow_mut();
-	frontend.present_frame(frame);
-    }
-    
-    std::mem::forget(frontend_cell);
-}
+declare_present_frame!(SDLPlatform);

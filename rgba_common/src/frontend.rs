@@ -3,7 +3,7 @@
 // Filename: frontend.rs
 // Author: Louise <louise>
 // Created: Tue Oct  1 02:50:56 2019 (+0200)
-// Last-Updated: Fri Oct  4 01:57:57 2019 (+0200)
+// Last-Updated: Fri Oct  4 14:13:45 2019 (+0200)
 //           By: Louise <louise>
 //
 use std::{
@@ -111,4 +111,22 @@ impl Drop for Core {
             (self.lib.get::<fn(*mut CoreData)>(b"rgba_core_deinit\0").unwrap())(self.coredata)
         };
     }
+}
+
+#[macro_export]
+macro_rules! declare_present_frame {
+    ($t:ty) => (
+	pub extern "C" fn present_frame(frame_len: usize, frame_ptr: *const Pixel, frontend: *const RefCell<$t>) {
+	    let frontend_cell = unsafe { Weak::from_raw(frontend) };
+	    let frame: &[Pixel] = unsafe { std::slice::from_raw_parts(frame_ptr, frame_len) };
+
+	    {
+		let frontend_rc = frontend_cell.upgrade().unwrap();
+		let mut frontend = frontend_rc.borrow_mut();
+		frontend.present_frame(frame);
+	    }
+	    
+	    std::mem::forget(frontend_cell);
+	}
+    );
 }

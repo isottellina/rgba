@@ -3,7 +3,7 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Fri Oct  4 01:58:48 2019 (+0200)
+// Last-Updated: Fri Oct  4 14:16:39 2019 (+0200)
 //           By: Louise <louise>
 //
 #![feature(weak_into_raw)]
@@ -87,10 +87,17 @@ fn main() {
     core.load_extra("BIOS", bios_name.unwrap());
     core.set_cb_present_frame(present_frame, platform.clone());
     core.finish().unwrap();
-    
-    loop {
+
+    'main_loop: loop {
 	core.run();
 	let mut pl = platform.borrow_mut();
 	pl.present();
+
+	while let Some(event) = pl.poll_event() {
+	    match event {
+		rgba_common::Event::Quit => break 'main_loop,
+		_ => { }
+	    }
+	}
     }
 }

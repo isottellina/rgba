@@ -3,11 +3,11 @@
 // Filename: sdl.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 00:00:30 2017 (+0100)
-// Last-Updated: Mon Jul  1 12:46:25 2019 (+0200)
-//           By: Louise <ludwigette>
+// Last-Updated: Fri Oct  4 01:59:39 2019 (+0200)
+//           By: Louise <louise>
 //
 use rgba_common;
-use rgba_common::{Color, Platform, Key};
+use rgba_common::{Pixel, Key};
 
 use sdl2;
 use sdl2::EventPump;
@@ -18,7 +18,11 @@ use sdl2::keyboard::Scancode;
 use sdl2::video::Window;
 use sdl2::audio::{AudioSpecDesired, AudioQueue};
 
-use rustyline::Editor;
+use std::{
+    rc::Weak,
+    cell::RefCell
+};
+
 use log::{warn, error};
 
 pub struct SDLPlatform {
@@ -32,11 +36,10 @@ pub struct SDLPlatform {
     audio_device: AudioQueue<i16>,
     
     event_pump: EventPump,
-    rl: Editor::<()>,
 }
 
-impl Platform for SDLPlatform {
-    fn new(width: u32, height: u32, scale: u32) -> SDLPlatform {
+impl SDLPlatform {
+    pub fn new(width: u32, height: u32, scale: u32) -> SDLPlatform {
         let context = sdl2::init().unwrap();
         let video_sub = context.video().unwrap();
         let audio_sub = context.audio().unwrap();
@@ -60,8 +63,6 @@ impl Platform for SDLPlatform {
         ).unwrap();
 
         audio_device.resume();
-
-        let rl = Editor::<()>::new();
         
         SDLPlatform {
             width,
@@ -71,23 +72,16 @@ impl Platform for SDLPlatform {
             window,
             video_data,
             audio_device,
-            event_pump,
-            rl,
+            event_pump
         }
     }
 
-    fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
-        let width = self.width;
-        let i = (y * width + x) as usize;
-        let color32: u32 = ((color.0 as u32) << 16) | ((color.1 as u32) << 8) | color.2 as u32;
-
-        unsafe {
-            let ptr = (self.video_data.as_ptr() as *mut u32).add(i);
-            ptr.write_volatile(color32);
-        }
+    pub fn present_frame(&mut self, frame: &[Pixel]) {
+	let u8_slice = unsafe { std::slice::from_raw_parts(frame.as_ptr() as *const u8, frame.len() * 4 ) };
+	self.video_data.copy_from_slice(u8_slice);
     }
 
-    fn present(&mut self) {
+    pub fn present(&mut self) {
         let rect1 = sdl2::rect::Rect::new(0, 0, self.width, self.height);
         let rect2 = sdl2::rect::Rect::new(0, 0,
                                           self.width * self.scale,
@@ -112,17 +106,17 @@ impl Platform for SDLPlatform {
         }
     }
 
-    fn set_title(&mut self, s: String) {
+    pub fn set_title(&mut self, s: String) {
         if let Err(e) = self.window.set_title(&s) {
             warn!("{}", e);
         }
     }
 
-    fn queue_samples(&mut self, samples: &[i16]) {
+    pub fn queue_samples(&mut self, samples: &[i16]) {
         self.audio_device.queue(samples);
     }
     
-    fn poll_event(&mut self) -> Option<rgba_common::Event> {
+    pub fn poll_event(&mut self) -> Option<rgba_common::Event> {
         match self.event_pump.poll_event() {
             Some(Event::Quit { .. }) => Some(rgba_common::Event::Quit),
             Some(Event::KeyDown { scancode: Some(scan), .. }) =>
@@ -172,13 +166,23 @@ impl Platform for SDLPlatform {
             _ => None
         }
     }
+}
 
-    fn read_line(&mut self, prompt: &str) -> Option<String> {
-        if let Ok(s) = self.rl.readline(prompt) {
-            self.rl.add_history_entry(&s);
-            Some(s)
-        } else {
-            None
-        }
+impl Drop for SDLPlatform {
+    fn drop(&mut self) {
+	panic!("C");
     }
+}
+
+pub extern "C" fn present_frame(frame_len: usize, frame_ptr: *const Pixel, frontend: *const RefCell<SDLPlatform>) {
+    let frontend_cell = unsafe { Weak::from_raw(frontend) };
+    let frame: &[Pixel] = unsafe { std::slice::from_raw_parts(frame_ptr, frame_len) };
+
+    {
+	let frontend_rc = frontend_cell.upgrade().unwrap();
+	let mut frontend = frontend_rc.borrow_mut();
+	frontend.present_frame(frame);
+    }
+    
+    std::mem::forget(frontend_cell);
 }

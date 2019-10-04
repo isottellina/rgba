@@ -3,10 +3,11 @@
 // Filename: gpu.rs
 // Author: Louise <louise>
 // Created: Thu Dec  7 13:38:58 2017 (+0100)
-// Last-Updated: Thu Jul 12 17:52:12 2018 (+0200)
-//           By: Louise <ludwigette>
+// Last-Updated: Fri Oct  4 00:14:38 2019 (+0200)
+//           By: Louise <louise>
 //
-use rgba_common;
+use rgba_common::Pixel;
+use rgba_common::core::Frontend;
 use std::cmp::Ordering;
 
 mod render_dmg;
@@ -67,6 +68,7 @@ pub struct GPU {
     it_lcd: bool,
 
     has_hblank: bool,
+    frame: [Pixel; 160 * 144],
 }
 
 impl GPU {
@@ -124,7 +126,13 @@ impl GPU {
             it_vblank: false,
             it_lcd: false,
             has_hblank: false,
+
+	    frame: [0; 160 * 144],
         }
+    }
+
+    pub fn push_frame(&mut self, frontend: &mut Frontend) {
+	frontend.present_frame(&self.frame);
     }
 
     pub fn reset(&mut self) {
@@ -484,12 +492,12 @@ impl Default for DmgColor {
 
 impl DmgColor {
     #[inline]
-    fn as_real(self) -> rgba_common::Color {
+    fn as_real(self) -> rgba_common::Pixel {
         match self {
-            DmgColor::White => rgba_common::Color(224, 248, 208),
-            DmgColor::LightGray => rgba_common::Color(136, 192, 112),
-            DmgColor::DarkGray => rgba_common::Color(52, 104, 86),
-            DmgColor::Black => rgba_common::Color(8, 24, 32),
+            DmgColor::White => 0x00e0f8d0,
+            DmgColor::LightGray => 0x0088c070,
+            DmgColor::DarkGray => 0x00346856,
+            DmgColor::Black => 0x00081820,
         }
     }
 }
@@ -537,12 +545,10 @@ impl CgbColor {
     }
 
     #[inline]
-    pub fn as_real(self) -> rgba_common::Color {
-        rgba_common::Color(
-            self.r << 3,
-            self.g << 3,
-            self.b << 3
-        )
+    pub fn as_real(self) -> rgba_common::Pixel {
+        (self.r as u32) << 19 |
+        (self.g as u32) << 11 |
+        (self.b as u32) << 3
     }
 }
 

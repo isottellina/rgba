@@ -1,6 +1,6 @@
 [package]
 name = "rgba_dmg_core"
-version = "1.1.0"
+version = "2.0.0"
 edition = "2018"
 authors = ["Louise"]
 
@@ -11,7 +11,7 @@ rpath = false
 lto = false
 debug-assertions = true
 codegen-units = 4
-panic = 'unwind'
+panic = 'abort'
 
 [profile.release]
 opt-level = 3
@@ -19,12 +19,17 @@ debug = false
 rpath = false
 lto   = true
 debug-assertions = false
-panic = 'unwind'
+panic = 'abort'
 
 [profile.bench]
 opt-level = 3
 debug = true
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 rgba_common = { path = '../rgba_common' }
 log = "~0.4.0"
+libc = "0.2.62"
+simplelog = "0.7.3"

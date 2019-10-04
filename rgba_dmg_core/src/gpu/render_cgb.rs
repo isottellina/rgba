@@ -3,16 +3,14 @@
 // Filename: background.rs
 // Author: Louise <louise>
 // Created: Fri Dec 15 19:27:05 2017 (+0100)
-// Last-Updated: Thu Jul 12 17:52:38 2018 (+0200)
-//           By: Louise <ludwigette>
+// Last-Updated: Fri Oct  4 00:17:13 2019 (+0200)
+//           By: Louise <louise>
 //
-use rgba_common::Platform;
-
 use crate::gpu::GPU;
 use crate::gpu::CgbColor;
 
 impl GPU {   
-    pub fn render_cgb<T: Platform>(&mut self, platform: &mut T) {
+    pub fn render_cgb(&mut self) {
         if let Some(y) = self.render_line {    
             for x in 0..160 {
                 let (bg_color, bg_pal) = if self.window_enable && self.in_window(x, y) {
@@ -37,8 +35,8 @@ impl GPU {
                             [bg_pal as usize]
                             [bg_color as usize].as_real()
                     };
-                
-                platform.set_pixel(x as u32, y as u32, real_color);
+
+		self.frame[(y as usize) * 160 + (x as usize)] = real_color;
             }
             
             if y == 143 {

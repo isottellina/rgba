@@ -1,0 +1,17 @@
+[package]
+name = "rgba_core_test"
+version = "0.1.0"
+authors = ["Louise <louise@zanier.org>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.dev]
+panic="abort"
+[profile.release]
+panic="abort"
+
+[dependencies]
+libc = "0.2.62"
+rgba_common = { path = "../rgba_common" }

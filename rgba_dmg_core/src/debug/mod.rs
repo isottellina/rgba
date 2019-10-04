@@ -3,8 +3,8 @@
 // Filename: debug.rs
 // Author: Louise <louise>
 // Created: Sat Dec  9 23:52:10 2017 (+0100)
-// Last-Updated: Mon Jul  1 12:33:37 2019 (+0200)
-//           By: Louise <ludwigette>
+// Last-Updated: Mon Sep 30 20:18:16 2019 (+0200)
+//           By: Louise <louise>
 //
 mod disasm;
 
@@ -13,8 +13,6 @@ use std::collections::{BTreeSet, VecDeque};
 use crate::Gameboy;
 use crate::io::Interconnect;
 use crate::debug::disasm::disasm;
-
-use rgba_common::Platform;
 
 pub struct Debugger {
     breakpoints: BTreeSet<usize>,
@@ -35,14 +33,14 @@ impl Debugger {
         self.steps = 1;
     }
     
-    pub fn handle<T: Platform>(&mut self, gb: &mut Gameboy, platform: &mut T) {
+    pub fn handle(&mut self, gb: &mut Gameboy) {
         if self.should_break(gb.cpu.pc()) || self.enough_steps() ||
             self.hit_watchpoint(&mut gb.io) {
                 println!("{}", gb.cpu);
                 println!("Timer track: {:04x}", gb.io.get_internal());
                 println!("0x{:04x}: {}", gb.cpu.pc(), disasm(&gb.io, gb.cpu.pc()));
                 
-                while let Some(s) = platform.read_line("> ") {
+                while let Some(s) = Some(" ") {
                     let mut command: VecDeque<&str> =
                         s.split_whitespace().collect();
 

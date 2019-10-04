@@ -1,6 +1,9 @@
 [package]
 name = "rgba_common"
-version = "1.0.0"
+version = "2.0.0"
+edition = "2018"
 authors = ["Louise"]
 
 [dependencies]
+libc = "0.2.62"
+libloading = "0.5.2"

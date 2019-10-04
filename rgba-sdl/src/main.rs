@@ -3,17 +3,20 @@
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
-// Last-Updated: Sat Jul  6 22:58:48 2019 (+0200)
-//           By: Louise <ludwigette>
+// Last-Updated: Fri Oct  4 01:58:48 2019 (+0200)
+//           By: Louise <louise>
 //
+#![feature(weak_into_raw)]
 mod sdl;
 
 use clap::{App, Arg};
-
-use sdl::SDLPlatform;
-
-use rgba_common::{Console, Platform};
-use rgba_builder::ConsoleBuilder;
+use std::{
+    rc::Rc,
+    cell::RefCell,
+};
+use rgba_common::Pixel;
+use rgba_common::frontend::Core;
+use crate::sdl::{SDLPlatform, present_frame};
 
 fn main() {
     let matches = App::new("rgba").version(env!("CARGO_PKG_VERSION"))
@@ -42,20 +45,16 @@ fn main() {
              .possible_value("error")
              .default_value("warn")
              .help("Set the log level"))
-        .arg(Arg::with_name("console")
+        .arg(Arg::with_name("core")
              .short("c")
-             .long("console")
+             .long("core")
              .takes_value(true)
-             .possible_value("gb")
-             .possible_value("gba")
-             .possible_value("nes")
-             .possible_value("nds")
-             .required(false))
+             .required(true))
         .get_matches();
 
+    let core_name = matches.value_of("core").unwrap();
     let rom_name = matches.value_of("ROM").unwrap();
     let bios_name = matches.value_of("bios");
-    let debug = matches.is_present("debug");
     let log = matches.value_of("log").unwrap();
 
     let log_level = match log {
@@ -71,25 +70,27 @@ fn main() {
                                 simplelog::TerminalMode::Stderr
     ).unwrap();
     
-    let console = ConsoleBuilder::default()
-        .load_bios(bios_name)
-        .load_rom(rom_name);
+    let mut core = Core::new(core_name);
+    let core_info = core.get_coreinfo();
 
-    let console = match matches.value_of("console") {
-        Some("gb") => console.set_console(Console::Gameboy),
-        Some("gba") => console.set_console(Console::GBA),
-        Some("nes") => console.set_console(Console::NES),
-        Some("nds") => console.set_console(Console::NDS),
-        None => console,
-        _ => unreachable!(),
-    }.build();
+    let mut platform = Rc::new(
+	RefCell::new(
+	    SDLPlatform::new(core_info.geometry.0, core_info.geometry.1, 2)
+	)
+    );
+    
+    if !core.is_file(rom_name) {
+	panic!("{} is not a GB ROM.", rom_name);
+    }
 
-    if console.is_determined() {
-        let parameters = console.get_platform_parameters().unwrap();
-        let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
-        
-        let _ = console.run(&mut platform, debug);
-    } else {
-        panic!("Couldn't build Console");
+    core.load_rom(rom_name);
+    core.load_extra("BIOS", bios_name.unwrap());
+    core.set_cb_present_frame(present_frame, platform.clone());
+    core.finish().unwrap();
+    
+    loop {
+	core.run();
+	let mut pl = platform.borrow_mut();
+	pl.present();
     }
 }

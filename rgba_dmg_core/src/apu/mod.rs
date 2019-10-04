@@ -3,8 +3,8 @@
 // Filename: apu.rs
 // Author: Louise <louise>
 // Created: Fri Dec  8 22:08:49 2017 (+0100)
-// Last-Updated: Wed Jul 11 19:44:39 2018 (+0200)
-//           By: Louise <ludwigette>
+// Last-Updated: Mon Sep 30 20:20:02 2019 (+0200)
+//           By: Louise <louise>
 // 
 mod square;
 mod wave;
@@ -13,8 +13,6 @@ mod noise;
 use crate::apu::square::SquareChannel;
 use crate::apu::wave::WaveChannel;
 use crate::apu::noise::NoiseChannel;
-
-use rgba_common::Platform;
 
 pub struct APU {
     enabled: bool,
@@ -146,10 +144,8 @@ impl APU {
     }
 
     // Actual APU
-    pub fn render<T: Platform>(&mut self, platform: &mut T) {
+    pub fn render(&mut self) {
         if self.buffer_complete {
-            platform.queue_samples(&self.samples);
-
             self.buffer_complete = false;
         }
     }

@@ -1,0 +1,8 @@
+[package]
+name = "rgba_frontend_test"
+version = "0.1.0"
+authors = ["Louise <louise@zanier.org>"]
+edition = "2018"
+
+[dependencies]
+rgba_common = { path = "../rgba_common" }

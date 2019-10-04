@@ -3,10 +3,10 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 16:56:40 2017 (+0100)
-// Last-Updated: Wed Jul 11 19:42:14 2018 (+0200)
-//           By: Louise <ludwigette>
-// 
-use rgba_common::Platform;
+// Last-Updated: Fri Oct  4 00:13:46 2019 (+0200)
+//           By: Louise <louise>
+//
+use rgba_common::core::Frontend;
 use rgba_common::Event;
 
 use std::collections::HashSet;
@@ -613,13 +613,18 @@ impl Interconnect {
         }
     }
     
-    pub fn render<T: Platform>(&mut self, platform: &mut T) {
+    pub fn render(&mut self, _frontend: &mut Frontend) {
         if self.cgb {
-            self.gpu.render_cgb(platform);
+            self.gpu.render_cgb();
         } else {
-            self.gpu.render_dmg(platform);
+            self.gpu.render_dmg();
         }
         
-        self.apu.render(platform);
+        self.apu.render();
+    }
+
+    #[inline]
+    pub fn push_frame(&mut self, frontend: &mut Frontend) {
+	self.gpu.push_frame(frontend);
     }
 }

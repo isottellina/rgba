@@ -21,10 +21,17 @@ dependencies = [
 
 [[package]]
 name = "rgba_common"
-version = "2.0.0"
+version = "1.0.0"
 dependencies = [
  "libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "rgba_frontend_test"
+version = "0.1.0"
+dependencies = [
+ "rgba_common 1.0.0",
 ]
 
 [[package]]

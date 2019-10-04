@@ -3,7 +3,7 @@
  * Filename: api.h
  * Author: Louise <louise>
  * Created: Mon Sep 30 16:17:43 2019 (+0200)
- * Last-Updated: Mon Sep 30 20:04:03 2019 (+0200)
+ * Last-Updated: Fri Oct  4 12:50:13 2019 (+0200)
  *           By: Louise <louise>
  */
 #ifndef RGBA_API_H
@@ -17,8 +17,6 @@ struct CoreInfo {
     char * console;
     char * version;
     char * author;
-    int extra_files_n; // Number of extra files that can be loaded
-    char ** extra_files; // Array of loadnames for extra files
 };
 
 // General fonctions
@@ -37,10 +35,13 @@ extern void   rgba_core_deinit(void * data);
 extern void   rgba_core_run(void * data);
 
 // Load extra files, such as the BIOS for cores who need one
-extern bool   rgba_core_load_extra(void * data, char * load_name, char * filename);
+extern void   rgba_core_load_extra(void * data, char * load_name, char * filename);
 
 // Load the actual ROM file
-extern bool   rgba_core_load_rom(void * data, char * filename);
+extern void   rgba_core_load_rom(void * data, char * filename);
+
+// Returns NULL if the core is ready to run, a string to an error message in another case.
+extern char * rgba_core_finish(void * data);
 
 // Set callback
 extern void   rgba_core_set_cb_present_frame(void * data, FrontendCallbackVideoPresentFrame cb);

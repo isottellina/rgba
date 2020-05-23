@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Sat May 23 19:56:52 2020 (+0200)
+# Last-Updated: Sat May 23 19:58:29 2020 (+0200)
 #           By: Louise <louise>
 # 
 
@@ -223,7 +223,7 @@ def write_alu(g, high, low):
             g.write("_cpu.overflow = (rn ^ op2) & (rn ^ res) & 0x80000000 != 0;", indent = 2)
             g.write("}")
     elif op == 7: # RSC
-        g.write("let res = op2.wrapping_sub(rn).wrapping_sub(cf as u32);")
+        g.write("let res = op2.wrapping_sub(rn).wrapping_sub(!cf as u32);")
         if s:
             g.write("if rd != 15 {")
             g.write("_cpu.carry = if cf { op2 > rn } else { op2 >= rn };", indent = 2)

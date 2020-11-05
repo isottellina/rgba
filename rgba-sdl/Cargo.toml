@@ -5,7 +5,7 @@ edition = "2018"
 authors = ["Louise"]
 
 [profile.dev]
-opt-level = 1
+opt-level = 0
 debug = true
 rpath = false
 lto = false

@@ -3,7 +3,7 @@
 // Filename: mod.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 16:20:45 2018 (+0100)
-// Last-Updated: Thu Sep 26 04:31:03 2019 (+0200)
+// Last-Updated: Thu Nov  5 21:25:16 2020 (+0100)
 //           By: Louise <louise>
 // 
 use std::fmt;
@@ -46,8 +46,8 @@ impl ARM7TDMI {
         self.registers[15] = 0;
         self.irq = false;
         self.fiq = false;
-
-        self.fill_pipeline(io);
+	
+        self.branch(io);
     }
 
     pub fn raise_irq(&mut self) {

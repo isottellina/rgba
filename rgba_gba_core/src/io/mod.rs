@@ -3,7 +3,7 @@
 // Filename: io.rs
 // Author: Louise <louise>
 // Created: Wed Jan  3 15:30:01 2018 (+0100)
-// Last-Updated: Thu Sep 26 04:31:29 2019 (+0200)
+// Last-Updated: Thu Nov  5 21:07:37 2020 (+0100)
 //           By: Louise <louise>
 //
 mod dma;
@@ -273,7 +273,7 @@ impl Interconnect {
             DMA3CNT_L => self.dma[3].word_count,
             DMA3CNT_H => self.dma[3].read_cnt_h(),
             
-            _ => { warn!("Unmapped read_u16 from {:38x} (IO)", address); 3 }
+            _ => { warn!("Unmapped read_u16 from {:08x} (IO)", address); 0 }
         }
     }
     

@@ -3,7 +3,7 @@
 // Filename: dma.rs
 // Author: Louise <louise>
 // Created: Thu Feb  1 16:51:05 2018 (+0100)
-// Last-Updated: Sun Feb  4 02:05:00 2018 (+0100)
+// Last-Updated: Thu Nov  5 21:11:57 2020 (+0100)
 //           By: Louise <louise>
 // 
 
@@ -63,7 +63,7 @@ impl DmaChannel {
         self.enable = ((cnt >> 15) & 1) != 0;
 
         if self.enable {
-            warn!("Writing to DMA{}CNT_H with value {:04x}", self.channel, cnt);
+            warn!("Writing to DMA{}CNT_H with value {:04x} (from {:08x} to {:08x})", self.channel, cnt, self.source_addr, self.dest_addr);
         }
     }
 }

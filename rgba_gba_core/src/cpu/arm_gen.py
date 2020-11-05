@@ -3,7 +3,7 @@
 # Filename: arm_gen.py
 # Author: Louise <louise>
 # Created: Sat Jan 13 17:25:38 2018 (+0100)
-# Last-Updated: Sat May 23 19:58:29 2020 (+0200)
+# Last-Updated: Thu Nov  5 23:15:30 2020 (+0100)
 #           By: Louise <louise>
 # 
 
@@ -76,8 +76,8 @@ def write_op2_imm(g, high, low):
 def write_op2_reg(g, low, s):
     shift = (low & 0x6) >> 1
     
-    g.write("let rm = _cpu.get_register((instr & 0xF) as usize);")
     if (low & 1) == 0: # By immediate
+        g.write("let rm = _cpu.get_register((instr & 0xF) as usize);")
         g.write("let amount = (instr >> 7) & 0x1f;")
         if shift == 0:
             g.write("let op2 = if amount == 0 { rm } else {", end = "")
@@ -108,6 +108,13 @@ def write_op2_reg(g, low, s):
                 g.write("(rm >> 1) | ((_cpu.carry as u32) << 31) } else { rm.rotate_right(amount) };")
         
     else: # By register
+        # Shift by register is longer and PC is shifted more
+        g.write("let rm = if (instr & 0xF) != 15 {")
+        g.write("_cpu.get_register((instr & 0xF) as usize)", indent = 2)
+        g.write("} else {")
+        g.write("_cpu.get_register(15) + 4")
+        g.write("};")
+        
         g.write("let amount = _cpu.get_register(((instr >> 8) & 0xF) as usize) & 0xFF;")
         g.write("let op2 = if amount != 0 {")
         if shift == 0:
@@ -327,20 +334,21 @@ def write_sdt(g, high, low):
         g.write("_cpu.branch(_io);", indent = 2)
         g.write("}")
 
+    g.write("if rn != rd {")
     if not pre:
         if high & 0x08 != 0:
-            g.write("let wb = addr.wrapping_add(off);")
+            g.write("let wb = addr.wrapping_add(off);", indent = 2)
         else:
-            g.write("let wb = addr.wrapping_sub(off);")
+            g.write("let wb = addr.wrapping_sub(off);", indent = 2)
         if wb:
-            g.write('unimplemented!("User-mode transfer ({:08x})", instr);')
+            g.write('unimplemented!("User-mode transfer ({:08x})", instr);', indent = 2)
+            g.write("}")
             return
-        wb = True
+        g.write("_cpu.set_register(rn as usize, wb);", indent = 2)
     elif wb:
-        g.write("let wb = addr;")
+        g.write("_cpu.set_register(rn as usize, addr);", indent = 2)
 
-    if wb:
-        g.write("_cpu.set_register(rn as usize, wb);")
+    g.write("}")
 
 def write_bdt(g, high, low):
     pre = high & 0x10 != 0
@@ -540,15 +548,17 @@ def write_half(g, high, low):
             g.write('panic!("Tried to store signed halfword");')
 
     if wb:
+        g.write("if rn != rd {")
         if not pre:
             if up:
-                g.write("let wb_val = addr.wrapping_add(off as usize);")
+                g.write("let wb_val = addr.wrapping_add(off as usize);", indent = 2)
             else:
-                g.write("let wb_val = addr.wrapping_sub(off as usize);")
+                g.write("let wb_val = addr.wrapping_sub(off as usize);", indent = 2)
         else:
-            g.write("let wb_val = addr;")
+            g.write("let wb_val = addr;", indent = 2)
             
-        g.write("_cpu.set_register(rn as usize, wb_val as u32);")
+        g.write("_cpu.set_register(rn as usize, wb_val as u32);", indent = 2)
+        g.write("}")
         
         
 def write_instruction(g, high, low):

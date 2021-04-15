@@ -100,15 +100,13 @@ impl Platform for SDLPlatform {
                                              PixelFormatEnum::RGB888)
                 .unwrap();
             
-            if let Err(e) = surface.blit_scaled(rect1,
-                                                &mut window_surface,
-                                                rect2) {
-                error!("{}", e);
-            }
+            surface.blit_scaled(rect1,
+                &mut window_surface,
+                rect2
+            ).expect("Couldn't blit surface");
             
-            if let Err(e) = window_surface.update_window() {
-                error!("{}", e);
-            }
+            
+            window_surface.update_window().expect("Couldn't update window");
         }
     }
 
@@ -127,6 +125,8 @@ impl Platform for SDLPlatform {
             Some(Event::Quit { .. }) => Some(rgba_common::Event::Quit),
             Some(Event::KeyDown { scancode: Some(scan), .. }) =>
                 match scan {
+                    Scancode::F10 =>
+                        Some(rgba_common::Event::FastMode),
                     Scancode::F11 =>
                         Some(rgba_common::Event::Debug),
                     Scancode::F12 =>

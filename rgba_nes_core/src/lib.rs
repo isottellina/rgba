@@ -26,14 +26,16 @@ impl NES {
         }
     }
 
-    pub fn reset() {
-        
+    pub fn reset(&mut self) {
+        self.state = true;
     }
 }
 
 impl Core for NES {
     fn run<T: Platform>(&mut self, _: &mut T, _: bool) {
-        
+        while self.state {
+
+        }
     }
 
     fn is_file(filename: &str) -> bool {

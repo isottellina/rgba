@@ -1,0 +1,26 @@
+[workspace]
+members = [
+	"rgba_common",
+	"rgba_builder",
+	"rgba_dmg_core",
+	"rgba_nes_core",
+	"rgba_gba_core",
+	"rgba-sdl"
+]
+
+[profile.dev]
+opt-level = 1
+debug = true
+rpath = false
+lto = false
+debug-assertions = true
+codegen-units = 5
+panic = 'unwind'
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto   = true
+debug-assertions = false
+panic = 'unwind'

@@ -36,6 +36,7 @@ pub enum Event {
     Quit,
     Debug,
     Reset,
+    FastMode,
     KeyDown(Key),
     KeyUp(Key)
 }
@@ -66,14 +67,8 @@ pub trait Platform {
     fn new(u32, u32, u32) -> Self;
 
     // Video functions
-    fn set_pixel(&mut self, _: u32, _: u32, _: Color) {
-
-    }
-    
-    fn present(&mut self) {
-
-    }
-
+    fn set_pixel(&mut self, u32, u32, Color);
+    fn present(&mut self);
     fn set_title(&mut self, _: String) {
         
     }

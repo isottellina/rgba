@@ -34,6 +34,7 @@ pub struct Gameboy {
     io: Interconnect,
 
     state: bool,
+    fast_mode: bool,
     last_frame: Instant,
 }
 
@@ -44,6 +45,7 @@ impl Gameboy {
             io: Interconnect::new(),
 
             state: false,
+            fast_mode: false,
             last_frame: Instant::now(),
         }
     }
@@ -58,7 +60,7 @@ impl Gameboy {
                              platform: &mut T) {
         let elapsed = self.last_frame.elapsed();
                 
-        if elapsed < Duration::new(0, 16_600_000) {
+        if !self.fast_mode && elapsed < Duration::new(0, 16_600_000) {
             let to_wait = Duration::new(0, 16_600_000) - elapsed;
 
             if to_wait > Duration::new(0, 600_000) {
@@ -82,6 +84,7 @@ impl Gameboy {
         while let Some(e) = platform.poll_event() {
             match e {
                 Event::Quit => self.state = false,
+                Event::FastMode => self.fast_mode = !self.fast_mode,
                 Event::Debug => debugger.trigger(),
                 Event::Reset => self.reset(),
                 _ => self.io.handle_event(e),

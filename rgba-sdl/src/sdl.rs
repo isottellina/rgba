@@ -79,7 +79,7 @@ impl Platform for SDLPlatform {
     fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         let width = self.width;
         let i = (y * width + x) as usize;
-        let color32: u32 = ((color.0 as u32) << 16) | ((color.1 as u32) << 8) | color.2 as u32;
+        let color32: u32 = color.into();
 
         unsafe {
             let ptr = (self.video_data.as_ptr() as *mut u32).add(i);

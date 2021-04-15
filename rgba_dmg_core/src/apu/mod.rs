@@ -266,25 +266,3 @@ impl APU {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use test::Bencher;
-    
-    #[bench]
-    fn spend_cycles_same(b: &mut Bencher) {
-        let mut apu = APU::new();
-        
-        b.iter(|| apu.spend_cycles(500))
-    }
-
-    #[bench]
-    fn spend_cycles_new(b: &mut Bencher) {
-        b.iter(|| {
-            let mut apu = APU::new();
-
-            apu.spend_cycles(500);
-        })
-    }
-}

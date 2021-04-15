@@ -567,30 +567,3 @@ impl PaletteRegister for [DmgColor; 4] {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use test::Bencher;
-    
-    #[bench]
-    fn get_background_dmg(b: &mut Bencher) {
-        let gpu = GPU::new();
-        
-        b.iter(|| {
-            for x in 0..160 {
-                gpu.get_background(x, 0);
-            }
-        })
-    }
-
-    #[bench]
-    fn get_background_cgb(b: &mut Bencher) {
-        let gpu = GPU::new();
-        
-        b.iter(|| {
-            for x in 0..160 {
-                gpu.get_background_cgb(x, 0);
-            }
-        })
-    }
-}

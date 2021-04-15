@@ -44,6 +44,11 @@ pub enum Event {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color(pub u8, pub u8, pub u8);
+impl From<Color> for u32 {
+    fn from(color: Color) -> u32 {
+        u32::from_be_bytes([0, color.0, color.1, color.2])
+    }
+}
 
 // Traits
 

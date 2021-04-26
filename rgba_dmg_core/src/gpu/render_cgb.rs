@@ -38,8 +38,10 @@ impl GPU {
                             [bg_color as usize].as_real()
                     };
                 
-                platform.set_pixel(x as u32, y as u32, real_color);
+                self.line_buffer[x as usize] = real_color;
             }
+
+            platform.set_scanline(y as u32, &self.line_buffer);
             
             if y == 143 {
                 self.frame_done = true;

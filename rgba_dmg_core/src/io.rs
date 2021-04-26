@@ -98,6 +98,7 @@ pub struct Interconnect {
     gpu: GPU,
     apu: APU,
     joypad: Joypad,
+    sound_enabled: bool,
 
     // Interrupts
     it_vblank_enable: bool,
@@ -141,6 +142,7 @@ impl Interconnect {
 
             gpu: GPU::new(),
             apu: APU::new(),
+            sound_enabled: true,
             timer: Timer::new(),
             joypad: Default::default(),
             
@@ -591,6 +593,11 @@ impl Interconnect {
         self.joypad.handle_event(event);
     }
 
+    #[inline]
+    pub fn set_sound_enabled(&mut self, sound_enabled: bool) {
+        self.sound_enabled = sound_enabled;
+    }
+
     pub fn spend_cycles(&mut self) {
         let cycles = self.cycles_to_spend << 2;
         self.cycles_to_spend = 0;
@@ -602,8 +609,10 @@ impl Interconnect {
         }
         
         self.gpu.spend_cycles(cycles);
-        self.apu.spend_cycles(cycles);
-        
+        if self.sound_enabled {
+            self.apu.spend_cycles(cycles);
+        }
+
         for _ in 0..cycles {
             if self.dma_ongoing {
                 self.handle_dma();
@@ -620,6 +629,8 @@ impl Interconnect {
             self.gpu.render_dmg(platform);
         }
         
-        self.apu.render(platform);
+        if self.sound_enabled {
+            self.apu.render(platform);
+        }
     }
 }

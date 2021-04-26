@@ -84,7 +84,10 @@ impl Gameboy {
         while let Some(e) = platform.poll_event() {
             match e {
                 Event::Quit => self.state = false,
-                Event::FastMode => self.fast_mode = !self.fast_mode,
+                Event::FastMode => {
+                    self.fast_mode = !self.fast_mode;
+                    self.io.set_sound_enabled(!self.fast_mode);
+                },
                 Event::Debug => debugger.trigger(),
                 Event::Reset => self.reset(),
                 _ => self.io.handle_event(e),

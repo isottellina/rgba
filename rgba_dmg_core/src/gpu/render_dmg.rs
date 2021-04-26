@@ -43,6 +43,30 @@ impl GPU {
 				bg_fifo[x..160].copy_from_slice(&self.tile_get(self.tile_data, tile, tile_y as usize)[0..tile_limit]);
 			}
 
+			// Draw the window over BG
+			if self.window_enable && y >= self.wy && self.wx >= 7 && self.wx < 166 {
+				let mut scanline_x = (self.wx - 7) as usize;
+				let mut window_x = 7;
+				let tile_y = (y - self.wy) as usize;
+
+				// Draw all tiles except the last
+				while scanline_x < 153 {
+					let tile = self.get_window(window_x, tile_y);
+					bg_fifo[scanline_x..(scanline_x+8)].copy_from_slice(&self.tile_get(self.tile_data, tile, tile_y & 7));
+
+					scanline_x += 8;
+					window_x += 8;
+				}
+
+				// Draw last tile
+				if scanline_x != 160 {
+					let tile = self.get_window(window_x, y as usize);
+					let tile_limit: usize = 160 - scanline_x;
+
+					bg_fifo[scanline_x..160].copy_from_slice(&self.tile_get(self.tile_data, tile, tile_y as usize)[0..tile_limit]);
+				}
+			}
+
 			// Merge FIFOs into scanline
 			{
 				for x in 0..160 {
@@ -94,16 +118,13 @@ impl GPU {
 		]
 	}
 
-	fn get_window(&self, x: u8, y: u8) -> u8 {
-		let actual_x = x.wrapping_sub(self.wx).wrapping_add(7) as u16;
-		let actual_y = y.wrapping_sub(self.wy) as u16;
-		
+	fn get_window(&self, x: usize, y: usize) -> u8 {
 		let tile = if self.window_map {
 			self.vram
-				[(0x1C00 + (actual_x >> 3) + ((actual_y & 0xf8) << 2)) as usize]
+				[0x1C00 + (x >> 3) + ((y & 0xf8) << 2)]
 		} else {
 			self.vram
-				[(0x1800 + (actual_x >> 3) + ((actual_y & 0xf8) << 2)) as usize]
+				[0x1800 + (x >> 3) + ((y & 0xf8) << 2)]
 		};
 
 		tile

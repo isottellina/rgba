@@ -41,16 +41,6 @@ pub enum Event {
     KeyUp(Key)
 }
 
-// Structs
-
-#[derive(Debug, Clone, Copy)]
-pub struct Color(pub u8, pub u8, pub u8);
-impl From<Color> for u32 {
-    fn from(color: Color) -> u32 {
-        u32::from_be_bytes([0, color.0, color.1, color.2])
-    }
-}
-
 // Traits
 
 pub trait Core {
@@ -67,7 +57,8 @@ pub trait Platform {
     fn new(u32, u32, u32) -> Self;
 
     // Video functions
-    fn set_pixel(&mut self, u32, u32, Color);
+    fn set_pixel(&mut self, u32, u32, u32);
+    fn set_scanline(&mut self, u32, &[u32]);
     fn present(&mut self);
     fn set_title(&mut self, _: String) {
         

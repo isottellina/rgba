@@ -6,7 +6,6 @@
 // Last-Updated: Thu Jul 12 17:52:12 2018 (+0200)
 //           By: Louise <ludwigette>
 //
-use rgba_common;
 use std::cmp::Ordering;
 
 mod render_dmg;
@@ -18,6 +17,7 @@ pub struct GPU {
     oam: [Sprite; 40],
     
     line_cache: [[Option<u8>; 10]; 144],
+    line_buffer: [u32; 160],
     render_line: Option<u8>,
     frame_done: bool,
     
@@ -75,6 +75,7 @@ impl GPU {
             vram: [0; 0x4000],
             oam: [Default::default(); 40],
             line_cache: [[None; 10]; 144],
+            line_buffer: [0; 160],
 
             mode: GpuMode::ReadingOAM,
             render_line: None,
@@ -484,12 +485,12 @@ impl Default for DmgColor {
 
 impl DmgColor {
     #[inline]
-    fn as_real(self) -> rgba_common::Color {
+    fn as_real(self) -> u32 {
         match self {
-            DmgColor::White => rgba_common::Color(224, 248, 208),
-            DmgColor::LightGray => rgba_common::Color(136, 192, 112),
-            DmgColor::DarkGray => rgba_common::Color(52, 104, 86),
-            DmgColor::Black => rgba_common::Color(8, 24, 32),
+            DmgColor::White => u32::from_be_bytes([0, 224, 248, 208]),
+            DmgColor::LightGray => u32::from_be_bytes([0, 136, 192, 112]),
+            DmgColor::DarkGray => u32::from_be_bytes([0, 52, 104, 86]),
+            DmgColor::Black => u32::from_be_bytes([0, 8, 24, 32]),
         }
     }
 }
@@ -537,11 +538,14 @@ impl CgbColor {
     }
 
     #[inline]
-    pub fn as_real(self) -> rgba_common::Color {
-        rgba_common::Color(
-            self.r << 3,
-            self.g << 3,
-            self.b << 3
+    pub fn as_real(self) -> u32 {
+        u32::from_be_bytes(
+            [
+                0,
+                self.r << 3,
+                self.g << 3,
+                self.b << 3
+            ]
         )
     }
 }

@@ -7,7 +7,7 @@
 //           By: Louise <ludwigette>
 //
 use rgba_common;
-use rgba_common::{Color, Platform, Key};
+use rgba_common::{Platform, Key};
 
 use sdl2;
 use sdl2::EventPump;
@@ -19,7 +19,7 @@ use sdl2::video::Window;
 use sdl2::audio::{AudioSpecDesired, AudioQueue};
 
 use rustyline::Editor;
-use log::{warn, error};
+use log::warn;
 
 pub struct SDLPlatform {
     height: u32,
@@ -76,15 +76,27 @@ impl Platform for SDLPlatform {
         }
     }
 
-    fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
+    fn set_pixel(&mut self, x: u32, y: u32, color: u32) {
         let width = self.width;
         let i = (y * width + x) as usize;
-        let color32: u32 = color.into();
 
         unsafe {
             let ptr = (self.video_data.as_ptr() as *mut u32).add(i);
-            ptr.write_volatile(color32);
+            ptr.write_volatile(color);
         }
+    }
+
+    fn set_scanline(&mut self, y: u32, line: &[u32]) {
+        let i = (y * self.width) as usize * 4;
+        
+        self.video_data[i..(i + (self.width as usize) * 4)].copy_from_slice(
+            unsafe { 
+                std::slice::from_raw_parts(
+                    line.as_ptr() as *const u8,
+                    self.width as usize * 4,
+                )
+            }
+        );
     }
 
     fn present(&mut self) {

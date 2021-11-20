@@ -15,7 +15,7 @@ fn main() {
     let dir = env::var("OUT_DIR").unwrap().to_string();
 
     let python = "python3";
-    
+
     // Generate ARM code
     let gen_arm = Command::new(python)
         .arg("src/cpu/arm_gen.py")

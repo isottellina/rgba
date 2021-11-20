@@ -322,7 +322,7 @@ impl LR35902 {
         let a = self.a as u32;
         let v = value as u32;
        
-	let res = a + v;
+	    let res = a + v;
 
         self.zero = (res & 0xff) == 0;
         self.sub = false;

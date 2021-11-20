@@ -234,7 +234,6 @@ impl ARM7TDMI {
     }
 
     pub fn branch(&mut self, io: &mut Interconnect) {
-        // println!("Branching from {:08x} to {:08x}", self.pc, self.registers[15]);
         self.pc = self.registers[15];
         self.fill_pipeline(io);
     }

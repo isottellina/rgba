@@ -1,6 +1,7 @@
 [package]
 name = "rgba_nes_core"
 version = "0.1.0"
+edition = "2021"
 authors = ["Louise <louise@zanier.org>"]
 
 [dependencies]

@@ -44,34 +44,34 @@ pub enum Event {
 // Traits
 
 pub trait Core {
-    fn run<T: Platform>(&mut self, &mut T, bool);
-    fn is_file(&str) -> bool;
-    fn load_bios<T: ToString>(&mut self, Option<T>) -> Result<(), &'static str>;
-    fn load_rom(&mut self, &str) -> bool;
+    fn run<T: Platform>(&mut self, platform: &mut T, use_debug: bool);
+    fn is_file(filename: &str) -> bool;
+    fn load_bios<T: ToString>(&mut self, filename: Option<T>) -> Result<(), &'static str>;
+    fn load_rom(&mut self, filename: &str) -> bool;
 
     fn get_platform_parameters() -> (u32, u32);
     fn get_console_type() -> Console;
 }
 
 pub trait Platform {
-    fn new(u32, u32, u32) -> Self;
+    fn new(width: u32, height: u32, scale: u32) -> Self;
 
     // Video functions
-    fn set_pixel(&mut self, u32, u32, u32);
-    fn set_scanline(&mut self, u32, &[u32]);
+    fn set_pixel(&mut self, x: u32, y: u32, color: u32);
+    fn set_scanline(&mut self, y: u32, scanline: &[u32]);
     fn present(&mut self);
-    fn set_title(&mut self, _: String) {
+    fn set_title(&mut self, _title: String) {
         
     }
 
     // Sound functions
-    fn queue_samples(&mut self, _: &[i16]) {
+    fn queue_samples(&mut self, _samples: &[i16]) {
 
     }
     
     // Input functions
     fn poll_event(&mut self) -> Option<Event> { None }
-    fn read_line(&mut self, _: &str) -> Option<String> { None }
+    fn read_line(&mut self, _prompt: &str) -> Option<String> { None }
 }
 
 // Functions

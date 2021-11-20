@@ -102,7 +102,7 @@ impl NoiseChannel {
                 self.length_counter = 64;
             }
 
-            self.timer_load = DIVISORS[self.divisor as usize] << self.clock_shift;
+            self.timer_load = DIVISORS[self.divisor as usize].rotate_left(self.clock_shift as u32);
             self.timer = 0;
             self.volume = self.volume_load;
 

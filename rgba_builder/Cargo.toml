@@ -8,5 +8,4 @@ authors = ["Louise"]
 log = "~0.4.0"
 rgba_common = { path = '../rgba_common' }
 rgba_dmg_core = { path = '../rgba_dmg_core' }
-rgba_nes_core = { path = '../rgba_nes_core' }
 rgba_gba_core = { path = '../rgba_gba_core' }

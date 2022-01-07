@@ -468,7 +468,6 @@ dependencies = [
  "rgba_common",
  "rgba_dmg_core",
  "rgba_gba_core",
- "rgba_nes_core",
 ]
 
 [[package]]
@@ -488,14 +487,6 @@ name = "rgba_gba_core"
 version = "0.1.0"
 dependencies = [
  "byteorder",
- "log",
- "rgba_common",
-]
-
-[[package]]
-name = "rgba_nes_core"
-version = "0.1.0"
-dependencies = [
  "log",
  "rgba_common",
 ]

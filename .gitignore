@@ -3,6 +3,7 @@
 **/*.rs.bk
 cachegrind.*
 callgrind.*
+perf.data*
 
 bootrom.gb
 bootrom.gbc

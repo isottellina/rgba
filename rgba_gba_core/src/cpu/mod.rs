@@ -41,12 +41,15 @@ impl ARM7TDMI {
     }
 
     pub fn reset(&mut self, io: &mut Interconnect) {
-        self.mode = CpuMode::SVC;
+        self.mode = CpuMode::System;
         self.state = CpuState::ARM;
-        self.registers[15] = 0;
+
+        self.registers[15] = 0x08000000;
+        self.registers[18] = 0x03007f00; // SVC r13
+
         self.irq = false;
         self.fiq = false;
-	
+
         self.branch(io);
     }
 

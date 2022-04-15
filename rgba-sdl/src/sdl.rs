@@ -74,6 +74,12 @@ impl SDLPlatform {
         }
     }
 
+    pub fn set_title(&mut self, s: String) {
+        if let Err(e) = self.window.set_title(&s) {
+            warn!("{}", e);
+        }
+    }
+
     pub fn set_buffer(&mut self, buffer: &[u32]) {
         self.video_data.copy_from_slice(
             unsafe {
@@ -84,67 +90,31 @@ impl SDLPlatform {
             }
         );
     }
-}
 
-impl Platform for SDLPlatform {
-
-    fn set_pixel(&mut self, x: u32, y: u32, color: u32) {
-        let width = self.width;
-        let i = (y * width + x) as usize;
-
-        unsafe {
-            let ptr = (self.video_data.as_ptr() as *mut u32).add(i);
-            ptr.write_volatile(color);
-        }
-    }
-
-    fn set_scanline(&mut self, y: u32, line: &[u32]) {
-        let i = (y * self.width) as usize * 4;
-        
-        self.video_data[i..(i + (self.width as usize) * 4)].copy_from_slice(
-            unsafe { 
-                std::slice::from_raw_parts(
-                    line.as_ptr() as *const u8,
-                    self.width as usize * 4,
-                )
-            }
-        );
-    }
-
-    fn present(&mut self) {
+    pub fn present(&mut self) {
         let rect1 = sdl2::rect::Rect::new(0, 0, self.width, self.height);
         let rect2 = sdl2::rect::Rect::new(0, 0,
                                           self.width * self.scale,
                                           self.height * self.scale);
-        
+
         if let Ok(mut window_surface) = self.window.surface(&self.event_pump) {
             let surface = Surface::from_data(&mut self.video_data,
                                              self.width, self.height,
                                              self.width * 4,
                                              PixelFormatEnum::RGB888)
                 .unwrap();
-            
+
             surface.blit_scaled(rect1,
                 &mut window_surface,
                 rect2
             ).expect("Couldn't blit surface");
-            
-            
+
+
             window_surface.update_window().expect("Couldn't update window");
         }
     }
 
-    fn set_title(&mut self, s: String) {
-        if let Err(e) = self.window.set_title(&s) {
-            warn!("{}", e);
-        }
-    }
-
-    fn queue_samples(&mut self, samples: &[i16]) {
-        self.audio_device.queue(samples);
-    }
-    
-    fn poll_event(&mut self) -> Option<rgba_common::Event> {
+    pub fn poll_event(&mut self) -> Option<rgba_common::Event> {
         match self.event_pump.poll_event() {
             Some(Event::Quit { .. }) => Some(rgba_common::Event::Quit),
             Some(Event::KeyDown { scancode: Some(scan), .. }) =>
@@ -195,6 +165,12 @@ impl Platform for SDLPlatform {
                 },
             _ => None
         }
+    }
+}
+
+impl Platform for SDLPlatform {
+    fn queue_samples(&mut self, samples: &[i16]) {
+        self.audio_device.queue(samples);
     }
 
     fn read_line(&mut self, prompt: &str) -> Option<String> {

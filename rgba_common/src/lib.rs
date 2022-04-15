@@ -55,21 +55,12 @@ pub trait Core {
 }
 
 pub trait Platform {
-    // Video functions
-    fn set_pixel(&mut self, x: u32, y: u32, color: u32);
-    fn set_scanline(&mut self, y: u32, scanline: &[u32]);
-    fn present(&mut self);
-    fn set_title(&mut self, _title: String) {
-        
-    }
-
     // Sound functions
     fn queue_samples(&mut self, _samples: &[i16]) {
 
     }
     
     // Input functions
-    fn poll_event(&mut self) -> Option<Event> { None }
     fn read_line(&mut self, _prompt: &str) -> Option<String> { None }
 }
 

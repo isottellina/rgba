@@ -35,8 +35,6 @@ use std::cell::RefCell;
 
 #[macro_use] mod macros;
 
-use rgba_common::Platform;
-
 pub struct Interconnect {
     bios: Vec<u8>,
     rom:  Vec<u8>,
@@ -142,8 +140,12 @@ impl Interconnect {
         self.cycles_to_spend = 0;
     }
 
-    pub fn render<T: Platform>(&mut self, platform: &mut T) {
-        self.gpu.render(platform);
+    pub fn render(&mut self) {
+        self.gpu.render();
+    }
+
+    pub fn get_framebuffer(&self) -> &[u32] {
+        &self.gpu.framebuffer
     }
     
     pub fn read_u32(&self, address: usize) -> u32 {

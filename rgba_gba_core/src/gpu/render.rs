@@ -11,11 +11,9 @@ use byteorder::{ByteOrder, LittleEndian};
 use crate::gpu::GPU;
 use crate::gpu::DisplayLine;
 
-use rgba_common::Platform;
-
 impl GPU {
 	#[inline]
-	pub fn render<T: Platform>(&mut self, platform: &mut T) {
+	pub fn render(&mut self) {
 		if let Some(line) = self.render_line {
 			self.render_line = None;
 
@@ -38,7 +36,7 @@ impl GPU {
 			let result = self.blend_line(line, &mut display_line);
 			
 			for x in 0..240 {
-				platform.set_pixel(x, line as u32, expand_color(result[x as usize]));
+				self.framebuffer[line as usize * 240 + x] = expand_color(result[x as usize]);
 			}
 		}
 	}

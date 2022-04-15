@@ -48,11 +48,6 @@ impl Debugger {
                 let mut cmd: VecDeque<&str> = s.split_whitespace().collect();
                 
                 match cmd.pop_front() {
-                    Some("q") | Some("quit") => {
-                        gba.state = false;
-                        break;
-                    },
-                    
                     Some("c") | Some("continue") => break,
                     Some("s") | Some("step") => {
                         self.steps = 1;

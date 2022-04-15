@@ -14,7 +14,7 @@ use clap::{App, Arg};
 
 use sdl::SDLPlatform;
 
-use rgba_common::{Core, Console, Event, Platform};
+use rgba_common::{Core, Console, Event};
 use rgba_builder::ConsoleBuilder;
 
 fn main() {

@@ -24,6 +24,9 @@ mod mode4;
 use crate::irq::{IrqManager, IRQ_VBLANK, IRQ_HBLANK, IRQ_VCOUNT};
 
 pub struct GPU {
+    // Result
+    pub framebuffer: [u32; 240 * 160],
+
     // Memory
     pram: [u8; 0x400],
     vram: [u8; 0x18000],
@@ -62,6 +65,8 @@ pub struct GPU {
 impl GPU {
     pub fn new() -> GPU {
         GPU {
+            framebuffer: [0; 240 * 160],
+
             pram: [0; 0x400],
             vram: [0; 0x18000],
             oam:  [0; 0x400],

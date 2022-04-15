@@ -6,10 +6,8 @@
 // Last-Updated: Mon Jul  1 12:46:25 2019 (+0200)
 //           By: Louise <ludwigette>
 //
-use rgba_common;
 use rgba_common::{Platform, Key};
 
-use sdl2;
 use sdl2::EventPump;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::event::Event;
@@ -35,15 +33,15 @@ pub struct SDLPlatform {
     rl: Editor::<()>,
 }
 
-impl Platform for SDLPlatform {
-    fn new(width: u32, height: u32, scale: u32) -> SDLPlatform {
+impl SDLPlatform {
+    pub fn new(width: u32, height: u32, scale: u32) -> SDLPlatform {
         let context = sdl2::init().unwrap();
         let video_sub = context.video().unwrap();
         let audio_sub = context.audio().unwrap();
-        
+
         let video_data = vec![0; ((width * height) << 2) as usize]
             .into_boxed_slice();
-        
+
         let window = video_sub.window("rGBA", width * scale, height * scale)
             .position_centered()
             .build()
@@ -62,7 +60,7 @@ impl Platform for SDLPlatform {
         audio_device.resume();
 
         let rl = Editor::<()>::new();
-        
+
         SDLPlatform {
             width,
             height,
@@ -75,6 +73,20 @@ impl Platform for SDLPlatform {
             rl,
         }
     }
+
+    pub fn set_buffer(&mut self, buffer: &[u32]) {
+        self.video_data.copy_from_slice(
+            unsafe {
+                std::slice::from_raw_parts(
+                    buffer.as_ptr() as *const u8,
+                    buffer.len() as usize * 4,
+                )
+            }
+        );
+    }
+}
+
+impl Platform for SDLPlatform {
 
     fn set_pixel(&mut self, x: u32, y: u32, color: u32) {
         let width = self.width;

@@ -107,8 +107,8 @@ impl GBA {
 }
 
 impl Core for GBA {
-    fn run<T: Platform>(&mut self, platform: &mut T, debug: bool) {
-        let mut debugger = Debugger::new(debug);
+    fn run_frame<T: Platform>(&mut self, platform: &mut T) -> &[u32] {
+        let mut debugger = Debugger::new(true);
 
         self.cpu.reset(&mut self.io);
         
@@ -129,6 +129,12 @@ impl Core for GBA {
             self.io.spend(&mut self.cpu);
             self.io.render(platform)
         }
+
+        &[]
+    }
+
+    fn process_event(&mut self, _event: Event) {
+
     }
     
     fn is_file(filename: &str) -> bool {
@@ -169,7 +175,7 @@ impl Core for GBA {
         self.io.load_rom(filename)
     }
 
-    fn get_platform_parameters() -> (u32, u32) {
+    fn get_platform_parameters(&self) -> (u32, u32) {
         (240, 160)
     }
     

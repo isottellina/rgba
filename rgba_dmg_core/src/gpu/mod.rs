@@ -13,11 +13,13 @@ mod render_cgb;
 mod oam;
 
 pub struct GPU {
+    // Result
+    pub framebuffer: [u32; 160 * 144],
+
     vram: [u8; 0x4000],
     oam: [Sprite; 40],
     
     line_cache: [[Option<u8>; 10]; 144],
-    line_buffer: [u32; 160],
     render_line: Option<u8>,
     frame_done: bool,
     
@@ -72,10 +74,10 @@ pub struct GPU {
 impl GPU {
     pub fn new() -> GPU {
         GPU {
+            framebuffer: [0; 160 * 144],
             vram: [0; 0x4000],
             oam: [Default::default(); 40],
             line_cache: [[None; 10]; 144],
-            line_buffer: [0; 160],
 
             mode: GpuMode::ReadingOAM,
             render_line: None,

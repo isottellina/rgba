@@ -10,7 +10,7 @@ mod disasm;
 
 use std::collections::{BTreeSet, VecDeque};
 
-use crate::Gameboy;
+use crate::cpu::LR35902;
 use crate::io::Interconnect;
 use crate::debug::disasm::disasm;
 
@@ -23,11 +23,11 @@ pub struct Debugger {
 }
 
 impl Debugger {
-    pub fn new(trigger: bool) -> Debugger {
+    pub fn new() -> Debugger {
         Debugger {
             breakpoints: BTreeSet::new(),
             
-            steps: trigger as u32
+            steps: 0
         }
     }
 
@@ -35,12 +35,12 @@ impl Debugger {
         self.steps = 1;
     }
     
-    pub fn handle<T: Platform>(&mut self, gb: &mut Gameboy, platform: &mut T) {
-        if self.should_break(gb.cpu.pc()) || self.enough_steps() ||
-            self.hit_watchpoint(&mut gb.io) {
-                println!("{}", gb.cpu);
-                println!("Timer track: {:04x}", gb.io.get_internal());
-                println!("0x{:04x}: {}", gb.cpu.pc(), disasm(&gb.io, gb.cpu.pc()));
+    pub fn handle<T: Platform>(&mut self, cpu: &mut LR35902, io: &mut Interconnect, platform: &mut T) {
+        if self.should_break(cpu.pc()) || self.enough_steps() ||
+            self.hit_watchpoint(io) {
+                println!("{}", cpu);
+                println!("Timer track: {:04x}", io.get_internal());
+                println!("0x{:04x}: {}", cpu.pc(), disasm(&io, cpu.pc()));
                 
                 while let Some(s) = platform.read_line("> ") {
                     let mut command: VecDeque<&str> =
@@ -48,11 +48,6 @@ impl Debugger {
 
                     match command.pop_front() {
                         Some("c") | Some("continue") => {
-                            break;
-                        },
-
-                        Some("q") | Some("quit") => {
-                            gb.state = false;
                             break;
                         },
 
@@ -90,7 +85,7 @@ impl Debugger {
                             match get_argument(&mut command) {
                                 Some(addr) => {
                                     println!("Setting watchpoint at {:#04x}", addr);
-                                    gb.io.set_watchpoint(addr as usize);
+                                    io.set_watchpoint(addr as usize);
                                 },
                                 
                                 _ => println!("This function requires an argument"),
@@ -102,7 +97,7 @@ impl Debugger {
                                 Some(addr) => {
                                     println!("Removing watchpoint at {:#04x}", addr);
                                     
-                                    if !gb.io.rem_watchpoint(addr as usize) {
+                                    if !io.rem_watchpoint(addr as usize) {
                                         println!("There was no watchpoint to remove.");
                                     }
                                 },
@@ -115,29 +110,27 @@ impl Debugger {
                             let addr = if let Some(u) = get_argument(&mut command) {
                                 u as usize
                             } else {
-                                gb.cpu.pc()
+                                cpu.pc()
                             };
 
-                            println!("{:04x}: {:02x}", addr, gb.io.read_u8(addr));
+                            println!("{:04x}: {:02x}", addr, io.read_u8(addr));
                         },
                         
                         Some("d") | Some("disassemble") => {
                             let addr = if let Some(u) = get_argument(&mut command) {
                                 u as usize
                             } else {
-                                gb.cpu.pc()
+                                cpu.pc()
                             };
 
-                            println!("{:04x}: {}", addr, disasm(&gb.io, addr));
+                            println!("{:04x}: {}", addr, disasm(&io, addr));
                         },
-
-                        Some("reset") => gb.reset(),
                         
                         Some("h") | Some("help") => {
                             println!("c, continue\tContinue emulation\n\
                                       q, quit\t\tQuit the emulator\n\
                                       h, help\t\tPrint this help\n\
-                                      s, step\t\tStep executgb.ion\n\
+                                      s, step\t\tStep execution\n\
                                       b, break\tSet a breakpoint\n\
                                       rb, rbreak\tRemove a breakpoint\n\
                                       w, watch\tSet a watchpoint\n\

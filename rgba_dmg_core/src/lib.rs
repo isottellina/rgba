@@ -32,8 +32,8 @@ use std::io::{Seek, SeekFrom, Read};
 pub struct Gameboy {
     cpu: LR35902,
     io: Interconnect,
+    debug: Debugger,
 
-    state: bool,
     fast_mode: bool,
     last_frame: Instant,
 }
@@ -43,8 +43,8 @@ impl Gameboy {
         Gameboy {
             cpu: LR35902::new(),
             io: Interconnect::new(),
+            debug: Debugger::new(),
 
-            state: false,
             fast_mode: false,
             last_frame: Instant::now(),
         }
@@ -56,7 +56,6 @@ impl Gameboy {
     }
     
     fn on_frame<T: Platform>(&mut self,
-                             debugger: &mut Debugger,
                              platform: &mut T) {
         let elapsed = self.last_frame.elapsed();
                 
@@ -81,42 +80,38 @@ impl Gameboy {
         
         self.last_frame = Instant::now();
         
-        while let Some(e) = platform.poll_event() {
-            match e {
-                Event::Quit => self.state = false,
-                Event::FastMode => {
-                    self.fast_mode = !self.fast_mode;
-                    self.io.set_sound_enabled(!self.fast_mode);
-                },
-                Event::Debug => debugger.trigger(),
-                Event::Reset => self.reset(),
-                _ => self.io.handle_event(e),
-            }
-        }
-        
         platform.present();
     }
 }
 
 impl Core for Gameboy {
-    fn run<T: Platform>(&mut self, platform: &mut T, debug: bool) {
-        let mut debugger = Debugger::new(debug);
-        self.state = true;
-        
-        while self.state {
-            debugger.handle(self, platform);
-            
+    fn run_frame<T: Platform>(&mut self, platform: &mut T) -> &[u32] {
+        while !self.io.is_frame_done() {
+            self.debug.handle(&mut self.cpu, &mut self.io, platform);
             self.cpu.step(&mut self.io);
             self.io.spend_cycles();
             self.io.render(platform);
-
-            if self.io.is_frame_done() {
-                self.on_frame(&mut debugger, platform);
-                self.io.ack_frame();
-            }
         }
 
+        self.on_frame(platform);
+        self.io.ack_frame();
         self.io.write_savefile();
+
+        self.io.get_framebuffer()
+    }
+
+    fn process_event(&mut self, event: Event) {
+        match event {
+            Event::Debug => {
+                self.debug.trigger();
+            },
+            Event::FastMode => {
+                self.fast_mode = !self.fast_mode;
+                self.io.set_sound_enabled(!self.fast_mode);
+            },
+            Event::Reset => self.reset(),
+            _ => self.io.handle_event(event),
+        }
     }
     
     fn is_file(filename: &str) -> bool {
@@ -155,7 +150,7 @@ impl Core for Gameboy {
         self.io.load_rom(filename)
     }
 
-    fn get_platform_parameters() -> (u32, u32) {
+    fn get_platform_parameters(&self) -> (u32, u32) {
         (160, 144)
     }
 

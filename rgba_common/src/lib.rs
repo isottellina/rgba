@@ -44,18 +44,17 @@ pub enum Event {
 // Traits
 
 pub trait Core {
-    fn run<T: Platform>(&mut self, platform: &mut T, use_debug: bool);
+    fn run_frame<T: Platform>(&mut self, platform: &mut T) -> &[u32];
+    fn process_event(&mut self, event: Event);
     fn is_file(filename: &str) -> bool;
     fn load_bios<T: ToString>(&mut self, filename: Option<T>) -> Result<(), &'static str>;
     fn load_rom(&mut self, filename: &str) -> bool;
 
-    fn get_platform_parameters() -> (u32, u32);
+    fn get_platform_parameters(&self) -> (u32, u32);
     fn get_console_type() -> Console;
 }
 
 pub trait Platform {
-    fn new(width: u32, height: u32, scale: u32) -> Self;
-
     // Video functions
     fn set_pixel(&mut self, x: u32, y: u32, color: u32);
     fn set_scanline(&mut self, y: u32, scanline: &[u32]);

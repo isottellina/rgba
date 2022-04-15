@@ -564,6 +564,8 @@ impl Interconnect {
     pub fn is_frame_done(&self) -> bool { self.gpu.is_frame_done() }
     #[inline(always)]
     pub fn ack_frame(&mut self) { self.gpu.ack_frame() }
+    #[inline(always)]
+    pub fn get_framebuffer(&mut self) -> &[u32] { &self.gpu.framebuffer }
 
     pub fn get_internal(&self) -> u16 { self.timer.get_internal() }
     
@@ -624,9 +626,9 @@ impl Interconnect {
     
     pub fn render<T: Platform>(&mut self, platform: &mut T) {
         if self.cgb {
-            self.gpu.render_cgb(platform);
+            self.gpu.render_cgb();
         } else {
-            self.gpu.render_dmg(platform);
+            self.gpu.render_dmg();
         }
         
         if self.sound_enabled {

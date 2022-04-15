@@ -12,7 +12,7 @@ use clap::{App, Arg};
 
 use sdl::SDLPlatform;
 
-use rgba_common::{Console, Platform};
+use rgba_common::{Core, Console, Event, Platform};
 use rgba_builder::ConsoleBuilder;
 
 fn main() {
@@ -75,21 +75,32 @@ fn main() {
         .load_bios(bios_name)
         .load_rom(rom_name);
 
-    let console = match matches.value_of("console") {
+    let mut console = match matches.value_of("console") {
         Some("gb") => console.set_console(Console::Gameboy),
         Some("gba") => console.set_console(Console::GBA),
         Some("nes") => console.set_console(Console::NES),
         Some("nds") => console.set_console(Console::NDS),
         None => console,
         _ => unreachable!(),
-    }.build();
+    }.build().unwrap();
 
-    if console.is_determined() {
-        let parameters = console.get_platform_parameters().unwrap();
-        let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
-        
-        let _ = console.run(&mut platform, debug);
-    } else {
-        panic!("Couldn't build Console");
+    if debug {
+        console.process_event(Event::Debug);
+    }
+
+    let parameters = console.get_platform_parameters();
+    let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
+
+    'main_loop: loop {
+        while let Some(event) = platform.poll_event() {
+            match event {
+                Event::Quit => break 'main_loop,
+                _ => console.process_event(event),
+            }
+        }
+
+        let buffer = console.run_frame(&mut platform);
+        platform.set_buffer(buffer);
+        platform.present();
     }
 }

@@ -12,7 +12,7 @@ extern crate rgba_common;
 extern crate rgba_dmg_core;
 extern crate rgba_gba_core;
 
-use rgba_common::{Console, Core, Platform};
+use rgba_common::{Console, Core};
 use rgba_dmg_core::Gameboy;
 use rgba_gba_core::GBA;
 
@@ -44,7 +44,7 @@ impl ConsoleBuilder {
         self
     }
 
-    pub fn build(mut self) -> ConsoleBuilder {
+    pub fn build(mut self) -> Option<impl Core> {
         if self.console.is_none() {
             if let Some(ref rom_name) = self.rom {
                 if Gameboy::is_file(rom_name) {
@@ -57,56 +57,21 @@ impl ConsoleBuilder {
             }
         }
 
-        self
+        match self.console {
+            Some(Console::Gameboy) => {
+                let mut gb = Gameboy::new();
+                let _ = gb.load_bios(self.bios);
+
+                if let Some(file_name) = self.rom {
+                    gb.load_rom(&file_name);
+                };
+
+                Some(gb)
+            },
+
+            _ => None
+        }
     }
 
     pub fn is_determined(&self) -> bool { self.console.is_some() }
-    
-    pub fn get_platform_parameters(&self) -> Option<(u32, u32)> {
-        if let Some(ref console) = self.console {
-            match *console {
-                Console::Gameboy => Some(Gameboy::get_platform_parameters()),
-                Console::GBA => Some(GBA::get_platform_parameters()),
-                _ => None
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn run<T: Platform>(&self, platform: &mut T, debug: bool) -> Result<(), String> {
-        if let Some(console) = self.console {
-            match console {
-                Console::Gameboy => {
-                    let mut gb = Gameboy::new();
-
-                    gb.load_bios(self.bios.clone())?;
-
-                    if let Some(ref rom_name) = self.rom {
-                        gb.load_rom(rom_name);
-                    }
-                    
-                    gb.run(platform, debug);
-                    Ok(())
-                },
-
-                Console::GBA => {
-                    let mut gba = GBA::new();
-
-                    gba.load_bios(self.bios.clone())?;
-
-                    if let Some(ref rom_name) = self.rom {
-                        gba.load_rom(rom_name);
-                    }
-
-                    gba.run(platform, debug);
-                    Ok(())
-                },
-                
-                _ => panic!("There isn't a core yet for {:?}", console)
-            }
-        } else {
-            Err("Console wasn't determined".to_string())
-        }
-    }
 }

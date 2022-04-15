@@ -24,9 +24,7 @@ use crate::cpu::LR35902;
 use crate::io::Interconnect;
 use crate::debug::Debugger;
 
-use std::thread;
 use std::fs::File;
-use std::time::{Instant, Duration};
 use std::io::{Seek, SeekFrom, Read};
 
 pub struct Gameboy {
@@ -35,7 +33,6 @@ pub struct Gameboy {
     debug: Debugger,
 
     fast_mode: bool,
-    last_frame: Instant,
 }
 
 impl Gameboy {
@@ -46,41 +43,12 @@ impl Gameboy {
             debug: Debugger::new(),
 
             fast_mode: false,
-            last_frame: Instant::now(),
         }
     }
 
     fn reset(&mut self) {
         self.cpu.reset();
         self.io.reset();
-    }
-    
-    fn on_frame<T: Platform>(&mut self,
-                             platform: &mut T) {
-        let elapsed = self.last_frame.elapsed();
-                
-        if !self.fast_mode && elapsed < Duration::new(0, 16_600_000) {
-            let to_wait = Duration::new(0, 16_600_000) - elapsed;
-
-            if to_wait > Duration::new(0, 600_000) {
-                thread::sleep(to_wait);
-            }
-        }
-        
-        let new_elapsed = self.last_frame.elapsed();
-        let elapsed_nanos = new_elapsed.as_secs() * 1_000_000_000 +
-            u64::from(new_elapsed.subsec_nanos());
-        
-        let s = format!(
-            "rGBA [{}/60]",
-            ((1.0 / (elapsed_nanos as f64)) * 1000000000.0).round() as u32
-        );
-        
-        platform.set_title(s);
-        
-        self.last_frame = Instant::now();
-        
-        platform.present();
     }
 }
 
@@ -93,7 +61,6 @@ impl Core for Gameboy {
             self.io.render(platform);
         }
 
-        self.on_frame(platform);
         self.io.ack_frame();
         self.io.write_savefile();
 

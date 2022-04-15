@@ -8,6 +8,8 @@
 //
 mod sdl;
 
+use std::time::{Instant, Duration};
+use std::thread::sleep;
 use clap::{App, Arg};
 
 use sdl::SDLPlatform;
@@ -92,6 +94,8 @@ fn main() {
     let mut platform = SDLPlatform::new(parameters.0, parameters.1, 2);
 
     'main_loop: loop {
+        let frame_start = Instant::now();
+
         while let Some(event) = platform.poll_event() {
             match event {
                 Event::Quit => break 'main_loop,
@@ -102,5 +106,12 @@ fn main() {
         let buffer = console.run_frame(&mut platform);
         platform.set_buffer(buffer);
         platform.present();
+
+        let time_frame_took = Instant::now() - frame_start;
+        let time_to_wait = Duration::new(0, 16_600_000).saturating_sub(time_frame_took);
+
+        if time_to_wait > Duration::new(0, 600_000) {
+            sleep(time_to_wait);
+        }
     }
 }

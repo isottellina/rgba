@@ -6,4 +6,4 @@ authors = ["Louise"]
 
 [dependencies]
 rgba_common = { path = '../rgba_common' }
-log = "~0.4.0"
+log = "0.4.17"

@@ -1,5 +1,5 @@
-// main.rs --- 
-// 
+// main.rs ---
+//
 // Filename: main.rs
 // Author: Louise <louise>
 // Created: Wed Dec  6 12:07:11 2017 (+0100)
@@ -8,59 +8,71 @@
 //
 mod sdl;
 
-use std::time::{Instant, Duration};
+use clap::builder::PossibleValue;
+use clap::{Arg, Command};
 use std::thread::sleep;
-use clap::{App, Arg};
+use std::time::{Duration, Instant};
 
 use sdl::SDLPlatform;
 
-use rgba_common::{Core, ConsoleType, Event};
 use rgba_builder::ConsoleBuilder;
+use rgba_common::{ConsoleType, Core, Event};
 
 fn main() {
-    let matches = App::new("rgba").version(env!("CARGO_PKG_VERSION"))
+    let matches = Command::new("rgba")
+        .version(env!("CARGO_PKG_VERSION"))
         .about("Multi-console emulator")
         .author("Louise Z.")
-        .arg(Arg::with_name("bios")
-             .short("b")
-             .long("bios")
-             .value_name("BIOS")
-             .help("Sets the BIOS/bootrom to use")
-             .required(false))
-        .arg(Arg::with_name("ROM")
-             .required(true)
-             .index(1))
-        .arg(Arg::with_name("debug")
-             .short("d")
-             .long("debug")
-             .help("Enables the debugger at start-up"))
-        .arg(Arg::with_name("log")
-             .short("l")
-             .long("log")
-             .takes_value(true)
-             .possible_value("debug")
-             .possible_value("info")
-             .possible_value("warn")
-             .possible_value("error")
-             .default_value("warn")
-             .help("Set the log level"))
-        .arg(Arg::with_name("console")
-             .short("c")
-             .long("console")
-             .takes_value(true)
-             .possible_value("gb")
-             .possible_value("gba")
-             .possible_value("nes")
-             .possible_value("nds")
-             .required(false))
+        .arg(
+            Arg::new("bios")
+                .short('b')
+                .long("bios")
+                .value_name("BIOS")
+                .help("Sets the BIOS/bootrom to use")
+                .required(false),
+        )
+        .arg(Arg::new("ROM").required(true).index(1))
+        .arg(
+            Arg::new("debug")
+                .short('d')
+                .long("debug")
+                .help("Enables the debugger at start-up"),
+        )
+        .arg(
+            Arg::new("log")
+                .short('l')
+                .long("log")
+                .num_args(1)
+                .value_parser([
+                    PossibleValue::new("debug"),
+                    PossibleValue::new("info"),
+                    PossibleValue::new("warn"),
+                    PossibleValue::new("error"),
+                ])
+                .default_value("warn")
+                .help("Set the log level"),
+        )
+        .arg(
+            Arg::new("console")
+                .short('c')
+                .long("console")
+                .num_args(1)
+                .value_parser([
+                    PossibleValue::new("gb"),
+                    PossibleValue::new("gba"),
+                    PossibleValue::new("nes"),
+                    PossibleValue::new("nds"),
+                ])
+                .required(false),
+        )
         .get_matches();
 
-    let rom_name = matches.value_of("ROM").unwrap();
-    let bios_name = matches.value_of("bios");
-    let debug = matches.is_present("debug");
-    let log = matches.value_of("log").unwrap();
+    let rom_name = matches.get_one::<String>("ROM").unwrap();
+    let bios_name = matches.get_one::<String>("bios");
+    let debug = matches.contains_id("debug");
+    let log = matches.get_one::<String>("log").unwrap();
 
-    let log_level = match log {
+    let log_level = match log.as_str() {
         "debug" => simplelog::LevelFilter::Debug,
         "info" => simplelog::LevelFilter::Info,
         "warn" => simplelog::LevelFilter::Warn,
@@ -68,23 +80,28 @@ fn main() {
         _ => unreachable!(),
     };
 
-    simplelog::TermLogger::init(log_level,
-                                simplelog::Config::default(),
-                                simplelog::TerminalMode::Stderr
-    ).unwrap();
-    
+    simplelog::TermLogger::init(
+        log_level,
+        simplelog::Config::default(),
+        simplelog::TerminalMode::Stderr,
+        simplelog::ColorChoice::Auto,
+    )
+    .unwrap();
+
     let console = ConsoleBuilder::default()
-        .load_bios(bios_name)
+        .load_bios(bios_name.map(String::as_str))
         .load_rom(rom_name);
 
-    let mut console = match matches.value_of("console") {
+    let mut console = match matches.get_one::<String>("console").map(String::as_str) {
         Some("gb") => console.set_console(ConsoleType::Gameboy),
         Some("gba") => console.set_console(ConsoleType::GBA),
         Some("nes") => console.set_console(ConsoleType::NES),
         Some("nds") => console.set_console(ConsoleType::NDS),
         None => console,
         _ => unreachable!(),
-    }.build().unwrap();
+    }
+    .build()
+    .unwrap();
 
     if debug {
         console.process_event(Event::Debug);

@@ -59,7 +59,7 @@ impl SDLPlatform {
 
         audio_device.resume();
 
-        let rl = Editor::<()>::new();
+        let rl = Editor::<()>::new().unwrap();
 
         SDLPlatform {
             width,
@@ -170,7 +170,8 @@ impl SDLPlatform {
 
 impl Platform for SDLPlatform {
     fn queue_samples(&mut self, samples: &[i16]) {
-        self.audio_device.queue(samples);
+        // TODO: Do something else than panic
+        self.audio_device.queue_audio(samples).unwrap();
     }
 
     fn read_line(&mut self, prompt: &str) -> Option<String> {

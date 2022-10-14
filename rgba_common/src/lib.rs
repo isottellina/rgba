@@ -10,7 +10,7 @@
 // Enums
 
 #[derive(Debug, Clone, Copy)]
-pub enum Console {
+pub enum ConsoleType {
     Gameboy,
     NES,
     GBA,
@@ -51,7 +51,7 @@ pub trait Core {
     fn load_rom(&mut self, filename: &str) -> bool;
 
     fn get_platform_parameters(&self) -> (u32, u32);
-    fn get_console_type() -> Console;
+    fn get_console_type() -> ConsoleType;
 }
 
 pub trait Platform {

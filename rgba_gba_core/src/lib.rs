@@ -9,7 +9,7 @@
 #[macro_use] extern crate log;
 extern crate byteorder;
 extern crate rgba_common;
-use rgba_common::{Console, Core, Platform, Event, Key};
+use rgba_common::{ConsoleType, Core, Platform, Event, Key};
 use rgba_common::fnv_hash;
 
 mod debug;
@@ -132,5 +132,5 @@ impl Core for GBA {
         (240, 160)
     }
     
-    fn get_console_type() -> Console { Console::GBA }
+    fn get_console_type() -> ConsoleType { ConsoleType::GBA }
 }

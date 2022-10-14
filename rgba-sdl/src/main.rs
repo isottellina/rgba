@@ -14,7 +14,7 @@ use clap::{App, Arg};
 
 use sdl::SDLPlatform;
 
-use rgba_common::{Core, Console, Event};
+use rgba_common::{Core, ConsoleType, Event};
 use rgba_builder::ConsoleBuilder;
 
 fn main() {
@@ -78,10 +78,10 @@ fn main() {
         .load_rom(rom_name);
 
     let mut console = match matches.value_of("console") {
-        Some("gb") => console.set_console(Console::Gameboy),
-        Some("gba") => console.set_console(Console::GBA),
-        Some("nes") => console.set_console(Console::NES),
-        Some("nds") => console.set_console(Console::NDS),
+        Some("gb") => console.set_console(ConsoleType::Gameboy),
+        Some("gba") => console.set_console(ConsoleType::GBA),
+        Some("nes") => console.set_console(ConsoleType::NES),
+        Some("nds") => console.set_console(ConsoleType::NDS),
         None => console,
         _ => unreachable!(),
     }.build().unwrap();

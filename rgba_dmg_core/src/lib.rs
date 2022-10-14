@@ -18,7 +18,7 @@ mod io;
 mod cart;
 mod debug;
 
-use rgba_common::{Core, Platform, Event, Console};
+use rgba_common::{Core, Platform, Event, ConsoleType};
 use rgba_common::fnv_hash;
 use crate::cpu::LR35902;
 use crate::io::Interconnect;
@@ -121,8 +121,8 @@ impl Core for Gameboy {
         (160, 144)
     }
 
-    fn get_console_type() -> Console {
-        Console::Gameboy
+    fn get_console_type() -> ConsoleType {
+        ConsoleType::Gameboy
     }
 }
 

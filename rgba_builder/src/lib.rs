@@ -68,6 +68,17 @@ impl ConsoleBuilder {
                 };
 
                 Some(Console::Gameboy(gb))
+            },
+
+            Some(ConsoleType::GBA) => {
+                let mut gba = GBA::new();
+                let _ = gba.load_bios(self.bios);
+
+                if let Some(file_name) = self.rom {
+                    gba.load_rom(&file_name);
+                };
+
+                Some(Console::GBA(gba))
             }
 
             _ => None,
@@ -81,40 +92,46 @@ impl ConsoleBuilder {
 
 pub enum Console {
     Gameboy(Gameboy),
+    GBA(GBA),
 }
 
 impl Core for Console {
     fn run_frame<T: rgba_common::Platform>(&mut self, platform: &mut T) -> &[u32] {
         match self {
             Console::Gameboy(gb) => gb.run_frame(platform),
+            Console::GBA(gba) => gba.run_frame(platform),
         }
     }
 
     fn process_event(&mut self, event: rgba_common::Event) {
         match self {
             Console::Gameboy(gb) => gb.process_event(event),
+            Console::GBA(gba) => gba.process_event(event),
         }
     }
 
-    fn is_file(filename: &str) -> bool {
+    fn is_file(_filename: &str) -> bool {
         false
     }
 
     fn load_bios<T: ToString>(&mut self, filename: Option<T>) -> Result<(), &'static str> {
         match self {
             Console::Gameboy(gb) => gb.load_bios(filename),
+            Console::GBA(gba) => gba.load_bios(filename),
         }
     }
 
     fn load_rom(&mut self, filename: &str) -> bool {
         match self {
             Console::Gameboy(gb) => gb.load_rom(filename),
+            Console::GBA(gba) => gba.load_rom(filename),
         }
     }
 
     fn get_platform_parameters(&self) -> (u32, u32) {
         match self {
             Console::Gameboy(gb) => gb.get_platform_parameters(),
+            Console::GBA(gba) => gba.get_platform_parameters(),
         }
     }
 

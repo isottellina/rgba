@@ -12,6 +12,18 @@
 This is a WIP emulator in Rust. It currently supports the Gameboy, but I will be adding more cores,
 such as a GBA core, and, I hope, a NDS core.
 
+## Current state
+
+A new version of this emulator, from scratch, is being worked on. The main goals are :
+
+ - Cleaner architecture, with an event-driven clock/scheduler, which will allow us to improve performance, consider a JIT execution core, and emulating several "main components" (namely CPUs here)
+ - Cleaner code, using Rust macros to eliminate scheduler and bus access boilerplate while keeping performance, and to following a "turtles all the way down" philosophy to ease (and actually do!) unit testing
+ - GDB protocol implementation, to simplify the integration with other tools (such as radare2)
+ - VRAM debugger
+ - Actual ARM emulation with clean code, not the Python mess you can see here (sorry for that), to keep myself sane
+ 
+Therefore, this repo is not going to receive updates. I'll see you when it's done!
+
 ## Building and running
 
 Currently, the binary used to launch rGBA cores is the rGBA-sdl crate.
